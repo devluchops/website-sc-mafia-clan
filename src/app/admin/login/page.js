@@ -73,12 +73,12 @@ export default function LoginPage() {
           Panel de Administración
         </p>
         <button
-          onClick={() => signIn("github", { callbackUrl: "/admin" })}
+          onClick={() => signIn("discord", { callbackUrl: "/admin" })}
           style={{
             width: "100%",
             padding: "14px 24px",
-            background: "#c9a84c",
-            color: "#0a0a0a",
+            background: "#5865F2",
+            color: "#ffffff",
             border: "none",
             borderRadius: 6,
             fontFamily: "'Cinzel', serif",
@@ -90,13 +90,13 @@ export default function LoginPage() {
             transition: "all 0.2s",
           }}
           onMouseOver={(e) => {
-            e.target.style.background = "#d4b961";
+            e.target.style.background = "#4752C4";
           }}
           onMouseOut={(e) => {
-            e.target.style.background = "#c9a84c";
+            e.target.style.background = "#5865F2";
           }}
         >
-          Iniciar sesión con GitHub
+          🎮 Iniciar sesión con Discord
         </button>
         <p
           style={{
