@@ -1,73 +1,96 @@
-# Clan MAFIA — Sitio Web StarCraft
+# MAFIA - Clan StarCraft Website
 
-Sitio oficial del Clan MAFIA. Hecho con Next.js, deploy en Vercel.
+Sitio web oficial del clan MAFIA de StarCraft Remastered.
 
-## Estructura del proyecto
+## 🎮 Características
+
+- **Roster de Miembros** - Sistema de ranking por nivel (S, A+, A, B+, B, C+, C, D+, D)
+- **Blog de Noticias** - Publicaciones con imágenes sobre torneos y eventos
+- **Videos y Replays** - Integración con YouTube para ver partidas destacadas
+- **Calendario de Eventos** - ShowMatches y torneos con integración a Google Calendar
+- **Reglas del Clan** - Código de conducta y compromisos de miembros
+- **Perfiles de Jugadores** - Información detallada con redes sociales
+- **Panel Admin** - Gestión completa de contenido con autenticación Discord
+
+## 🛠️ Stack Tecnológico
+
+- **Framework**: Next.js 14 (App Router)
+- **Base de Datos**: Neon Postgres
+- **Autenticación**: NextAuth.js con Discord OAuth
+- **Hosting**: Vercel
+- **Estilos**: Inline CSS con tema dorado personalizado
+
+## ⚙️ Variables de Entorno Requeridas
+
+Crea un archivo `.env.local` con:
+
+```env
+# Database (Neon Postgres)
+DATABASE_URL=postgresql://...
+
+# NextAuth
+NEXTAUTH_SECRET=tu-secret-generado
+NEXTAUTH_URL=http://localhost:3000
+
+# Discord OAuth (obtén en https://discord.com/developers/applications)
+DISCORD_CLIENT_ID=tu-client-id
+DISCORD_CLIENT_SECRET=tu-client-secret
+DISCORD_ALLOWED_ID=tu-discord-user-id
+```
+
+## 🚀 Desarrollo Local
+
+```bash
+# Instalar dependencias
+npm install
+
+# Ejecutar en modo desarrollo
+npm run dev
+```
+
+Abre [http://localhost:3000](http://localhost:3000)
+
+## 📦 Despliegue en Vercel
+
+1. **Conecta el repositorio** a Vercel
+2. **Configura las variables de entorno** en Vercel Dashboard:
+   - `DATABASE_URL`
+   - `NEXTAUTH_SECRET`
+   - `NEXTAUTH_URL` (tu dominio de Vercel)
+   - `DISCORD_CLIENT_ID`
+   - `DISCORD_CLIENT_SECRET`
+   - `DISCORD_ALLOWED_ID`
+3. **Despliega** automáticamente
+
+## 🔐 Panel de Administración
+
+Accede a `/admin` después de autenticarte con Discord.
+
+Desde el panel puedes:
+- Gestionar miembros del clan
+- Publicar posts con imágenes
+- Agregar videos de YouTube
+- Crear eventos y torneos
+- Administrar reglas del clan
+
+## 📁 Estructura
 
 ```
 clan-mafia/
 ├── public/
-│   ├── logo.png              ← Tu logo del clan aqui
-│   └── members/              ← Fotos de los miembros aqui
-│       ├── darklord.jpg
-│       ├── shadowking.jpg
-│       └── ...
+│   ├── logo.png
+│   ├── posts/          # Imágenes de publicaciones
+│   └── members/        # Avatares de miembros
 ├── src/
-│   ├── data/
-│   │   └── clan-data.js      ← EDITA ESTE ARCHIVO para cambiar todo el contenido
-│   └── app/
-│       ├── globals.css
-│       ├── layout.js
-│       └── page.js
-├── package.json
-└── next.config.js
+│   ├── app/
+│   │   ├── admin/      # Panel de administración
+│   │   ├── api/        # API routes
+│   │   └── login/      # Autenticación
+│   ├── components/     # Componentes reutilizables
+│   └── lib/            # Utilidades (auth, db)
+└── package.json
 ```
 
-## Setup rapido
+## 📄 Licencia
 
-### 1. Instalar dependencias
-```bash
-npm install
-```
-
-### 2. Agregar tus imagenes
-- Pon tu logo en `public/logo.png`
-- Crea la carpeta `public/members/` y pon las fotos de cada miembro
-- Los nombres deben coincidir con lo que pusiste en `src/data/clan-data.js`
-
-### 3. Editar datos del clan
-Abre `src/data/clan-data.js` y modifica:
-- **CLAN** — nombre, tagline, ruta del logo
-- **MEMBERS** — agrega/quita miembros, cambia avatares, MMR, rango
-- **POSTS** — publicaciones del blog
-- **VIDEOS** — agrega el `youtubeId` de cada video (el ID que aparece en la URL de YouTube)
-- **EVENTS** — proximos torneos y actividades
-
-### 4. Probar localmente
-```bash
-npm run dev
-```
-Abre http://localhost:3000
-
-### 5. Subir a GitHub
-```bash
-git init
-git add .
-git commit -m "Clan MAFIA site"
-git branch -M main
-git remote add origin https://github.com/TU_USUARIO/clan-mafia.git
-git push -u origin main
-```
-
-### 6. Deploy en Vercel
-1. Ve a https://vercel.com y logueate con tu cuenta de GitHub
-2. Click en "Add New Project"
-3. Importa el repo `clan-mafia`
-4. Click en "Deploy" (no necesitas cambiar nada, Vercel detecta Next.js automaticamente)
-5. En ~1 minuto tendras tu sitio en `clan-mafia.vercel.app`
-
-### 7. Dominio custom (opcional)
-En el dashboard de Vercel > Settings > Domains, puedes agregar un dominio propio como `clanmafia.gg`.
-
-## Para actualizar el sitio
-Solo edita `src/data/clan-data.js`, haz commit y push. Vercel hace deploy automatico.
+© 2025 MAFIA Clan - StarCraft Remastered

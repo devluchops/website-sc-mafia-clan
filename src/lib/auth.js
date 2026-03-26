@@ -9,20 +9,36 @@ export const authOptions = {
   ],
   callbacks: {
     async signIn({ user, account, profile }) {
+      // Log para debug - ver información del usuario
+      console.log("=== Discord Login Info ===");
+      console.log("Username:", profile.username);
+      console.log("Discord ID:", profile.id);
+      console.log("Email:", user.email);
+      console.log("Global Name:", profile.global_name);
+      console.log("========================");
+
       // Solo permite login de usuarios autorizados
-      const allowedUsers = process.env.DISCORD_ALLOWED_USERS?.split(",") || [];
-      if (allowedUsers.length === 0) return true;
+      const allowedUsers = process.env.DISCORD_ALLOWED_USERS?.split(",").map(u => u.trim()) || [];
+      console.log("Allowed users:", allowedUsers);
 
-      // Permitir por Discord username#discriminator o por ID
-      const discordTag = profile.username + "#" + profile.discriminator;
+      if (allowedUsers.length === 0) {
+        console.log("No restrictions - allowing all users");
+        return true;
+      }
+
+      // Permitir por Discord username (sin discriminador), ID o email
       const discordId = profile.id;
+      const username = profile.username;
 
-      return allowedUsers.includes(user.email) ||
-             allowedUsers.includes(discordTag) ||
-             allowedUsers.includes(discordId);
+      const isAllowed = allowedUsers.includes(user.email) ||
+                       allowedUsers.includes(username) ||
+                       allowedUsers.includes(discordId);
+
+      console.log("Is user allowed?", isAllowed);
+      return isAllowed;
     },
   },
   pages: {
-    signIn: "/admin/login",
+    signIn: "/login",
   },
 };

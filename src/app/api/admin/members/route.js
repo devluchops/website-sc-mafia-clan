@@ -23,22 +23,47 @@ export async function POST(request) {
   }
 
   try {
-    const { id, name, race, rank, avatar, mmr } = await request.json();
+    const {
+      id, name, race, rank, avatar, mmr,
+      main_race, races_played, level_rank,
+      social_facebook, social_discord, social_tiktok,
+      social_kick, social_instagram, social_twitter
+    } = await request.json();
     const sql = getDb();
 
     if (id) {
       // Actualizar
       await sql`
         UPDATE members
-        SET name = ${name}, race = ${race}, rank = ${rank},
-            avatar = ${avatar}, mmr = ${mmr}, updated_at = NOW()
+        SET name = ${name}, race = ${main_race || race}, rank = ${rank},
+            avatar = ${avatar}, mmr = ${mmr},
+            main_race = ${main_race || race},
+            races_played = ${races_played || race},
+            level_rank = ${level_rank || 'B'},
+            social_facebook = ${social_facebook || ''},
+            social_discord = ${social_discord || ''},
+            social_tiktok = ${social_tiktok || ''},
+            social_kick = ${social_kick || ''},
+            social_instagram = ${social_instagram || ''},
+            social_twitter = ${social_twitter || ''},
+            updated_at = NOW()
         WHERE id = ${id}
       `;
     } else {
       // Crear nuevo
       await sql`
-        INSERT INTO members (name, race, rank, avatar, mmr)
-        VALUES (${name}, ${race}, ${rank}, ${avatar}, ${mmr})
+        INSERT INTO members (
+          name, race, rank, avatar, mmr,
+          main_race, races_played, level_rank,
+          social_facebook, social_discord, social_tiktok,
+          social_kick, social_instagram, social_twitter
+        )
+        VALUES (
+          ${name}, ${main_race || race || 'Terran'}, ${rank}, ${avatar}, ${mmr},
+          ${main_race || race || 'Terran'}, ${races_played || race || 'Terran'}, ${level_rank || 'B'},
+          ${social_facebook || ''}, ${social_discord || ''}, ${social_tiktok || ''},
+          ${social_kick || ''}, ${social_instagram || ''}, ${social_twitter || ''}
+        )
       `;
     }
 

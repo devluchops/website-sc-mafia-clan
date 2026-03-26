@@ -1,4 +1,5 @@
 import "./globals.css";
+import SessionProvider from "@/components/SessionProvider";
 
 export const metadata = {
   title: "Clan MAFIA — StarCraft",
@@ -19,7 +20,9 @@ export default function RootLayout({ children }) {
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
       </head>
-      <body>{children}</body>
+      <body>
+        <SessionProvider>{children}</SessionProvider>
+      </body>
     </html>
   );
 }
