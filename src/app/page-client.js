@@ -1067,7 +1067,7 @@ function EventsSection({ events }) {
       const startDate = formatGoogleDate(eventDate);
       const endDate = formatGoogleDate(eventEndDate);
 
-      const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startDate}/${endDate}&details=${description}&sf=true&output=xml`;
+      const googleCalendarUrl = `https://calendar.google.com/calendar/u/0/r/eventedit?text=${title}&dates=${startDate}/${endDate}&details=${description}`;
 
       // Abrir Google Calendar en una nueva pestaña
       window.open(googleCalendarUrl, '_blank');
