@@ -266,7 +266,6 @@ function BlogSection({ posts }) {
               <div
                 style={{
                   width: "100%",
-                  maxHeight: 400,
                   borderRadius: 10,
                   overflow: "hidden",
                   marginBottom: 24,
@@ -278,8 +277,8 @@ function BlogSection({ posts }) {
                   alt={selectedPost.title}
                   style={{
                     width: "100%",
-                    height: "100%",
-                    objectFit: "contain",
+                    height: "auto",
+                    display: "block",
                   }}
                 />
               </div>
