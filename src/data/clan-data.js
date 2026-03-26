@@ -5,7 +5,7 @@
 
 export const CLAN = {
   name: "MAFIA",
-  tagline: "En la sombra dominamos el mapa",
+  tagline: "El mejor clan del StarCraft en mapa Fastest",
   // Pon tu logo en la carpeta /public y referencia como "/logo.png"
   logo: "/logo.png",
 };
