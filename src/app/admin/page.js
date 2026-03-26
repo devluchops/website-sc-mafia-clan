@@ -218,12 +218,14 @@ export default function AdminDashboard() {
   const [posts, setPosts] = useState([]);
   const [videos, setVideos] = useState([]);
   const [events, setEvents] = useState([]);
+  const [rules, setRules] = useState([]);
 
   // Modal states
   const [memberModal, setMemberModal] = useState({ isOpen: false, member: null });
   const [postModal, setPostModal] = useState({ isOpen: false, post: null });
   const [videoModal, setVideoModal] = useState({ isOpen: false, video: null });
   const [eventModal, setEventModal] = useState({ isOpen: false, event: null });
+  const [ruleModal, setRuleModal] = useState({ isOpen: false, rule: null });
   const [logoFile, setLogoFile] = useState(null);
   const [postImageFile, setPostImageFile] = useState(null);
   const [memberFilter, setMemberFilter] = useState("todos");
@@ -265,6 +267,12 @@ export default function AdminDashboard() {
     fetch("/api/admin/events")
       .then((res) => res.json())
       .then((data) => setEvents(data))
+      .catch((err) => console.error(err));
+
+    // Cargar reglas
+    fetch("/api/admin/rules")
+      .then((res) => res.json())
+      .then((data) => setRules(data))
       .catch((err) => console.error(err));
   };
 
@@ -528,6 +536,53 @@ export default function AdminDashboard() {
       });
       if (res.ok) {
         showMessage("✅ Evento eliminado");
+        loadData();
+      } else {
+        showMessage("❌ Error al eliminar");
+      }
+    } catch (error) {
+      showMessage("❌ Error: " + error.message);
+    }
+    setLoading(false);
+  };
+
+  // ============================================================
+  // RULE HANDLERS
+  // ============================================================
+
+  const handleSaveRule = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/rules", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(ruleModal.rule),
+      });
+      if (res.ok) {
+        showMessage("✅ Regla guardada correctamente");
+        setRuleModal({ isOpen: false, rule: null });
+        loadData();
+      } else {
+        showMessage("❌ Error al guardar regla");
+      }
+    } catch (error) {
+      showMessage("❌ Error: " + error.message);
+    }
+    setLoading(false);
+  };
+
+  const handleDeleteRule = async (id) => {
+    if (!confirm("¿Estás seguro de eliminar esta regla?")) return;
+
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/rules", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      if (res.ok) {
+        showMessage("✅ Regla eliminada");
         loadData();
       } else {
         showMessage("❌ Error al eliminar");
@@ -963,6 +1018,61 @@ export default function AdminDashboard() {
             ))}
           </div>
         </AdminCard>
+
+        {/* Reglas del Clan */}
+        <AdminCard title="Reglas del Clan">
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <p style={{ color: textMuted, fontSize: 14 }}>
+              Total: <strong style={{ color: gold }}>{rules.length}</strong>
+            </p>
+            <Button onClick={() => setRuleModal({ isOpen: true, rule: { category: "Reglas Generales", title: "", description: "", order_index: rules.length } })}>
+              + Agregar Regla
+            </Button>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {rules.map((rule) => (
+              <div
+                key={rule.id}
+                style={{
+                  background: bg,
+                  padding: 14,
+                  borderRadius: 8,
+                  border: `1px solid ${darkGold}`,
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "flex-start",
+                  gap: 12,
+                }}
+              >
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                    <span style={{ fontSize: 11, color: gold, fontWeight: 600, letterSpacing: 1 }}>
+                      {rule.category.toUpperCase()}
+                    </span>
+                  </div>
+                  <p style={{ fontWeight: 600, color: textLight, marginBottom: 4 }}>{rule.title}</p>
+                  <p style={{ fontSize: 12, color: textMuted }}>{rule.description}</p>
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <Button
+                    variant="secondary"
+                    style={{ padding: "6px 12px", fontSize: 10 }}
+                    onClick={() => setRuleModal({ isOpen: true, rule })}
+                  >
+                    Editar
+                  </Button>
+                  <Button
+                    variant="danger"
+                    style={{ padding: "6px 12px", fontSize: 10 }}
+                    onClick={() => handleDeleteRule(rule.id)}
+                  >
+                    Eliminar
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </AdminCard>
       </main>
 
       {/* MODALS */}
@@ -1267,6 +1377,48 @@ export default function AdminDashboard() {
             Guardar
           </Button>
           <Button variant="secondary" onClick={() => setEventModal({ isOpen: false, event: null })} style={{ flex: 1 }}>
+            Cancelar
+          </Button>
+        </div>
+      </Modal>
+
+      {/* Rule Modal */}
+      <Modal
+        isOpen={ruleModal.isOpen}
+        onClose={() => setRuleModal({ isOpen: false, rule: null })}
+        title={ruleModal.rule?.id ? "Editar Regla" : "Agregar Regla"}
+      >
+        <Select
+          label="Categoría"
+          value={ruleModal.rule?.category || "Reglas Generales"}
+          onChange={(val) => setRuleModal({ ...ruleModal, rule: { ...ruleModal.rule, category: val } })}
+          options={["Reglas Generales", "Compromisos", "Consecuencias"]}
+        />
+        <Input
+          label="Título"
+          value={ruleModal.rule?.title || ""}
+          onChange={(val) => setRuleModal({ ...ruleModal, rule: { ...ruleModal.rule, title: val } })}
+          placeholder="Título de la regla"
+        />
+        <Input
+          label="Descripción"
+          textarea
+          value={ruleModal.rule?.description || ""}
+          onChange={(val) => setRuleModal({ ...ruleModal, rule: { ...ruleModal.rule, description: val } })}
+          placeholder="Descripción de la regla"
+        />
+        <Input
+          label="Orden"
+          type="number"
+          value={ruleModal.rule?.order_index ?? ""}
+          onChange={(val) => setRuleModal({ ...ruleModal, rule: { ...ruleModal.rule, order_index: parseInt(val) || 0 } })}
+          placeholder="0"
+        />
+        <div style={{ display: "flex", gap: 12, marginTop: 20 }}>
+          <Button onClick={handleSaveRule} loading={loading} style={{ flex: 1 }}>
+            Guardar
+          </Button>
+          <Button variant="secondary" onClick={() => setRuleModal({ isOpen: false, rule: null })} style={{ flex: 1 }}>
             Cancelar
           </Button>
         </div>
