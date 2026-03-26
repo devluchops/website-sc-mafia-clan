@@ -1,0 +1,42 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;500&display=swap');
+
+:root {
+  --gold: #c9a84c;
+  --dark-gold: #2a2215;
+  --bg: #0a0a0a;
+  --card-bg: #111110;
+  --text-muted: #6b5c3e;
+  --text-light: #e8dcc0;
+  --text-body: #d4c5a0;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  background: var(--bg);
+  color: var(--text-body);
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+}
+
+::selection {
+  background: rgba(201, 168, 76, 0.3);
+  color: var(--text-light);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--dark-gold);
+  border-radius: 4px;
+}
