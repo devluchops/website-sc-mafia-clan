@@ -1,0 +1,230 @@
+/* Utilidades responsive */
+
+.responsiveContainer {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 32px 20px 48px;
+}
+
+@media (max-width: 768px) {
+  .responsiveContainer {
+    padding: 24px 16px 36px;
+  }
+}
+
+/* Header responsive */
+.header {
+  padding: 48px 24px 32px;
+}
+
+@media (max-width: 768px) {
+  .header {
+    padding: 32px 16px 24px;
+  }
+}
+
+.logo {
+  width: 160px;
+  height: 160px;
+}
+
+@media (max-width: 768px) {
+  .logo {
+    width: 120px;
+    height: 120px;
+  }
+}
+
+.title {
+  font-size: 40px;
+  letter-spacing: 8px;
+}
+
+@media (max-width: 768px) {
+  .title {
+    font-size: 28px;
+    letter-spacing: 4px;
+  }
+}
+
+.tagline {
+  font-size: 13px;
+  letter-spacing: 2px;
+}
+
+@media (max-width: 768px) {
+  .tagline {
+    font-size: 11px;
+    letter-spacing: 1px;
+  }
+}
+
+/* Navigation responsive */
+.nav {
+  padding: 12px 16px;
+  gap: 4px;
+}
+
+@media (max-width: 768px) {
+  .nav {
+    padding: 10px 12px;
+    gap: 6px;
+  }
+}
+
+.navButton {
+  padding: 10px 18px;
+  font-size: 12px;
+  letter-spacing: 2px;
+}
+
+@media (max-width: 768px) {
+  .navButton {
+    padding: 8px 12px;
+    font-size: 10px;
+    letter-spacing: 1px;
+  }
+}
+
+/* Grids responsive */
+.videosGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+@media (max-width: 768px) {
+  .videosGrid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .videosGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.membersGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+  gap: 12px;
+}
+
+@media (max-width: 768px) {
+  .membersGrid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .membersGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+}
+
+/* Cards responsive */
+.card {
+  padding: 18px;
+}
+
+@media (max-width: 768px) {
+  .card {
+    padding: 14px;
+  }
+}
+
+/* Sorting buttons responsive */
+.sortButtons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .sortButtons {
+    gap: 6px;
+  }
+
+  .sortButtons button {
+    flex: 1;
+    min-width: 90px;
+  }
+}
+
+/* Event cards responsive */
+.eventCard {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .eventCard {
+    gap: 12px;
+  }
+}
+
+/* Section titles responsive */
+.sectionTitle {
+  font-size: 15px;
+  letter-spacing: 3px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+  .sectionTitle {
+    font-size: 13px;
+    letter-spacing: 2px;
+    margin-bottom: 16px;
+  }
+}
+
+/* Post titles responsive */
+.postTitle {
+  font-size: 17px;
+}
+
+@media (max-width: 768px) {
+  .postTitle {
+    font-size: 15px;
+  }
+}
+
+/* Video titles responsive */
+.videoTitle {
+  font-size: 14px;
+}
+
+@media (max-width: 768px) {
+  .videoTitle {
+    font-size: 13px;
+  }
+}
+
+/* Member names responsive */
+.memberName {
+  font-size: 14px;
+}
+
+@media (max-width: 768px) {
+  .memberName {
+    font-size: 13px;
+  }
+}
+
+/* Footer responsive */
+.footer {
+  padding: 24px 16px;
+  font-size: 11px;
+}
+
+@media (max-width: 768px) {
+  .footer {
+    padding: 20px 12px;
+    font-size: 10px;
+  }
+}

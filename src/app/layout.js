@@ -2,15 +2,23 @@ import "./globals.css";
 
 export const metadata = {
   title: "Clan MAFIA — StarCraft",
-  description: "En la sombra dominamos el mapa. Sitio oficial del Clan MAFIA de StarCraft.",
+  description: "El mejor clan del StarCraft en mapa Fastest. Sitio oficial del Clan MAFIA.",
   icons: {
     icon: "/favicon.ico",
+  },
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 5,
   },
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="es">
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+      </head>
       <body>{children}</body>
     </html>
   );
