@@ -266,11 +266,14 @@ function BlogSection({ posts }) {
               <div
                 style={{
                   width: "100%",
-                  height: 350,
+                  maxHeight: 500,
                   borderRadius: 10,
                   overflow: "hidden",
                   marginBottom: 24,
                   background: "#1a1810",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
                 }}
               >
                 <img
@@ -278,9 +281,9 @@ function BlogSection({ posts }) {
                   alt={selectedPost.title}
                   style={{
                     width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                    objectPosition: "center",
+                    height: "auto",
+                    maxHeight: 500,
+                    objectFit: "contain",
                   }}
                 />
               </div>
