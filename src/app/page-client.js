@@ -103,6 +103,9 @@ function Avatar({ name, race, avatar, size = 48 }) {
     );
   }
 
+  // Extraer la inicial del nombre (después de MAFIA]`)
+  const initial = name.includes(']') ? name.split(']')[1].trim()[0] : name[0];
+
   return (
     <div
       style={{
@@ -121,7 +124,7 @@ function Avatar({ name, race, avatar, size = 48 }) {
         flexShrink: 0,
       }}
     >
-      {race[0]}
+      {initial}
     </div>
   );
 }
