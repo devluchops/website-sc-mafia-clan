@@ -12,19 +12,35 @@ export async function GET(request) {
     console.log("Discord ID:", session?.user?.discordId);
     console.log("========================");
 
-    if (!session?.user?.discordId) {
+    if (!session?.user) {
       return Response.json({ error: "No autorizado" }, { status: 401 });
     }
 
     const sql = getDb();
 
-    // Get member data linked to this Discord ID
-    const members = await sql`
-      SELECT * FROM members WHERE discord_id = ${session.user.discordId}
-    `;
+    // Get member data linked to this Discord user
+    // Try by discord_id first, then by discord_username (from social_discord)
+    let members = [];
+
+    if (session.user.discordId) {
+      members = await sql`
+        SELECT * FROM members WHERE discord_id = ${session.user.discordId}
+      `;
+    }
+
+    // If not found by discord_id, try by discord username
+    if (members.length === 0 && session.user.name) {
+      members = await sql`
+        SELECT * FROM members WHERE social_discord = ${session.user.name}
+      `;
+    }
 
     if (members.length === 0) {
-      return Response.json({ error: "Miembro no encontrado" }, { status: 404 });
+      console.log("No member found for user:", session.user);
+      return Response.json({
+        error: "Tu cuenta de Discord no está vinculada a ningún miembro del clan. Contacta al administrador.",
+        user: session.user
+      }, { status: 404 });
     }
 
     return Response.json({ member: members[0] });
@@ -38,16 +54,27 @@ export async function PUT(request) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user?.discordId) {
+    if (!session?.user) {
       return Response.json({ error: "No autorizado" }, { status: 401 });
     }
 
     const sql = getDb();
 
     // Get member ID for this Discord user
-    const members = await sql`
-      SELECT id FROM members WHERE discord_id = ${session.user.discordId}
-    `;
+    let members = [];
+
+    if (session.user.discordId) {
+      members = await sql`
+        SELECT id FROM members WHERE discord_id = ${session.user.discordId}
+      `;
+    }
+
+    // If not found by discord_id, try by discord username
+    if (members.length === 0 && session.user.name) {
+      members = await sql`
+        SELECT id FROM members WHERE social_discord = ${session.user.name}
+      `;
+    }
 
     if (members.length === 0) {
       return Response.json({ error: "Miembro no encontrado" }, { status: 404 });
