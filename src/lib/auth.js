@@ -20,21 +20,7 @@ export const authOptions = {
       try {
         const sql = getDb();
 
-        // Actualizar discord_id en authorized_users si existe por username
-        await sql`
-          UPDATE discord_authorized_users
-          SET discord_id = ${profile.id}, updated_at = NOW()
-          WHERE discord_username = ${profile.username} AND discord_id IS NULL
-        `;
-
-        // Actualizar discord_id en members si existe vinculación por username
-        await sql`
-          UPDATE members
-          SET discord_id = ${profile.id}, updated_at = NOW()
-          WHERE name LIKE '%' || ${profile.username} || '%' AND discord_id IS NULL
-        `;
-
-        // Verificar si está autorizado
+        // Verificar si está en discord_authorized_users
         const authorizedUsers = await sql`
           SELECT * FROM discord_authorized_users
           WHERE discord_id = ${profile.id}
@@ -42,8 +28,40 @@ export const authOptions = {
              OR email = ${user.email}
         `;
 
-        const isAllowed = authorizedUsers.length > 0;
-        console.log("Is user allowed?", isAllowed);
+        // Verificar si es un miembro del clan (tiene social_discord configurado)
+        const members = await sql`
+          SELECT * FROM members
+          WHERE social_discord = ${profile.username}
+        `;
+
+        const isMember = members.length > 0;
+        const isAuthorizedUser = authorizedUsers.length > 0;
+
+        console.log("Is member?", isMember);
+        console.log("Is authorized user?", isAuthorizedUser);
+
+        // Si es miembro pero no está en authorized_users, agregarlo automáticamente
+        if (isMember && !isAuthorizedUser) {
+          console.log("Creating authorized user for member:", profile.username);
+          await sql`
+            INSERT INTO discord_authorized_users (discord_id, discord_username, email)
+            VALUES (${profile.id}, ${profile.username}, ${user.email})
+          `;
+        }
+
+        // Actualizar discord_id en members si hay match
+        if (isMember) {
+          await sql`
+            UPDATE members
+            SET discord_id = ${profile.id}, updated_at = NOW()
+            WHERE social_discord = ${profile.username}
+              AND (discord_id IS NULL OR discord_id != ${profile.id})
+          `;
+        }
+
+        // Permitir acceso si es miembro O usuario autorizado
+        const isAllowed = isMember || isAuthorizedUser;
+        console.log("Access allowed?", isAllowed);
 
         return isAllowed;
       } catch (error) {
