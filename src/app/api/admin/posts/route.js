@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/db";
+import { sendNewPostNotification } from "@/lib/email";
 
 // GET: Obtener todos los posts
 export async function GET() {
@@ -31,6 +32,9 @@ export async function POST(request) {
     const { id, tag, title, author, date, read_time, excerpt, content, image } = await request.json();
     const sql = getDb();
 
+    let newPostId = null;
+    let isNewPost = false;
+
     if (id) {
       // Actualizar
       await sql`
@@ -42,10 +46,37 @@ export async function POST(request) {
       `;
     } else {
       // Crear nuevo
-      await sql`
+      isNewPost = true;
+      const result = await sql`
         INSERT INTO posts (tag, title, author, date, read_time, excerpt, content, image)
         VALUES (${tag}, ${title}, ${author}, ${date}, ${read_time}, ${excerpt}, ${content || ""}, ${image || null})
+        RETURNING id
       `;
+      newPostId = result[0].id;
+    }
+
+    // Si es un post nuevo, enviar notificaciones por email a todos los miembros
+    if (isNewPost && newPostId) {
+      try {
+        // Obtener todos los miembros con email
+        const membersWithEmail = await sql`
+          SELECT name, email FROM members WHERE email IS NOT NULL AND email != ''
+        `;
+
+        if (membersWithEmail.length > 0) {
+          console.log(`Enviando notificaciones de nuevo post a ${membersWithEmail.length} miembros...`);
+          await sendNewPostNotification({
+            recipients: membersWithEmail,
+            postTitle: title,
+            postExcerpt: excerpt,
+            postId: newPostId,
+            authorName: author
+          });
+        }
+      } catch (emailError) {
+        // No fallar la operación si el email falla
+        console.error('Error enviando notificaciones de nuevo post:', emailError);
+      }
     }
 
     return NextResponse.json({ success: true });

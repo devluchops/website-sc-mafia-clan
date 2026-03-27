@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { sendCommentReplyNotification } from "@/lib/email";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -103,6 +104,48 @@ export async function POST(request) {
       )
       RETURNING *
     `;
+
+    // Si es una respuesta a otro comentario, enviar notificación por email
+    if (parentCommentId) {
+      try {
+        // Obtener el comentario padre
+        const [parentComment] = await sql`
+          SELECT bc.*, m.email, m.name as member_name
+          FROM blog_comments bc
+          LEFT JOIN members m ON bc.discord_id = m.discord_id OR bc.discord_username = m.social_discord
+          WHERE bc.id = ${parentCommentId}
+        `;
+
+        // Obtener el post para el título
+        const [post] = await sql`
+          SELECT title FROM posts WHERE id = ${postId}
+        `;
+
+        // Obtener info del autor de la respuesta
+        const [replyAuthor] = await sql`
+          SELECT name FROM members
+          WHERE discord_id = ${session.user.discordId}
+             OR social_discord = ${session.user.name}
+          LIMIT 1
+        `;
+
+        // Si el autor del comentario padre tiene email y no es el mismo que responde, enviar notificación
+        if (parentComment?.email && parentComment.discord_id !== session.user.discordId) {
+          await sendCommentReplyNotification({
+            authorEmail: parentComment.email,
+            authorName: parentComment.member_name || parentComment.discord_username,
+            replyAuthorName: replyAuthor?.name || session.user.name,
+            postTitle: post?.title || 'Post del Blog',
+            postId: postId,
+            commentContent: content.trim()
+          });
+          console.log(`✅ Notificación enviada a ${parentComment.email}`);
+        }
+      } catch (emailError) {
+        // No fallar la operación si el email falla
+        console.error('Error enviando notificación de respuesta:', emailError);
+      }
+    }
 
     return NextResponse.json(newComment, { status: 201 });
   } catch (error) {

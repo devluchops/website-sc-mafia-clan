@@ -1840,6 +1840,14 @@ export default function AdminDashboard() {
           placeholder="URL de la imagen"
         />
 
+        <Input
+          label="Email"
+          type="email"
+          value={memberModal.member?.email || ""}
+          onChange={(val) => setMemberModal({ ...memberModal, member: { ...memberModal.member, email: val } })}
+          placeholder="correo@ejemplo.com"
+        />
+
         <h4 style={{ color: gold, fontSize: 14, marginTop: 20, marginBottom: 10 }}>Redes Sociales</h4>
 
         <Input

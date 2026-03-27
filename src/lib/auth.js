@@ -49,13 +49,12 @@ export const authOptions = {
           `;
         }
 
-        // Actualizar discord_id en members si hay match
+        // Actualizar discord_id y last_login_at en members si hay match
         if (isMember) {
           await sql`
             UPDATE members
-            SET discord_id = ${profile.id}, updated_at = NOW()
+            SET discord_id = ${profile.id}, last_login_at = NOW(), updated_at = NOW()
             WHERE social_discord = ${profile.username}
-              AND (discord_id IS NULL OR discord_id != ${profile.id})
           `;
         }
 
