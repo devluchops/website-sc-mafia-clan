@@ -1,6 +1,10 @@
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Inicializar Resend solo si está configurado
+let resend = null;
+if (process.env.RESEND_API_KEY) {
+  resend = new Resend(process.env.RESEND_API_KEY);
+}
 
 // Configuración de emails
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'Clan MAFIA <onboarding@resend.dev>';
@@ -10,6 +14,11 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
  * Envía un email de invitación a un miembro del clan
  */
 export async function sendInviteEmail(member) {
+  if (!resend) {
+    console.warn('⚠️  Resend no está configurado. No se enviará el email.');
+    return null;
+  }
+
   if (!member.email) {
     throw new Error('El miembro no tiene email configurado');
   }
@@ -164,6 +173,11 @@ export async function sendNewPostNotification({
   postId,
   authorName
 }) {
+  if (!resend) {
+    console.warn('⚠️  Resend no está configurado. No se enviarán emails de nuevos posts.');
+    return null;
+  }
+
   if (!recipients || recipients.length === 0) {
     console.log('No hay destinatarios para enviar notificación de nuevo post');
     return;
@@ -317,6 +331,11 @@ export async function sendCommentReplyNotification({
   postId,
   commentContent
 }) {
+  if (!resend) {
+    console.warn('⚠️  Resend no está configurado. No se enviará notificación de respuesta.');
+    return null;
+  }
+
   if (!authorEmail) {
     throw new Error('El autor del comentario no tiene email configurado');
   }
