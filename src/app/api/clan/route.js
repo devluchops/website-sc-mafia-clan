@@ -35,6 +35,7 @@ export async function GET() {
         level: m.level_rank || 'B',
         avatar: m.avatar,
         mmr: m.mmr,
+        aboutMe: m.about_me || '',
         protossLevel: m.protoss_level || '-',
         terranLevel: m.terran_level || '-',
         zergLevel: m.zerg_level || '-',
@@ -49,6 +50,7 @@ export async function GET() {
         },
       })),
       posts: posts.map(p => ({
+        id: p.id,
         tag: p.tag,
         title: p.title,
         author: p.author,

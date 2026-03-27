@@ -59,10 +59,27 @@ export async function DELETE(request) {
   }
 
   try {
-    const { id } = await request.json();
+    const { id, discord_id, discord_username } = await request.json();
     const sql = getDb();
 
-    await sql`DELETE FROM discord_authorized_users WHERE id = ${id}`;
+    // Primero eliminar de user_permissions
+    if (discord_id) {
+      await sql`DELETE FROM user_permissions WHERE discord_id = ${discord_id}`;
+    }
+    if (discord_username) {
+      await sql`DELETE FROM user_permissions WHERE discord_username = ${discord_username}`;
+    }
+
+    // Luego eliminar de discord_authorized_users
+    if (discord_id) {
+      await sql`DELETE FROM discord_authorized_users WHERE discord_id = ${discord_id}`;
+    } else if (discord_username) {
+      await sql`DELETE FROM discord_authorized_users WHERE discord_username = ${discord_username}`;
+    } else if (id) {
+      await sql`DELETE FROM discord_authorized_users WHERE id = ${id}`;
+    } else {
+      return NextResponse.json({ error: "ID, Discord ID o Username requerido" }, { status: 400 });
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

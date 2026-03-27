@@ -22,6 +22,11 @@ export async function POST(request) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
+  const permissions = session.user?.permissions;
+  if (!permissions?.is_admin && !permissions?.can_manage_members) {
+    return NextResponse.json({ error: "No tienes permisos para gestionar miembros" }, { status: 403 });
+  }
+
   try {
     const {
       id, name, race, rank, avatar, mmr,
@@ -86,6 +91,11 @@ export async function DELETE(request) {
 
   if (!session) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+
+  const permissions = session.user?.permissions;
+  if (!permissions?.is_admin && !permissions?.can_manage_members) {
+    return NextResponse.json({ error: "No tienes permisos para eliminar miembros" }, { status: 403 });
   }
 
   try {

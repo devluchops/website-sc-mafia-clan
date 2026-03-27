@@ -22,6 +22,11 @@ export async function POST(request) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
+  const permissions = session.user?.permissions;
+  if (!permissions?.is_admin && !permissions?.can_publish_videos) {
+    return NextResponse.json({ error: "No tienes permisos para publicar videos" }, { status: 403 });
+  }
+
   try {
     const { id, title, duration, date, youtube_id } = await request.json();
     const sql = getDb();
@@ -54,6 +59,11 @@ export async function DELETE(request) {
 
   if (!session) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+
+  const permissions = session.user?.permissions;
+  if (!permissions?.is_admin && !permissions?.can_publish_videos) {
+    return NextResponse.json({ error: "No tienes permisos para eliminar videos" }, { status: 403 });
   }
 
   try {

@@ -22,6 +22,11 @@ export async function POST(request) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
+  const permissions = session.user?.permissions;
+  if (!permissions?.is_admin && !permissions?.can_edit_rules) {
+    return NextResponse.json({ error: "No tienes permisos para editar reglas" }, { status: 403 });
+  }
+
   try {
     const { id, category, title, description, order_index } = await request.json();
     const sql = getDb();
@@ -54,6 +59,11 @@ export async function DELETE(request) {
 
   if (!session) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+
+  const permissions = session.user?.permissions;
+  if (!permissions?.is_admin && !permissions?.can_edit_rules) {
+    return NextResponse.json({ error: "No tienes permisos para eliminar reglas" }, { status: 403 });
   }
 
   try {

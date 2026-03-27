@@ -223,65 +223,424 @@ function Card({ children, style: s, onClick }) {
 }
 
 // ============================================================
+//  BLOG POST COMPONENT
+// ============================================================
+
+function BlogPost({ post, session, onViewFull }) {
+  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState("");
+  const [replyTo, setReplyTo] = useState(null);
+  const [loadingComments, setLoadingComments] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [showComments, setShowComments] = useState(true);
+
+  useEffect(() => {
+    loadComments();
+  }, []);
+
+  const loadComments = async () => {
+    setLoadingComments(true);
+    try {
+      const res = await fetch(`/api/blog-comments?postId=${post.id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setComments(data);
+      }
+    } catch (error) {
+      console.error("Error al cargar comentarios:", error);
+    } finally {
+      setLoadingComments(false);
+    }
+  };
+
+  const handleSubmitComment = async (e) => {
+    e.preventDefault();
+    if (!newComment.trim() || !session) return;
+
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/blog-comments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          postId: post.id,
+          content: newComment,
+          parentCommentId: replyTo,
+        }),
+      });
+
+      if (res.ok) {
+        setNewComment("");
+        setReplyTo(null);
+        await loadComments();
+      } else {
+        const error = await res.json();
+        alert(error.error || "Error al publicar comentario");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("Error al publicar comentario");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeleteComment = async (commentId) => {
+    if (!confirm("¿Estás seguro de eliminar este comentario?")) return;
+
+    try {
+      const res = await fetch(`/api/blog-comments?commentId=${commentId}`, {
+        method: "DELETE",
+      });
+
+      if (res.ok) {
+        await loadComments();
+      } else {
+        const error = await res.json();
+        alert(error.error || "Error al eliminar comentario");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("Error al eliminar comentario");
+    }
+  };
+
+  const totalComments = comments.reduce((acc, c) => acc + 1 + (c.replies?.length || 0), 0);
+
+  return (
+    <Card style={{ padding: 20 }}>
+      {post.image && (
+        <div
+          style={{
+            width: "100%",
+            borderRadius: 8,
+            overflow: "hidden",
+            marginBottom: 12,
+            background: "#1a1810",
+            cursor: "pointer",
+          }}
+          onClick={onViewFull}
+        >
+          <img
+            src={post.image}
+            alt={post.title}
+            style={{
+              width: "100%",
+              height: "auto",
+              display: "block",
+            }}
+          />
+        </div>
+      )}
+      <Tag label={post.tag} />
+      <h3
+        style={{
+          fontFamily: "'Cinzel', serif",
+          fontSize: 19,
+          fontWeight: 600,
+          color: textLight,
+          margin: "12px 0 8px",
+          lineHeight: 1.4,
+          cursor: "pointer",
+        }}
+        onClick={onViewFull}
+      >
+        {post.title}
+      </h3>
+      <p
+        style={{
+          fontSize: 15,
+          color: textBody,
+          margin: "0 0 10px",
+          lineHeight: 1.6,
+        }}
+      >
+        {post.excerpt}
+      </p>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+        <p style={{ fontSize: 13, color: textMuted, margin: 0 }}>
+          Por {post.author} &bull; {post.date} &bull; {post.readTime} lectura
+        </p>
+        <button
+          onClick={() => setShowComments(!showComments)}
+          style={{
+            background: "transparent",
+            border: `1px solid ${darkGold}`,
+            color: gold,
+            padding: "6px 12px",
+            borderRadius: 4,
+            fontSize: 12,
+            fontWeight: 600,
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+          }}
+        >
+          💬 {totalComments} {showComments ? "Ocultar" : "Ver comentarios"}
+        </button>
+      </div>
+
+      {/* Comments Section */}
+      {showComments && (
+        <div style={{ borderTop: `1px solid ${darkGold}`, paddingTop: 16, marginTop: 16 }}>
+          {/* Comment Form */}
+          {session ? (
+            <form onSubmit={handleSubmitComment} style={{ marginBottom: 16 }}>
+              {replyTo && (
+                <div style={{
+                  fontSize: 12,
+                  color: textMuted,
+                  marginBottom: 8,
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}>
+                  <span>Respondiendo a comentario...</span>
+                  <button
+                    type="button"
+                    onClick={() => setReplyTo(null)}
+                    style={{
+                      background: "transparent",
+                      border: "none",
+                      color: gold,
+                      cursor: "pointer",
+                      fontSize: 12,
+                    }}
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              )}
+              <textarea
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                placeholder={replyTo ? "Escribe tu respuesta..." : "Escribe un comentario..."}
+                maxLength={1000}
+                rows={3}
+                style={{
+                  width: "100%",
+                  padding: 12,
+                  background: bg,
+                  border: `1px solid ${darkGold}`,
+                  borderRadius: 6,
+                  color: textLight,
+                  fontSize: 14,
+                  fontFamily: "inherit",
+                  resize: "vertical",
+                  marginBottom: 8,
+                }}
+              />
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ fontSize: 12, color: textMuted }}>
+                  {newComment.length}/1000
+                </span>
+                <button
+                  type="submit"
+                  disabled={submitting || !newComment.trim()}
+                  style={{
+                    padding: "8px 16px",
+                    background: gold,
+                    color: bg,
+                    border: "none",
+                    borderRadius: 6,
+                    fontFamily: "'Cinzel', serif",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    letterSpacing: 1,
+                    textTransform: "uppercase",
+                    cursor: submitting || !newComment.trim() ? "not-allowed" : "pointer",
+                    opacity: submitting || !newComment.trim() ? 0.5 : 1,
+                  }}
+                >
+                  {submitting ? "Publicando..." : (replyTo ? "Responder" : "Comentar")}
+                </button>
+              </div>
+            </form>
+          ) : (
+            <p style={{ fontSize: 14, color: textMuted, fontStyle: "italic", marginBottom: 16 }}>
+              Inicia sesión para comentar
+            </p>
+          )}
+
+          {/* Comments List */}
+          {loadingComments ? (
+            <p style={{ fontSize: 14, color: textMuted, textAlign: "center" }}>Cargando comentarios...</p>
+          ) : comments.length === 0 ? (
+            <p style={{ fontSize: 14, color: textMuted, fontStyle: "italic", textAlign: "center" }}>
+              No hay comentarios aún. ¡Sé el primero en comentar!
+            </p>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {comments.map((comment) => (
+                <CommentItem
+                  key={comment.id}
+                  comment={comment}
+                  session={session}
+                  onReply={() => setReplyTo(comment.id)}
+                  onDelete={handleDeleteComment}
+                  depth={0}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </Card>
+  );
+}
+
+// ============================================================
+//  COMMENT COMPONENT
+// ============================================================
+
+function CommentItem({ comment, session, onReply, onDelete, depth = 0 }) {
+  const canDelete = session?.user && (
+    comment.discord_username === session.user.name ||
+    comment.discord_id === session.user.id ||
+    session.user.permissions?.is_admin
+  );
+
+  const timeAgo = (date) => {
+    const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+    if (seconds < 60) return "hace unos segundos";
+    if (seconds < 3600) return `hace ${Math.floor(seconds / 60)} min`;
+    if (seconds < 86400) return `hace ${Math.floor(seconds / 3600)} h`;
+    return `hace ${Math.floor(seconds / 86400)} días`;
+  };
+
+  return (
+    <div style={{
+      marginLeft: depth > 0 ? 24 : 0,
+      paddingLeft: depth > 0 ? 12 : 0,
+      borderLeft: depth > 0 ? `2px solid ${darkGold}` : "none",
+    }}>
+      <div style={{
+        background: "rgba(201,168,76,0.03)",
+        border: `1px solid ${darkGold}`,
+        borderRadius: 8,
+        padding: 12,
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+          {comment.member_avatar ? (
+            <Avatar
+              name={comment.member_name || comment.discord_username}
+              race="Terran"
+              avatar={comment.member_avatar}
+              size={32}
+            />
+          ) : (
+            <div style={{
+              width: 32,
+              height: 32,
+              borderRadius: "50%",
+              background: "rgba(201,168,76,0.15)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 14,
+              fontWeight: 700,
+              color: gold,
+            }}>
+              {(comment.member_name || comment.discord_username)[0].toUpperCase()}
+            </div>
+          )}
+          <div style={{ flex: 1 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: textLight }}>
+                {comment.member_name || comment.discord_username}
+              </span>
+              {comment.member_rank && (
+                <span style={{
+                  fontSize: 10,
+                  color: gold,
+                  background: "rgba(201,168,76,0.1)",
+                  padding: "2px 6px",
+                  borderRadius: 3,
+                }}>
+                  {comment.member_rank}
+                </span>
+              )}
+            </div>
+            <span style={{ fontSize: 11, color: textMuted }}>
+              {timeAgo(comment.created_at)}
+            </span>
+          </div>
+          {canDelete && (
+            <button
+              onClick={() => onDelete(comment.id)}
+              style={{
+                background: "transparent",
+                border: "none",
+                color: "#c94c4c",
+                cursor: "pointer",
+                fontSize: 12,
+                padding: 4,
+              }}
+            >
+              Eliminar
+            </button>
+          )}
+        </div>
+        <p style={{
+          fontSize: 14,
+          color: textBody,
+          lineHeight: 1.6,
+          margin: "8px 0",
+          whiteSpace: "pre-wrap",
+        }}>
+          {comment.content}
+        </p>
+        {session && depth < 3 && (
+          <button
+            onClick={onReply}
+            style={{
+              background: "transparent",
+              border: "none",
+              color: gold,
+              cursor: "pointer",
+              fontSize: 12,
+              fontWeight: 600,
+              padding: "4px 0",
+            }}
+          >
+            Responder
+          </button>
+        )}
+      </div>
+
+      {/* Render replies recursively */}
+      {comment.replies && comment.replies.length > 0 && (
+        <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 12 }}>
+          {comment.replies.map((reply) => (
+            <CommentItem
+              key={reply.id}
+              comment={reply}
+              session={session}
+              onReply={onReply}
+              onDelete={onDelete}
+              depth={depth + 1}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================
 //  SECTIONS
 // ============================================================
 
 function BlogSection({ posts }) {
+  const { data: session } = useSession();
   const [selectedPost, setSelectedPost] = useState(null);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       <SectionTitle>Publicaciones recientes</SectionTitle>
       {posts.map((p, i) => (
-        <Card key={i} onClick={() => setSelectedPost(p)}>
-          {p.image && (
-            <div
-              style={{
-                width: "100%",
-                borderRadius: 8,
-                overflow: "hidden",
-                marginBottom: 12,
-                background: "#1a1810",
-              }}
-            >
-              <img
-                src={p.image}
-                alt={p.title}
-                style={{
-                  width: "100%",
-                  height: "auto",
-                  display: "block",
-                }}
-              />
-            </div>
-          )}
-          <Tag label={p.tag} />
-          <h3
-            style={{
-              fontFamily: "'Cinzel', serif",
-              fontSize: 19,
-              fontWeight: 600,
-              color: textLight,
-              margin: "12px 0 8px",
-              lineHeight: 1.4,
-            }}
-          >
-            {p.title}
-          </h3>
-          <p
-            style={{
-              fontSize: 15,
-              color: textBody,
-              margin: "0 0 10px",
-              lineHeight: 1.6,
-            }}
-          >
-            {p.excerpt}
-          </p>
-          <p style={{ fontSize: 13, color: textMuted, margin: 0 }}>
-            Por {p.author} &bull; {p.date} &bull; {p.readTime} lectura
-          </p>
-        </Card>
+        <BlogPost key={i} post={p} session={session} onViewFull={() => setSelectedPost(p)} />
       ))}
 
       {/* Post Detail Modal */}
@@ -858,37 +1217,40 @@ function RosterSection({ members }) {
       </div>
 
       {/* Member Profile Modal */}
-      {selectedMember && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "rgba(0,0,0,0.85)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1000,
-            padding: 20,
-          }}
-          onClick={() => setSelectedMember(null)}
-        >
+      {selectedMember && (() => {
+        console.log('Selected Member Data:', selectedMember);
+        console.log('About Me:', selectedMember.aboutMe);
+        return (
           <div
             style={{
-              background: cardBg,
-              border: `2px solid ${gold}`,
-              borderRadius: 12,
-              padding: 32,
-              maxWidth: 500,
-              width: "100%",
-              maxHeight: "90vh",
-              overflow: "auto",
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: "rgba(0,0,0,0.85)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 1000,
+              padding: 20,
             }}
-            onClick={(e) => e.stopPropagation()}
+            onClick={() => setSelectedMember(null)}
           >
-            <div style={{ textAlign: "center", marginBottom: 24 }}>
+            <div
+              style={{
+                background: cardBg,
+                border: `2px solid ${gold}`,
+                borderRadius: 12,
+                padding: 32,
+                maxWidth: 500,
+                width: "100%",
+                maxHeight: "90vh",
+                overflow: "auto",
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div style={{ textAlign: "center", marginBottom: 24 }}>
               <Avatar
                 name={selectedMember.name}
                 race={selectedMember.mainRace || selectedMember.race}
@@ -934,6 +1296,21 @@ function RosterSection({ members }) {
                 >
                   {selectedMember.mmr} MMR
                 </span>
+              </div>
+            </div>
+
+            {/* About Me Section */}
+            <div style={{ marginBottom: 20 }}>
+              <p style={{ fontSize: 12, color: textMuted, marginBottom: 12, fontWeight: 600 }}>SOBRE MÍ</p>
+              <div style={{
+                background: "rgba(201,168,76,0.04)",
+                padding: "16px",
+                borderRadius: 8,
+                border: `1px solid ${darkGold}`,
+              }}>
+                <p style={{ fontSize: 14, color: selectedMember.aboutMe ? textBody : textMuted, margin: 0, lineHeight: 1.6, whiteSpace: "pre-wrap", fontStyle: selectedMember.aboutMe ? "normal" : "italic" }}>
+                  {selectedMember.aboutMe || "Este miembro aún no ha configurado su información personal."}
+                </p>
               </div>
             </div>
 
@@ -1173,7 +1550,8 @@ function RosterSection({ members }) {
             </button>
           </div>
         </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
@@ -1714,7 +2092,7 @@ export default function HomePage() {
         style={{
           display: "flex",
           alignItems: "center",
-          justifyContent: "space-between",
+          justifyContent: "center",
           gap: 8,
           padding: "12px 16px",
           background: "#0d0d0a",
@@ -1723,9 +2101,10 @@ export default function HomePage() {
           position: "sticky",
           top: 0,
           zIndex: 10,
+          minHeight: 60,
         }}
       >
-        <div style={{ display: "flex", gap: 4, flexWrap: "wrap", flex: 1, justifyContent: "center" }}>
+        <div style={{ display: "flex", gap: 4, flexWrap: "wrap", justifyContent: "center", alignItems: "center" }}>
           {TABS.map((t) => (
             <button
               key={t.id}
@@ -1751,6 +2130,104 @@ export default function HomePage() {
               {t.label}
             </button>
           ))}
+        </div>
+
+        {/* User Menu - Positioned Absolutely */}
+        <div style={{ position: "absolute", right: 16, top: "50%", transform: "translateY(-50%)", display: "flex", gap: 8, alignItems: "center" }}>
+          {session ? (
+            <>
+              <Link
+                href="/profile"
+                style={{
+                  background: "transparent",
+                  border: `1px solid ${gold}`,
+                  color: gold,
+                  fontFamily: "'Cinzel', serif",
+                  fontSize: 11,
+                  fontWeight: 600,
+                  letterSpacing: 1.5,
+                  textTransform: "uppercase",
+                  padding: "12px 20px",
+                  cursor: "pointer",
+                  borderRadius: 6,
+                  textDecoration: "none",
+                  display: "inline-block",
+                  transition: "all 0.2s",
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.background = gold;
+                  e.currentTarget.style.color = bg;
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.background = "transparent";
+                  e.currentTarget.style.color = gold;
+                }}
+              >
+                Mi Perfil
+              </Link>
+              {session.user?.permissions?.is_admin && (
+                <Link
+                  href="/admin"
+                  style={{
+                    background: "rgba(201,168,76,0.1)",
+                    border: `1px solid ${gold}`,
+                    color: gold,
+                    fontFamily: "'Cinzel', serif",
+                    fontSize: 11,
+                    fontWeight: 600,
+                    letterSpacing: 1.5,
+                    textTransform: "uppercase",
+                    padding: "12px 20px",
+                    cursor: "pointer",
+                    borderRadius: 6,
+                    textDecoration: "none",
+                    display: "inline-block",
+                    transition: "all 0.2s",
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.background = gold;
+                    e.currentTarget.style.color = bg;
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.background = "rgba(201,168,76,0.1)";
+                    e.currentTarget.style.color = gold;
+                  }}
+                >
+                  Admin
+                </Link>
+              )}
+            </>
+          ) : (
+            <Link
+              href="/login"
+              style={{
+                background: "transparent",
+                border: `1px solid ${gold}`,
+                color: gold,
+                fontFamily: "'Cinzel', serif",
+                fontSize: 11,
+                fontWeight: 600,
+                letterSpacing: 1.5,
+                textTransform: "uppercase",
+                padding: "12px 20px",
+                cursor: "pointer",
+                borderRadius: 6,
+                textDecoration: "none",
+                display: "inline-block",
+                transition: "all 0.2s",
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.background = gold;
+                e.currentTarget.style.color = bg;
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.background = "transparent";
+                e.currentTarget.style.color = gold;
+              }}
+            >
+              Iniciar Sesión
+            </Link>
+          )}
         </div>
 
       </nav>
@@ -1866,7 +2343,7 @@ export default function HomePage() {
             <>
               {" "}&bull;{" "}
               <Link
-                href="/admin"
+                href="/profile"
                 style={{
                   color: "#3d3525",
                   textDecoration: "none",
@@ -1875,8 +2352,25 @@ export default function HomePage() {
                 onMouseOver={(e) => e.currentTarget.style.color = gold}
                 onMouseOut={(e) => e.currentTarget.style.color = "#3d3525"}
               >
-                Admin
+                Mi Perfil
               </Link>
+              {session.user?.permissions?.is_admin && (
+                <>
+                  {" "}&bull;{" "}
+                  <Link
+                    href="/admin"
+                    style={{
+                      color: "#3d3525",
+                      textDecoration: "none",
+                      transition: "color 0.2s",
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.color = gold}
+                    onMouseOut={(e) => e.currentTarget.style.color = "#3d3525"}
+                  >
+                    Admin
+                  </Link>
+                </>
+              )}
             </>
           )}
         </p>

@@ -219,7 +219,7 @@ export default function AdminDashboard() {
   const [videos, setVideos] = useState([]);
   const [events, setEvents] = useState([]);
   const [rules, setRules] = useState([]);
-  const [discordUsers, setDiscordUsers] = useState([]);
+  const [permissions, setPermissions] = useState([]);
 
   // Modal states
   const [memberModal, setMemberModal] = useState({ isOpen: false, member: null });
@@ -235,11 +235,40 @@ export default function AdminDashboard() {
   const [videoFilter, setVideoFilter] = useState("");
   const [postFilter, setPostFilter] = useState("Todos");
   const [eventFilter, setEventFilter] = useState("Todos");
+  const [activeSection, setActiveSection] = useState("info");
+  const [permissionsPage, setPermissionsPage] = useState(1);
+  const [membersPage, setMembersPage] = useState(1);
+  const [postsPage, setPostsPage] = useState(1);
+  const [videosPage, setVideosPage] = useState(1);
+  const [eventsPage, setEventsPage] = useState(1);
+  const [rulesPage, setRulesPage] = useState(1);
 
   // Load data
   useEffect(() => {
     loadData();
   }, []);
+
+  // Set initial active section based on permissions
+  useEffect(() => {
+    if (session?.user?.permissions) {
+      const perms = session.user.permissions;
+      if (perms.is_admin) {
+        setActiveSection("info");
+      } else if (perms.can_manage_members) {
+        setActiveSection("members");
+      } else if (perms.can_publish_blog) {
+        setActiveSection("blog");
+      } else if (perms.can_publish_videos) {
+        setActiveSection("videos");
+      } else if (perms.can_publish_events) {
+        setActiveSection("events");
+      } else if (perms.can_edit_rules) {
+        setActiveSection("rules");
+      } else if (perms.can_manage_permissions) {
+        setActiveSection("permissions");
+      }
+    }
+  }, [session]);
 
   const loadData = () => {
     // Cargar información del clan
@@ -278,10 +307,10 @@ export default function AdminDashboard() {
       .then((data) => setRules(data))
       .catch((err) => console.error(err));
 
-    // Cargar usuarios de Discord autorizados
-    fetch("/api/admin/discord-users")
+    // Cargar permisos
+    fetch("/api/admin/permissions")
       .then((res) => res.json())
-      .then((data) => setDiscordUsers(data))
+      .then((data) => setPermissions(data.members || []))
       .catch((err) => console.error(err));
   };
 
@@ -603,47 +632,128 @@ export default function AdminDashboard() {
   };
 
   // ============================================================
-  // DISCORD USER HANDLERS
+  // USER MANAGEMENT (for Permissions section)
   // ============================================================
 
   const handleSaveDiscordUser = async () => {
     setLoading(true);
     try {
+      if (!discordUserModal.selectedMemberId || discordUserModal.selectedMemberId === "-- Seleccionar miembro --") {
+        showMessage("❌ Debes seleccionar un miembro");
+        setLoading(false);
+        return;
+      }
+
+      // El valor es "id:nombre (discord)", extraer el ID
+      const memberId = parseInt(discordUserModal.selectedMemberId.split(':')[0]);
+      const member = members.find(m => m.id === memberId);
+
+      if (!member || !member.social_discord) {
+        showMessage("❌ El miembro seleccionado no tiene Discord configurado");
+        setLoading(false);
+        return;
+      }
+
+      const userData = {
+        discord_id: null, // Se llenará cuando el usuario haga login
+        discord_username: member.social_discord,
+        email: null,
+      };
+
+      // Save the user to discord_authorized_users
       const res = await fetch("/api/admin/discord-users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(discordUserModal.user),
+        body: JSON.stringify(userData),
       });
+
       if (res.ok) {
-        showMessage("✅ Usuario guardado correctamente");
-        setDiscordUserModal({ isOpen: false, user: null });
+        showMessage(`✅ ${member.name} agregado correctamente`);
+        setDiscordUserModal({ isOpen: false, selectedMemberId: null });
         loadData();
       } else {
-        showMessage("❌ Error al guardar usuario");
+        const data = await res.json();
+        console.error("Error al agregar usuario:", data);
+        showMessage("❌ " + (data.error || "Error al agregar usuario"));
       }
     } catch (error) {
+      console.error("Error en handleSaveDiscordUser:", error);
       showMessage("❌ Error: " + error.message);
     }
     setLoading(false);
   };
 
-  const handleDeleteDiscordUser = async (id) => {
-    if (!confirm("¿Estás seguro de eliminar este usuario?")) return;
+  const handleDeleteUser = async (user) => {
+    if (!confirm(`¿Estás seguro de eliminar a ${user.discord_username}? Se eliminarán sus permisos y acceso.`)) return;
 
     setLoading(true);
     try {
+      // Delete from discord_authorized_users (permissions will cascade)
       const res = await fetch("/api/admin/discord-users", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id }),
+        body: JSON.stringify({
+          discord_id: user.discord_id || null,
+          discord_username: user.discord_username || null,
+        }),
       });
       if (res.ok) {
-        showMessage("✅ Usuario eliminado");
+        showMessage(`✅ ${user.discord_username} eliminado correctamente`);
         loadData();
       } else {
-        showMessage("❌ Error al eliminar");
+        const errorData = await res.json();
+        console.error("Error al eliminar usuario:", errorData);
+        showMessage("❌ " + (errorData.error || "Error al eliminar"));
       }
     } catch (error) {
+      console.error("Error en handleDeleteUser:", error);
+      showMessage("❌ Error: " + error.message);
+    }
+    setLoading(false);
+  };
+
+  // ============================================================
+  // PERMISSIONS HANDLERS
+  // ============================================================
+
+  const handleTogglePermission = async (user, permissionKey, currentValue) => {
+    setLoading(true);
+    try {
+      if (!user) {
+        showMessage("❌ Usuario no encontrado");
+        setLoading(false);
+        return;
+      }
+
+      const updatedPerms = {
+        discord_id: user.discord_id || null,
+        discord_username: user.discord_username || null,
+        is_admin: user.is_admin,
+        can_publish_blog: user.can_publish_blog,
+        can_publish_videos: user.can_publish_videos,
+        can_publish_events: user.can_publish_events,
+        can_edit_rules: user.can_edit_rules,
+        can_manage_members: user.can_manage_members,
+        can_manage_permissions: user.can_manage_permissions,
+        [permissionKey]: !currentValue,
+      };
+
+      const res = await fetch("/api/admin/permissions", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedPerms),
+      });
+
+      if (res.ok) {
+        showMessage("✅ Permisos actualizados");
+        loadData();
+      } else {
+        const errorData = await res.json();
+        console.error("Error al actualizar permisos:", errorData);
+        showMessage("❌ " + (errorData.error || "Error al actualizar permisos"));
+      }
+    } catch (error) {
+      console.error("Error en handleTogglePermission:", error);
       showMessage("❌ Error: " + error.message);
     }
     setLoading(false);
@@ -690,7 +800,7 @@ export default function AdminDashboard() {
             {session?.user?.email || session?.user?.name}
           </p>
         </div>
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
           <Button variant="secondary" onClick={() => router.push("/")}>
             Ver Sitio
           </Button>
@@ -699,6 +809,172 @@ export default function AdminDashboard() {
           </Button>
         </div>
       </header>
+
+      {/* Navigation Tabs */}
+      <nav
+        style={{
+          background: "#0d0d0a",
+          borderBottom: `1px solid ${darkGold}`,
+          overflowX: "auto",
+        }}
+      >
+        <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", alignItems: "center", gap: 4, padding: "0 24px" }}>
+          {session?.user?.permissions?.is_admin && (
+            <button
+              onClick={() => setActiveSection("info")}
+              style={{
+                background: activeSection === "info" ? "rgba(201,168,76,0.08)" : "transparent",
+                border: "none",
+                color: activeSection === "info" ? gold : textMuted,
+                fontFamily: "'Cinzel', serif",
+                fontSize: 12,
+                fontWeight: 600,
+                letterSpacing: 1.5,
+                textTransform: "uppercase",
+                padding: "16px 20px",
+                cursor: "pointer",
+                borderBottom: activeSection === "info" ? `2px solid ${gold}` : "2px solid transparent",
+                transition: "all 0.2s",
+                whiteSpace: "nowrap",
+              }}
+            >
+              Información
+            </button>
+          )}
+          {(session?.user?.permissions?.is_admin || session?.user?.permissions?.can_manage_members) && (
+            <button
+              onClick={() => setActiveSection("members")}
+              style={{
+                background: activeSection === "members" ? "rgba(201,168,76,0.08)" : "transparent",
+                border: "none",
+                color: activeSection === "members" ? gold : textMuted,
+                fontFamily: "'Cinzel', serif",
+                fontSize: 12,
+                fontWeight: 600,
+                letterSpacing: 1.5,
+                textTransform: "uppercase",
+                padding: "16px 20px",
+                cursor: "pointer",
+                borderBottom: activeSection === "members" ? `2px solid ${gold}` : "2px solid transparent",
+                transition: "all 0.2s",
+                whiteSpace: "nowrap",
+              }}
+            >
+              Miembros
+            </button>
+          )}
+          {(session?.user?.permissions?.is_admin || session?.user?.permissions?.can_publish_blog) && (
+            <button
+              onClick={() => setActiveSection("blog")}
+              style={{
+                background: activeSection === "blog" ? "rgba(201,168,76,0.08)" : "transparent",
+                border: "none",
+                color: activeSection === "blog" ? gold : textMuted,
+                fontFamily: "'Cinzel', serif",
+                fontSize: 12,
+                fontWeight: 600,
+                letterSpacing: 1.5,
+                textTransform: "uppercase",
+                padding: "16px 20px",
+                cursor: "pointer",
+                borderBottom: activeSection === "blog" ? `2px solid ${gold}` : "2px solid transparent",
+                transition: "all 0.2s",
+                whiteSpace: "nowrap",
+              }}
+            >
+              Blog
+            </button>
+          )}
+          {(session?.user?.permissions?.is_admin || session?.user?.permissions?.can_publish_videos) && (
+            <button
+              onClick={() => setActiveSection("videos")}
+              style={{
+                background: activeSection === "videos" ? "rgba(201,168,76,0.08)" : "transparent",
+                border: "none",
+                color: activeSection === "videos" ? gold : textMuted,
+                fontFamily: "'Cinzel', serif",
+                fontSize: 12,
+                fontWeight: 600,
+                letterSpacing: 1.5,
+                textTransform: "uppercase",
+                padding: "16px 20px",
+                cursor: "pointer",
+                borderBottom: activeSection === "videos" ? `2px solid ${gold}` : "2px solid transparent",
+                transition: "all 0.2s",
+                whiteSpace: "nowrap",
+              }}
+            >
+              Videos
+            </button>
+          )}
+          {(session?.user?.permissions?.is_admin || session?.user?.permissions?.can_publish_events) && (
+            <button
+              onClick={() => setActiveSection("events")}
+              style={{
+                background: activeSection === "events" ? "rgba(201,168,76,0.08)" : "transparent",
+                border: "none",
+                color: activeSection === "events" ? gold : textMuted,
+                fontFamily: "'Cinzel', serif",
+                fontSize: 12,
+                fontWeight: 600,
+                letterSpacing: 1.5,
+                textTransform: "uppercase",
+                padding: "16px 20px",
+                cursor: "pointer",
+                borderBottom: activeSection === "events" ? `2px solid ${gold}` : "2px solid transparent",
+                transition: "all 0.2s",
+                whiteSpace: "nowrap",
+              }}
+            >
+              Eventos
+            </button>
+          )}
+          {(session?.user?.permissions?.is_admin || session?.user?.permissions?.can_edit_rules) && (
+            <button
+              onClick={() => setActiveSection("rules")}
+              style={{
+                background: activeSection === "rules" ? "rgba(201,168,76,0.08)" : "transparent",
+                border: "none",
+                color: activeSection === "rules" ? gold : textMuted,
+                fontFamily: "'Cinzel', serif",
+                fontSize: 12,
+                fontWeight: 600,
+                letterSpacing: 1.5,
+                textTransform: "uppercase",
+                padding: "16px 20px",
+                cursor: "pointer",
+                borderBottom: activeSection === "rules" ? `2px solid ${gold}` : "2px solid transparent",
+                transition: "all 0.2s",
+                whiteSpace: "nowrap",
+              }}
+            >
+              Reglas
+            </button>
+          )}
+          {(session?.user?.permissions?.is_admin || session?.user?.permissions?.can_manage_permissions) && (
+            <button
+              onClick={() => setActiveSection("permissions")}
+              style={{
+                background: activeSection === "permissions" ? "rgba(201,168,76,0.08)" : "transparent",
+                border: "none",
+                color: activeSection === "permissions" ? gold : textMuted,
+                fontFamily: "'Cinzel', serif",
+                fontSize: 12,
+                fontWeight: 600,
+                letterSpacing: 1.5,
+                textTransform: "uppercase",
+                padding: "16px 20px",
+                cursor: "pointer",
+                borderBottom: activeSection === "permissions" ? `2px solid ${gold}` : "2px solid transparent",
+                transition: "all 0.2s",
+                whiteSpace: "nowrap",
+              }}
+            >
+              Permisos
+            </button>
+          )}
+        </div>
+      </nav>
 
       {/* Main Content */}
       <main style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 24px" }}>
@@ -718,8 +994,9 @@ export default function AdminDashboard() {
         )}
 
         {/* Clan Info & Logo */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 24, marginBottom: 24 }}>
-          <AdminCard title="Información del Clan">
+        {activeSection === "info" && session?.user?.permissions?.is_admin && (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 24, marginBottom: 24 }}>
+            <AdminCard title="Información del Clan">
             <Input
               label="Nombre del Clan"
               value={clanInfo.name}
@@ -775,437 +1052,724 @@ export default function AdminDashboard() {
               Subir Logo
             </Button>
           </AdminCard>
-        </div>
+          </div>
+        )}
 
         {/* Members */}
-        <AdminCard title="Miembros del Clan" style={{ marginBottom: 24 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 12 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-              <p style={{ color: textMuted, fontSize: 14 }}>
-                Total: <strong style={{ color: gold }}>{members.filter(m =>
-                  (memberFilter === "todos" || m.level_rank === memberFilter) &&
-                  (memberSearch === "" || m.name.toLowerCase().includes(memberSearch.toLowerCase()))
-                ).length}</strong>
-              </p>
-              <input
-                type="text"
-                placeholder="Buscar por nombre..."
-                value={memberSearch}
-                onChange={(e) => setMemberSearch(e.target.value)}
-                style={{
-                  padding: "6px 12px",
-                  background: bg,
-                  border: `1px solid ${darkGold}`,
-                  borderRadius: 6,
-                  color: textLight,
-                  fontSize: 12,
-                  minWidth: 180,
-                }}
-              />
-              <select
-                value={memberFilter}
-                onChange={(e) => setMemberFilter(e.target.value)}
-                style={{
-                  padding: "6px 12px",
-                  background: bg,
-                  border: `1px solid ${darkGold}`,
-                  borderRadius: 6,
-                  color: textLight,
-                  fontSize: 12,
-                  cursor: "pointer",
-                }}
-              >
-                <option value="todos">Todos los niveles</option>
-                <option value="S">Nivel S</option>
-                <option value="A+">Nivel A+</option>
-                <option value="A">Nivel A</option>
-                <option value="B+">Nivel B+</option>
-                <option value="B">Nivel B</option>
-                <option value="C+">Nivel C+</option>
-                <option value="C">Nivel C</option>
-                <option value="D+">Nivel D+</option>
-                <option value="D">Nivel D</option>
-              </select>
-            </div>
-            <Button onClick={() => setMemberModal({ isOpen: true, member: { name: "", race: "Terran", rank: "Miembro", avatar: "", mmr: 0 } })}>
-              + Agregar Miembro
-            </Button>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {members
-              .filter(m =>
-                (memberFilter === "todos" || m.level_rank === memberFilter) &&
-                (memberSearch === "" || m.name.toLowerCase().includes(memberSearch.toLowerCase()))
-              )
-              .map((member) => (
-              <div
-                key={member.id}
-                style={{
-                  background: bg,
-                  padding: 14,
-                  borderRadius: 8,
-                  border: `1px solid ${darkGold}`,
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  gap: 16,
-                }}
-              >
-                <div style={{ flex: 1 }}>
-                  <p style={{ fontWeight: 600, color: textLight, marginBottom: 6, fontSize: 15 }}>
-                    {member.name}
-                    {member.level_rank && (
-                      <span style={{
-                        marginLeft: 8,
-                        padding: "2px 8px",
-                        fontSize: 11,
-                        fontWeight: 700,
-                        background: "rgba(201,168,76,0.15)",
-                        color: gold,
-                        borderRadius: 4,
-                      }}>
-                        {member.level_rank}
-                      </span>
-                    )}
-                  </p>
-                  <p style={{ fontSize: 12, color: textMuted, marginBottom: 0 }}>
-                    <strong style={{ color: gold }}>{member.rank}</strong> • {member.main_race || member.race} • MMR: {member.mmr}
-                  </p>
-                </div>
-                <div style={{ display: "flex", gap: 8 }}>
-                  <Button
-                    variant="secondary"
-                    style={{ padding: "6px 12px", fontSize: 10 }}
-                    onClick={() => setMemberModal({ isOpen: true, member })}
-                  >
-                    Editar
-                  </Button>
-                  <Button
-                    variant="danger"
-                    style={{ padding: "6px 12px", fontSize: 10 }}
-                    onClick={() => handleDeleteMember(member.id)}
-                  >
-                    Eliminar
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </AdminCard>
+        {activeSection === "members" && (session?.user?.permissions?.is_admin || session?.user?.permissions?.can_manage_members) && (() => {
+          const ITEMS_PER_PAGE = 10;
+          const filteredMembers = members.filter(m =>
+            (memberFilter === "todos" || m.level_rank === memberFilter) &&
+            (memberSearch === "" || m.name.toLowerCase().includes(memberSearch.toLowerCase()))
+          );
+          const totalPages = Math.ceil(filteredMembers.length / ITEMS_PER_PAGE);
+          const startIndex = (membersPage - 1) * ITEMS_PER_PAGE;
+          const endIndex = startIndex + ITEMS_PER_PAGE;
+          const paginatedMembers = filteredMembers.slice(startIndex, endIndex);
 
-        {/* Posts */}
-        <AdminCard title="Posts del Blog" style={{ marginBottom: 24 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 12 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-              <p style={{ color: textMuted, fontSize: 14 }}>
-                Total: <strong style={{ color: gold }}>{posts.filter(p => postFilter === "Todos" || p.tag === postFilter).length}</strong>
-              </p>
-              <select
-                value={postFilter}
-                onChange={(e) => setPostFilter(e.target.value)}
-                style={{
-                  padding: "6px 12px",
-                  background: bg,
-                  border: `1px solid ${darkGold}`,
-                  borderRadius: 6,
-                  color: textLight,
-                  fontSize: 12,
-                  cursor: "pointer",
-                }}
-              >
-                <option value="Todos">Todas las categorías</option>
-                <option value="Guia">Guía</option>
-                <option value="Recap">Recap</option>
-                <option value="Noticias">Noticias</option>
-              </select>
-            </div>
-            <Button onClick={() => {
-              setPostImageFile(null);
-              setPostModal({ isOpen: true, post: { tag: "Noticias", title: "", author: "", date: "", read_time: "", excerpt: "", content: "", image: null } });
-            }}>
-              + Agregar Post
-            </Button>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {posts
-              .filter(p => postFilter === "Todos" || p.tag === postFilter)
-              .map((post) => (
-              <div
-                key={post.id}
-                style={{
-                  background: bg,
-                  padding: 14,
-                  borderRadius: 8,
-                  border: `1px solid ${darkGold}`,
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  gap: 12,
-                }}
-              >
-                <div style={{ flex: 1 }}>
-                  <p style={{ fontWeight: 600, color: textLight, marginBottom: 4 }}>{post.title}</p>
-                  <p style={{ fontSize: 12, color: textMuted }}>
-                    {post.tag} • {post.author} • {post.date}
+          return (
+            <AdminCard title="Miembros del Clan" style={{ marginBottom: 24 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 12 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                  <p style={{ color: textMuted, fontSize: 14 }}>
+                    Total: <strong style={{ color: gold }}>{filteredMembers.length}</strong>
                   </p>
-                </div>
-                <div style={{ display: "flex", gap: 8 }}>
-                  <Button
-                    variant="secondary"
-                    style={{ padding: "6px 12px", fontSize: 10 }}
-                    onClick={() => {
-                      setPostImageFile(null);
-                      setPostModal({ isOpen: true, post });
+                  <input
+                    type="text"
+                    placeholder="Buscar por nombre..."
+                    value={memberSearch}
+                    onChange={(e) => {
+                      setMemberSearch(e.target.value);
+                      setMembersPage(1);
+                    }}
+                    style={{
+                      padding: "6px 12px",
+                      background: bg,
+                      border: `1px solid ${darkGold}`,
+                      borderRadius: 6,
+                      color: textLight,
+                      fontSize: 12,
+                      minWidth: 180,
+                    }}
+                  />
+                  <select
+                    value={memberFilter}
+                    onChange={(e) => {
+                      setMemberFilter(e.target.value);
+                      setMembersPage(1);
+                    }}
+                    style={{
+                      padding: "6px 12px",
+                      background: bg,
+                      border: `1px solid ${darkGold}`,
+                      borderRadius: 6,
+                      color: textLight,
+                      fontSize: 12,
+                      cursor: "pointer",
                     }}
                   >
-                    Editar
-                  </Button>
-                  <Button
-                    variant="danger"
-                    style={{ padding: "6px 12px", fontSize: 10 }}
-                    onClick={() => handleDeletePost(post.id)}
+                    <option value="todos">Todos los niveles</option>
+                    <option value="S">Nivel S</option>
+                    <option value="A+">Nivel A+</option>
+                    <option value="A">Nivel A</option>
+                    <option value="B+">Nivel B+</option>
+                    <option value="B">Nivel B</option>
+                    <option value="C+">Nivel C+</option>
+                    <option value="C">Nivel C</option>
+                    <option value="D+">Nivel D+</option>
+                    <option value="D">Nivel D</option>
+                  </select>
+                </div>
+                <Button onClick={() => setMemberModal({ isOpen: true, member: { name: "", race: "Terran", rank: "Miembro", avatar: "", mmr: 0 } })}>
+                  + Agregar Miembro
+                </Button>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {paginatedMembers.map((member) => (
+                  <div
+                    key={member.id}
+                    style={{
+                      background: bg,
+                      padding: 14,
+                      borderRadius: 8,
+                      border: `1px solid ${darkGold}`,
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      gap: 16,
+                    }}
                   >
-                    Eliminar
+                    <div style={{ flex: 1 }}>
+                      <p style={{ fontWeight: 600, color: textLight, marginBottom: 6, fontSize: 15 }}>
+                        {member.name}
+                        {member.level_rank && (
+                          <span style={{
+                            marginLeft: 8,
+                            padding: "2px 8px",
+                            fontSize: 11,
+                            fontWeight: 700,
+                            background: "rgba(201,168,76,0.15)",
+                            color: gold,
+                            borderRadius: 4,
+                          }}>
+                            {member.level_rank}
+                          </span>
+                        )}
+                      </p>
+                      <p style={{ fontSize: 12, color: textMuted, marginBottom: 0 }}>
+                        <strong style={{ color: gold }}>{member.rank}</strong> • {member.main_race || member.race} • MMR: {member.mmr}
+                      </p>
+                    </div>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <Button
+                        variant="secondary"
+                        style={{ padding: "6px 12px", fontSize: 10 }}
+                        onClick={() => setMemberModal({ isOpen: true, member })}
+                      >
+                        Editar
+                      </Button>
+                      <Button
+                        variant="danger"
+                        style={{ padding: "6px 12px", fontSize: 10 }}
+                        onClick={() => handleDeleteMember(member.id)}
+                      >
+                        Eliminar
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Paginación */}
+              {totalPages > 1 && (
+                <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 12, marginTop: 20 }}>
+                  <Button
+                    variant="secondary"
+                    onClick={() => setMembersPage(membersPage - 1)}
+                    disabled={membersPage === 1}
+                    style={{ padding: "8px 16px", fontSize: 12 }}
+                  >
+                    ← Anterior
+                  </Button>
+                  <span style={{ color: textMuted, fontSize: 13 }}>
+                    Página <strong style={{ color: gold }}>{membersPage}</strong> de <strong style={{ color: gold }}>{totalPages}</strong>
+                  </span>
+                  <Button
+                    variant="secondary"
+                    onClick={() => setMembersPage(membersPage + 1)}
+                    disabled={membersPage === totalPages}
+                    style={{ padding: "8px 16px", fontSize: 12 }}
+                  >
+                    Siguiente →
                   </Button>
                 </div>
+              )}
+            </AdminCard>
+          );
+        })()}
+
+        {/* Posts */}
+        {activeSection === "blog" && (session?.user?.permissions?.is_admin || session?.user?.permissions?.can_publish_blog) && (() => {
+          const ITEMS_PER_PAGE = 10;
+          const filteredPosts = posts.filter(p => postFilter === "Todos" || p.tag === postFilter);
+          const totalPages = Math.ceil(filteredPosts.length / ITEMS_PER_PAGE);
+          const startIndex = (postsPage - 1) * ITEMS_PER_PAGE;
+          const endIndex = startIndex + ITEMS_PER_PAGE;
+          const paginatedPosts = filteredPosts.slice(startIndex, endIndex);
+
+          return (
+            <AdminCard title="Posts del Blog" style={{ marginBottom: 24 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 12 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                  <p style={{ color: textMuted, fontSize: 14 }}>
+                    Total: <strong style={{ color: gold }}>{filteredPosts.length}</strong>
+                  </p>
+                  <select
+                    value={postFilter}
+                    onChange={(e) => {
+                      setPostFilter(e.target.value);
+                      setPostsPage(1);
+                    }}
+                    style={{
+                      padding: "6px 12px",
+                      background: bg,
+                      border: `1px solid ${darkGold}`,
+                      borderRadius: 6,
+                      color: textLight,
+                      fontSize: 12,
+                      cursor: "pointer",
+                    }}
+                  >
+                    <option value="Todos">Todas las categorías</option>
+                    <option value="Guia">Guía</option>
+                    <option value="Recap">Recap</option>
+                    <option value="Noticias">Noticias</option>
+                  </select>
+                </div>
+                <Button onClick={() => {
+                  setPostImageFile(null);
+                  setPostModal({ isOpen: true, post: { tag: "Noticias", title: "", author: "", date: "", read_time: "", excerpt: "", content: "", image: null } });
+                }}>
+                  + Agregar Post
+                </Button>
               </div>
-            ))}
-          </div>
-        </AdminCard>
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {paginatedPosts.map((post) => (
+                  <div
+                    key={post.id}
+                    style={{
+                      background: bg,
+                      padding: 14,
+                      borderRadius: 8,
+                      border: `1px solid ${darkGold}`,
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      gap: 12,
+                    }}
+                  >
+                    <div style={{ flex: 1 }}>
+                      <p style={{ fontWeight: 600, color: textLight, marginBottom: 4 }}>{post.title}</p>
+                      <p style={{ fontSize: 12, color: textMuted }}>
+                        {post.tag} • {post.author} • {post.date}
+                      </p>
+                    </div>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <Button
+                        variant="secondary"
+                        style={{ padding: "6px 12px", fontSize: 10 }}
+                        onClick={() => {
+                          setPostImageFile(null);
+                          setPostModal({ isOpen: true, post });
+                        }}
+                      >
+                        Editar
+                      </Button>
+                      <Button
+                        variant="danger"
+                        style={{ padding: "6px 12px", fontSize: 10 }}
+                        onClick={() => handleDeletePost(post.id)}
+                      >
+                        Eliminar
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Paginación */}
+              {totalPages > 1 && (
+                <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 12, marginTop: 20 }}>
+                  <Button
+                    variant="secondary"
+                    onClick={() => setPostsPage(postsPage - 1)}
+                    disabled={postsPage === 1}
+                    style={{ padding: "8px 16px", fontSize: 12 }}
+                  >
+                    ← Anterior
+                  </Button>
+                  <span style={{ color: textMuted, fontSize: 13 }}>
+                    Página <strong style={{ color: gold }}>{postsPage}</strong> de <strong style={{ color: gold }}>{totalPages}</strong>
+                  </span>
+                  <Button
+                    variant="secondary"
+                    onClick={() => setPostsPage(postsPage + 1)}
+                    disabled={postsPage === totalPages}
+                    style={{ padding: "8px 16px", fontSize: 12 }}
+                  >
+                    Siguiente →
+                  </Button>
+                </div>
+              )}
+            </AdminCard>
+          );
+        })()}
 
         {/* Videos */}
-        <AdminCard title="Videos" style={{ marginBottom: 24 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 12 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-              <p style={{ color: textMuted, fontSize: 14 }}>
-                Total: <strong style={{ color: gold }}>{videos.filter(v => v.title.toLowerCase().includes(videoFilter.toLowerCase())).length}</strong>
-              </p>
-              <input
-                type="text"
-                placeholder="Buscar video..."
-                value={videoFilter}
-                onChange={(e) => setVideoFilter(e.target.value)}
-                style={{
-                  padding: "6px 12px",
-                  background: bg,
-                  border: `1px solid ${darkGold}`,
-                  borderRadius: 6,
-                  color: textLight,
-                  fontSize: 12,
-                  minWidth: 200,
-                }}
-              />
-            </div>
-            <Button onClick={() => setVideoModal({ isOpen: true, video: { title: "", duration: "", date: "", youtube_id: "" } })}>
-              + Agregar Video
-            </Button>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {videos
-              .filter(v => v.title.toLowerCase().includes(videoFilter.toLowerCase()))
-              .map((video) => (
-              <div
-                key={video.id}
-                style={{
-                  background: bg,
-                  padding: 14,
-                  borderRadius: 8,
-                  border: `1px solid ${darkGold}`,
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  gap: 16,
-                }}
-              >
-                <div style={{ flex: 1 }}>
-                  <p style={{ fontWeight: 600, color: textLight, marginBottom: 4, fontSize: 14 }}>{video.title}</p>
-                  <p style={{ fontSize: 12, color: textMuted, marginBottom: 0 }}>
-                    {video.duration} • {video.date}
+        {activeSection === "videos" && (session?.user?.permissions?.is_admin || session?.user?.permissions?.can_publish_videos) && (() => {
+          const ITEMS_PER_PAGE = 10;
+          const filteredVideos = videos.filter(v => v.title.toLowerCase().includes(videoFilter.toLowerCase()));
+          const totalPages = Math.ceil(filteredVideos.length / ITEMS_PER_PAGE);
+          const startIndex = (videosPage - 1) * ITEMS_PER_PAGE;
+          const endIndex = startIndex + ITEMS_PER_PAGE;
+          const paginatedVideos = filteredVideos.slice(startIndex, endIndex);
+
+          return (
+            <AdminCard title="Videos" style={{ marginBottom: 24 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 12 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                  <p style={{ color: textMuted, fontSize: 14 }}>
+                    Total: <strong style={{ color: gold }}>{filteredVideos.length}</strong>
                   </p>
+                  <input
+                    type="text"
+                    placeholder="Buscar video..."
+                    value={videoFilter}
+                    onChange={(e) => {
+                      setVideoFilter(e.target.value);
+                      setVideosPage(1);
+                    }}
+                    style={{
+                      padding: "6px 12px",
+                      background: bg,
+                      border: `1px solid ${darkGold}`,
+                      borderRadius: 6,
+                      color: textLight,
+                      fontSize: 12,
+                      minWidth: 200,
+                    }}
+                  />
                 </div>
-                <div style={{ display: "flex", gap: 8 }}>
+                <Button onClick={() => setVideoModal({ isOpen: true, video: { title: "", duration: "", date: "", youtube_id: "" } })}>
+                  + Agregar Video
+                </Button>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {paginatedVideos.map((video) => (
+                  <div
+                    key={video.id}
+                    style={{
+                      background: bg,
+                      padding: 14,
+                      borderRadius: 8,
+                      border: `1px solid ${darkGold}`,
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      gap: 16,
+                    }}
+                  >
+                    <div style={{ flex: 1 }}>
+                      <p style={{ fontWeight: 600, color: textLight, marginBottom: 4, fontSize: 14 }}>{video.title}</p>
+                      <p style={{ fontSize: 12, color: textMuted, marginBottom: 0 }}>
+                        {video.duration} • {video.date}
+                      </p>
+                    </div>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <Button
+                        variant="secondary"
+                        style={{ padding: "6px 12px", fontSize: 10 }}
+                        onClick={() => setVideoModal({ isOpen: true, video })}
+                      >
+                        Editar
+                      </Button>
+                      <Button
+                        variant="danger"
+                        style={{ padding: "6px 12px", fontSize: 10 }}
+                        onClick={() => handleDeleteVideo(video.id)}
+                      >
+                        Eliminar
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Paginación */}
+              {totalPages > 1 && (
+                <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 12, marginTop: 20 }}>
                   <Button
                     variant="secondary"
-                    style={{ padding: "6px 12px", fontSize: 10 }}
-                    onClick={() => setVideoModal({ isOpen: true, video })}
+                    onClick={() => setVideosPage(videosPage - 1)}
+                    disabled={videosPage === 1}
+                    style={{ padding: "8px 16px", fontSize: 12 }}
                   >
-                    Editar
+                    ← Anterior
                   </Button>
+                  <span style={{ color: textMuted, fontSize: 13 }}>
+                    Página <strong style={{ color: gold }}>{videosPage}</strong> de <strong style={{ color: gold }}>{totalPages}</strong>
+                  </span>
                   <Button
-                    variant="danger"
-                    style={{ padding: "6px 12px", fontSize: 10 }}
-                    onClick={() => handleDeleteVideo(video.id)}
+                    variant="secondary"
+                    onClick={() => setVideosPage(videosPage + 1)}
+                    disabled={videosPage === totalPages}
+                    style={{ padding: "8px 16px", fontSize: 12 }}
                   >
-                    Eliminar
+                    Siguiente →
                   </Button>
                 </div>
-              </div>
-            ))}
-          </div>
-        </AdminCard>
+              )}
+            </AdminCard>
+          );
+        })()}
 
         {/* Events */}
-        <AdminCard title="Eventos" style={{ marginBottom: 24 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-            <p style={{ color: textMuted, fontSize: 14 }}>
-              Total: <strong style={{ color: gold }}>{events.length}</strong>
-            </p>
-            <Button onClick={() => setEventModal({ isOpen: true, event: { month: "Ene", day: "1", title: "", description: "", status: "Abierto" } })}>
-              + Agregar Evento
-            </Button>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {events.map((event) => (
-              <div
-                key={event.id}
-                style={{
-                  background: bg,
-                  padding: 14,
-                  borderRadius: 8,
-                  border: `1px solid ${darkGold}`,
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  gap: 12,
-                }}
-              >
-                <div style={{ flex: 1 }}>
-                  <p style={{ fontWeight: 600, color: textLight, marginBottom: 4 }}>{event.title}</p>
-                  <p style={{ fontSize: 12, color: textMuted }}>
-                    {event.month} {event.day} • {event.status}
-                  </p>
-                </div>
-                <div style={{ display: "flex", gap: 8 }}>
-                  <Button
-                    variant="secondary"
-                    style={{ padding: "6px 12px", fontSize: 10 }}
-                    onClick={() => setEventModal({ isOpen: true, event })}
-                  >
-                    Editar
-                  </Button>
-                  <Button
-                    variant="danger"
-                    style={{ padding: "6px 12px", fontSize: 10 }}
-                    onClick={() => handleDeleteEvent(event.id)}
-                  >
-                    Eliminar
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </AdminCard>
+        {activeSection === "events" && (session?.user?.permissions?.is_admin || session?.user?.permissions?.can_publish_events) && (() => {
+          const ITEMS_PER_PAGE = 10;
+          const totalPages = Math.ceil(events.length / ITEMS_PER_PAGE);
+          const startIndex = (eventsPage - 1) * ITEMS_PER_PAGE;
+          const endIndex = startIndex + ITEMS_PER_PAGE;
+          const paginatedEvents = events.slice(startIndex, endIndex);
 
-        {/* Usuarios Autorizados Discord */}
-        <AdminCard title="Usuarios Autorizados (Discord)" style={{ marginBottom: 24 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-            <p style={{ color: textMuted, fontSize: 14 }}>
-              Total: <strong style={{ color: gold }}>{discordUsers.length}</strong>
-            </p>
-            <Button onClick={() => setDiscordUserModal({ isOpen: true, user: { discord_id: "", discord_username: "", email: "" } })}>
-              + Agregar Usuario
-            </Button>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {discordUsers.map((user) => (
-              <div
-                key={user.id}
-                style={{
-                  background: bg,
-                  padding: 14,
-                  borderRadius: 8,
-                  border: `1px solid ${darkGold}`,
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  gap: 12,
-                }}
-              >
-                <div style={{ flex: 1 }}>
-                  <p style={{ fontWeight: 600, color: textLight, marginBottom: 4 }}>
-                    {user.discord_username || user.email || user.discord_id}
-                  </p>
-                  <p style={{ fontSize: 12, color: textMuted }}>
-                    {user.discord_id && `ID: ${user.discord_id}`}
-                    {user.discord_id && user.email && " • "}
-                    {user.email && `Email: ${user.email}`}
-                  </p>
-                </div>
-                <div style={{ display: "flex", gap: 8 }}>
+          return (
+            <AdminCard title="Eventos" style={{ marginBottom: 24 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                <p style={{ color: textMuted, fontSize: 14 }}>
+                  Total: <strong style={{ color: gold }}>{events.length}</strong>
+                </p>
+                <Button onClick={() => setEventModal({ isOpen: true, event: { month: "Ene", day: "1", title: "", description: "", status: "Abierto" } })}>
+                  + Agregar Evento
+                </Button>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {paginatedEvents.map((event) => (
+                  <div
+                    key={event.id}
+                    style={{
+                      background: bg,
+                      padding: 14,
+                      borderRadius: 8,
+                      border: `1px solid ${darkGold}`,
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      gap: 12,
+                    }}
+                  >
+                    <div style={{ flex: 1 }}>
+                      <p style={{ fontWeight: 600, color: textLight, marginBottom: 4 }}>{event.title}</p>
+                      <p style={{ fontSize: 12, color: textMuted }}>
+                        {event.month} {event.day} • {event.status}
+                      </p>
+                    </div>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <Button
+                        variant="secondary"
+                        style={{ padding: "6px 12px", fontSize: 10 }}
+                        onClick={() => setEventModal({ isOpen: true, event })}
+                      >
+                        Editar
+                      </Button>
+                      <Button
+                        variant="danger"
+                        style={{ padding: "6px 12px", fontSize: 10 }}
+                        onClick={() => handleDeleteEvent(event.id)}
+                      >
+                        Eliminar
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Paginación */}
+              {totalPages > 1 && (
+                <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 12, marginTop: 20 }}>
                   <Button
                     variant="secondary"
-                    style={{ padding: "6px 12px", fontSize: 10 }}
-                    onClick={() => setDiscordUserModal({ isOpen: true, user })}
+                    onClick={() => setEventsPage(eventsPage - 1)}
+                    disabled={eventsPage === 1}
+                    style={{ padding: "8px 16px", fontSize: 12 }}
                   >
-                    Editar
+                    ← Anterior
                   </Button>
+                  <span style={{ color: textMuted, fontSize: 13 }}>
+                    Página <strong style={{ color: gold }}>{eventsPage}</strong> de <strong style={{ color: gold }}>{totalPages}</strong>
+                  </span>
                   <Button
-                    variant="danger"
-                    style={{ padding: "6px 12px", fontSize: 10 }}
-                    onClick={() => handleDeleteDiscordUser(user.id)}
+                    variant="secondary"
+                    onClick={() => setEventsPage(eventsPage + 1)}
+                    disabled={eventsPage === totalPages}
+                    style={{ padding: "8px 16px", fontSize: 12 }}
                   >
-                    Eliminar
+                    Siguiente →
                   </Button>
                 </div>
+              )}
+            </AdminCard>
+          );
+        })()}
+
+        {/* Permisos de Usuarios */}
+        {activeSection === "permissions" && (session?.user?.permissions?.is_admin || session?.user?.permissions?.can_manage_permissions) && (() => {
+          const ITEMS_PER_PAGE = 10;
+          const totalPages = Math.ceil(permissions.length / ITEMS_PER_PAGE);
+          const startIndex = (permissionsPage - 1) * ITEMS_PER_PAGE;
+          const endIndex = startIndex + ITEMS_PER_PAGE;
+          const paginatedPermissions = permissions.slice(startIndex, endIndex);
+
+          return (
+            <AdminCard title="Usuarios y Permisos" style={{ marginBottom: 24 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 12 }}>
+                <p style={{ color: textMuted, fontSize: 14 }}>
+                  Gestiona quién puede acceder al sitio y sus permisos. Total: <strong style={{ color: gold }}>{permissions.length}</strong>
+                </p>
+                <Button onClick={() => setDiscordUserModal({ isOpen: true, selectedMemberId: null })}>
+                  + Agregar Usuario
+                </Button>
               </div>
-            ))}
-          </div>
-        </AdminCard>
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                  <thead>
+                    <tr style={{ borderBottom: `2px solid ${darkGold}` }}>
+                      <th style={{ padding: "12px 8px", textAlign: "left", color: gold, fontWeight: 600 }}>Usuario</th>
+                      <th style={{ padding: "12px 8px", textAlign: "center", color: gold, fontWeight: 600 }}>Admin</th>
+                      <th style={{ padding: "12px 8px", textAlign: "center", color: gold, fontWeight: 600 }}>Blog</th>
+                      <th style={{ padding: "12px 8px", textAlign: "center", color: gold, fontWeight: 600 }}>Videos</th>
+                      <th style={{ padding: "12px 8px", textAlign: "center", color: gold, fontWeight: 600 }}>Eventos</th>
+                      <th style={{ padding: "12px 8px", textAlign: "center", color: gold, fontWeight: 600 }}>Reglas</th>
+                      <th style={{ padding: "12px 8px", textAlign: "center", color: gold, fontWeight: 600 }}>Miembros</th>
+                      <th style={{ padding: "12px 8px", textAlign: "center", color: gold, fontWeight: 600 }}>Permisos</th>
+                      <th style={{ padding: "12px 8px", textAlign: "center", color: gold, fontWeight: 600 }}>Acción</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginatedPermissions.map((user) => (
+                    <tr key={user.discord_id} style={{ borderBottom: `1px solid ${darkGold}` }}>
+                      <td style={{ padding: "12px 8px", color: textLight }}>
+                        <div>
+                          <div style={{ fontWeight: 600 }}>{user.discord_username}</div>
+                          {(user.member_name || user.email) && (
+                            <div style={{ fontSize: 11, color: textMuted }}>
+                              {user.member_name && user.member_name}
+                              {user.member_name && user.email && ' • '}
+                              {user.email && user.email}
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td style={{ padding: "12px 8px", textAlign: "center" }}>
+                        <input
+                          type="checkbox"
+                          checked={user.is_admin}
+                          onChange={() => handleTogglePermission(user, "is_admin", user.is_admin)}
+                          style={{ cursor: "pointer", transform: "scale(1.2)" }}
+                        />
+                      </td>
+                      <td style={{ padding: "12px 8px", textAlign: "center" }}>
+                        <input
+                          type="checkbox"
+                          checked={user.is_admin || user.can_publish_blog}
+                          onChange={() => handleTogglePermission(user, "can_publish_blog", user.can_publish_blog)}
+                          disabled={user.is_admin}
+                          style={{ cursor: user.is_admin ? "not-allowed" : "pointer", transform: "scale(1.2)", opacity: user.is_admin ? 0.5 : 1 }}
+                        />
+                      </td>
+                      <td style={{ padding: "12px 8px", textAlign: "center" }}>
+                        <input
+                          type="checkbox"
+                          checked={user.is_admin || user.can_publish_videos}
+                          onChange={() => handleTogglePermission(user, "can_publish_videos", user.can_publish_videos)}
+                          disabled={user.is_admin}
+                          style={{ cursor: user.is_admin ? "not-allowed" : "pointer", transform: "scale(1.2)", opacity: user.is_admin ? 0.5 : 1 }}
+                        />
+                      </td>
+                      <td style={{ padding: "12px 8px", textAlign: "center" }}>
+                        <input
+                          type="checkbox"
+                          checked={user.is_admin || user.can_publish_events}
+                          onChange={() => handleTogglePermission(user, "can_publish_events", user.can_publish_events)}
+                          disabled={user.is_admin}
+                          style={{ cursor: user.is_admin ? "not-allowed" : "pointer", transform: "scale(1.2)", opacity: user.is_admin ? 0.5 : 1 }}
+                        />
+                      </td>
+                      <td style={{ padding: "12px 8px", textAlign: "center" }}>
+                        <input
+                          type="checkbox"
+                          checked={user.is_admin || user.can_edit_rules}
+                          onChange={() => handleTogglePermission(user, "can_edit_rules", user.can_edit_rules)}
+                          disabled={user.is_admin}
+                          style={{ cursor: user.is_admin ? "not-allowed" : "pointer", transform: "scale(1.2)", opacity: user.is_admin ? 0.5 : 1 }}
+                        />
+                      </td>
+                      <td style={{ padding: "12px 8px", textAlign: "center" }}>
+                        <input
+                          type="checkbox"
+                          checked={user.is_admin || user.can_manage_members}
+                          onChange={() => handleTogglePermission(user, "can_manage_members", user.can_manage_members)}
+                          disabled={user.is_admin}
+                          style={{ cursor: user.is_admin ? "not-allowed" : "pointer", transform: "scale(1.2)", opacity: user.is_admin ? 0.5 : 1 }}
+                        />
+                      </td>
+                      <td style={{ padding: "12px 8px", textAlign: "center" }}>
+                        <input
+                          type="checkbox"
+                          checked={user.is_admin || user.can_manage_permissions}
+                          onChange={() => handleTogglePermission(user, "can_manage_permissions", user.can_manage_permissions)}
+                          disabled={user.is_admin}
+                          style={{ cursor: user.is_admin ? "not-allowed" : "pointer", transform: "scale(1.2)", opacity: user.is_admin ? 0.5 : 1 }}
+                        />
+                      </td>
+                      <td style={{ padding: "12px 8px", textAlign: "center" }}>
+                        <Button
+                          variant="danger"
+                          style={{ padding: "4px 8px", fontSize: 10 }}
+                          onClick={() => handleDeleteUser(user)}
+                        >
+                          Eliminar
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Paginación */}
+              {totalPages > 1 && (
+                <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 12, marginTop: 20 }}>
+                  <Button
+                    variant="secondary"
+                    onClick={() => setPermissionsPage(permissionsPage - 1)}
+                    disabled={permissionsPage === 1}
+                    style={{ padding: "8px 16px", fontSize: 12 }}
+                  >
+                    ← Anterior
+                  </Button>
+                  <span style={{ color: textMuted, fontSize: 13 }}>
+                    Página <strong style={{ color: gold }}>{permissionsPage}</strong> de <strong style={{ color: gold }}>{totalPages}</strong>
+                  </span>
+                  <Button
+                    variant="secondary"
+                    onClick={() => setPermissionsPage(permissionsPage + 1)}
+                    disabled={permissionsPage === totalPages}
+                    style={{ padding: "8px 16px", fontSize: 12 }}
+                  >
+                    Siguiente →
+                  </Button>
+                </div>
+              )}
+
+              <div style={{ marginTop: 16, padding: "12px", background: "rgba(201,168,76,0.05)", borderRadius: 6 }}>
+                <p style={{ fontSize: 12, color: textMuted, margin: 0 }}>
+                  <strong>💡 Nota:</strong> Los administradores tienen acceso completo a todas las funciones automáticamente.
+                  Los permisos granulares solo aplican a usuarios no-admin. Al agregar un nuevo usuario, se le otorgará acceso al sitio
+                  sin permisos (deberás asignarlos manualmente).
+                </p>
+              </div>
+            </AdminCard>
+          );
+        })()}
 
         {/* Reglas del Clan */}
-        <AdminCard title="Reglas del Clan">
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-            <p style={{ color: textMuted, fontSize: 14 }}>
-              Total: <strong style={{ color: gold }}>{rules.length}</strong>
-            </p>
-            <Button onClick={() => setRuleModal({ isOpen: true, rule: { category: "Reglas Generales", title: "", description: "", order_index: rules.length } })}>
-              + Agregar Regla
-            </Button>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {rules.map((rule) => (
-              <div
-                key={rule.id}
-                style={{
-                  background: bg,
-                  padding: 14,
-                  borderRadius: 8,
-                  border: `1px solid ${darkGold}`,
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "flex-start",
-                  gap: 12,
-                }}
-              >
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                    <span style={{ fontSize: 11, color: gold, fontWeight: 600, letterSpacing: 1 }}>
-                      {rule.category.toUpperCase()}
-                    </span>
+        {activeSection === "rules" && (session?.user?.permissions?.is_admin || session?.user?.permissions?.can_edit_rules) && (() => {
+          const ITEMS_PER_PAGE = 10;
+          const totalPages = Math.ceil(rules.length / ITEMS_PER_PAGE);
+          const startIndex = (rulesPage - 1) * ITEMS_PER_PAGE;
+          const endIndex = startIndex + ITEMS_PER_PAGE;
+          const paginatedRules = rules.slice(startIndex, endIndex);
+
+          return (
+            <AdminCard title="Reglas del Clan">
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                <p style={{ color: textMuted, fontSize: 14 }}>
+                  Total: <strong style={{ color: gold }}>{rules.length}</strong>
+                </p>
+                <Button onClick={() => setRuleModal({ isOpen: true, rule: { category: "Reglas Generales", title: "", description: "", order_index: rules.length } })}>
+                  + Agregar Regla
+                </Button>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {paginatedRules.map((rule) => (
+                  <div
+                    key={rule.id}
+                    style={{
+                      background: bg,
+                      padding: 14,
+                      borderRadius: 8,
+                      border: `1px solid ${darkGold}`,
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "flex-start",
+                      gap: 12,
+                    }}
+                  >
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                        <span style={{ fontSize: 11, color: gold, fontWeight: 600, letterSpacing: 1 }}>
+                          {rule.category.toUpperCase()}
+                        </span>
+                      </div>
+                      <p style={{ fontWeight: 600, color: textLight, marginBottom: 4 }}>{rule.title}</p>
+                      <p style={{ fontSize: 12, color: textMuted }}>{rule.description}</p>
+                    </div>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <Button
+                        variant="secondary"
+                        style={{ padding: "6px 12px", fontSize: 10 }}
+                        onClick={() => setRuleModal({ isOpen: true, rule })}
+                      >
+                        Editar
+                      </Button>
+                      <Button
+                        variant="danger"
+                        style={{ padding: "6px 12px", fontSize: 10 }}
+                        onClick={() => handleDeleteRule(rule.id)}
+                      >
+                        Eliminar
+                      </Button>
+                    </div>
                   </div>
-                  <p style={{ fontWeight: 600, color: textLight, marginBottom: 4 }}>{rule.title}</p>
-                  <p style={{ fontSize: 12, color: textMuted }}>{rule.description}</p>
-                </div>
-                <div style={{ display: "flex", gap: 8 }}>
+                ))}
+              </div>
+
+              {/* Paginación */}
+              {totalPages > 1 && (
+                <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 12, marginTop: 20 }}>
                   <Button
                     variant="secondary"
-                    style={{ padding: "6px 12px", fontSize: 10 }}
-                    onClick={() => setRuleModal({ isOpen: true, rule })}
+                    onClick={() => setRulesPage(rulesPage - 1)}
+                    disabled={rulesPage === 1}
+                    style={{ padding: "8px 16px", fontSize: 12 }}
                   >
-                    Editar
+                    ← Anterior
                   </Button>
+                  <span style={{ color: textMuted, fontSize: 13 }}>
+                    Página <strong style={{ color: gold }}>{rulesPage}</strong> de <strong style={{ color: gold }}>{totalPages}</strong>
+                  </span>
                   <Button
-                    variant="danger"
-                    style={{ padding: "6px 12px", fontSize: 10 }}
-                    onClick={() => handleDeleteRule(rule.id)}
+                    variant="secondary"
+                    onClick={() => setRulesPage(rulesPage + 1)}
+                    disabled={rulesPage === totalPages}
+                    style={{ padding: "8px 16px", fontSize: 12 }}
                   >
-                    Eliminar
+                    Siguiente →
                   </Button>
                 </div>
-              </div>
-            ))}
-          </div>
-        </AdminCard>
+              )}
+            </AdminCard>
+          );
+        })()}
       </main>
 
       {/* MODALS */}
@@ -1574,36 +2138,59 @@ export default function AdminDashboard() {
       {/* Discord User Modal */}
       <Modal
         isOpen={discordUserModal.isOpen}
-        onClose={() => setDiscordUserModal({ isOpen: false, user: null })}
-        title={discordUserModal.user?.id ? "Editar Usuario" : "Agregar Usuario"}
+        onClose={() => setDiscordUserModal({ isOpen: false, selectedMemberId: null })}
+        title="Agregar Usuario"
       >
-        <Input
-          label="Discord ID"
-          value={discordUserModal.user?.discord_id || ""}
-          onChange={(val) => setDiscordUserModal({ ...discordUserModal, user: { ...discordUserModal.user, discord_id: val } })}
-          placeholder="123456789012345678"
+        <div style={{ marginBottom: 20, padding: 12, background: "rgba(201,168,76,0.05)", borderRadius: 6 }}>
+          <p style={{ fontSize: 12, color: textMuted, margin: 0 }}>
+            <strong>💡 Selecciona un miembro</strong> que tiene Discord configurado para darle acceso al sitio.
+          </p>
+        </div>
+
+        <Select
+          label="Miembro"
+          value={discordUserModal.selectedMemberId || ""}
+          onChange={(val) => setDiscordUserModal({ ...discordUserModal, selectedMemberId: val })}
+          options={[
+            "-- Seleccionar miembro --",
+            ...members
+              .filter(m => {
+                // Tiene discord configurado
+                if (!m.social_discord) return false;
+                // No está ya autorizado (buscar por username en vez de discord_id)
+                const alreadyAuthorized = permissions.find(p =>
+                  p.discord_username === m.social_discord ||
+                  p.discord_username === m.name
+                );
+                return !alreadyAuthorized;
+              })
+              .map(m => `${m.id}:${m.name} (${m.social_discord})`)
+          ]}
         />
-        <Input
-          label="Discord Username"
-          value={discordUserModal.user?.discord_username || ""}
-          onChange={(val) => setDiscordUserModal({ ...discordUserModal, user: { ...discordUserModal.user, discord_username: val } })}
-          placeholder="username"
-        />
-        <Input
-          label="Email"
-          type="email"
-          value={discordUserModal.user?.email || ""}
-          onChange={(val) => setDiscordUserModal({ ...discordUserModal, user: { ...discordUserModal.user, email: val } })}
-          placeholder="usuario@example.com"
-        />
-        <p style={{ fontSize: 12, color: textMuted, marginTop: 12 }}>
-          💡 Puedes usar Discord ID, Username o Email. Se verificará contra cualquiera que coincida.
-        </p>
+
+        {members.filter(m => {
+          if (!m.social_discord) return false;
+          const alreadyAuthorized = permissions.find(p =>
+            p.discord_username === m.social_discord ||
+            p.discord_username === m.name
+          );
+          return !alreadyAuthorized;
+        }).length === 0 && (
+          <p style={{ fontSize: 12, color: textMuted, marginTop: 12, fontStyle: "italic" }}>
+            No hay miembros disponibles. Todos los miembros con Discord ya tienen acceso, o ningún miembro tiene Discord configurado.
+          </p>
+        )}
+
         <div style={{ display: "flex", gap: 12, marginTop: 20 }}>
-          <Button onClick={handleSaveDiscordUser} loading={loading} style={{ flex: 1 }}>
-            Guardar
+          <Button
+            onClick={handleSaveDiscordUser}
+            loading={loading}
+            disabled={!discordUserModal.selectedMemberId || discordUserModal.selectedMemberId === "-- Seleccionar miembro --"}
+            style={{ flex: 1 }}
+          >
+            Agregar
           </Button>
-          <Button variant="secondary" onClick={() => setDiscordUserModal({ isOpen: false, user: null })} style={{ flex: 1 }}>
+          <Button variant="secondary" onClick={() => setDiscordUserModal({ isOpen: false, selectedMemberId: null })} style={{ flex: 1 }}>
             Cancelar
           </Button>
         </div>
