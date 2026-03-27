@@ -35,31 +35,45 @@ const RANK_ORDER = { Lider: 0, Oficial: 1, Miembro: 2, Recruit: 3 };
 //  SMALL COMPONENTS
 // ============================================================
 
-// Race Icons
-function ProtossIcon({ size = 16 }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ display: "inline-block", verticalAlign: "middle" }}>
-      <path d="M12 2L4 8v8l8 6 8-6V8l-8-6z" fill="#c9a84c" opacity="0.2" stroke="#c9a84c" strokeWidth="1.5"/>
-      <path d="M12 2v20M4 8l8 6 8-6M4 16l8-6 8 6" stroke="#c9a84c" strokeWidth="1.5" strokeLinecap="round"/>
-    </svg>
-  );
-}
+function RaceBadge({ race, level, small = false }) {
+  const colors = {
+    Protoss: { bg: "rgba(201,168,76,0.15)", border: "rgba(201,168,76,0.4)", text: "#c9a84c" },
+    Terran: { bg: "rgba(100,160,200,0.15)", border: "rgba(100,160,200,0.4)", text: "#7ab8d4" },
+    Zerg: { bg: "rgba(160,100,180,0.15)", border: "rgba(160,100,180,0.4)", text: "#c09ad8" },
+  };
 
-function TerranIcon({ size = 16 }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ display: "inline-block", verticalAlign: "middle" }}>
-      <circle cx="12" cy="12" r="9" fill="#7ab8d4" opacity="0.2" stroke="#7ab8d4" strokeWidth="1.5"/>
-      <path d="M12 6v12M6 12h12M8.5 8.5l7 7M15.5 8.5l-7 7" stroke="#7ab8d4" strokeWidth="1.5" strokeLinecap="round"/>
-    </svg>
-  );
-}
+  const c = colors[race] || colors.Terran;
 
-function ZergIcon({ size = 16 }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ display: "inline-block", verticalAlign: "middle" }}>
-      <path d="M12 2C8 2 5 5 5 9c0 3 2 5 4 6-2 1-4 3-4 6 0 4 3 7 7 7s7-3 7-7c0-3-2-5-4-6 2-1 4-3 4-6 0-4-3-7-7-7z" fill="#c09ad8" opacity="0.2" stroke="#c09ad8" strokeWidth="1.5"/>
-      <path d="M12 2v20M8 12h8" stroke="#c09ad8" strokeWidth="1.5" strokeLinecap="round"/>
-    </svg>
+    <div style={{
+      display: "inline-flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      background: c.bg,
+      border: `1px solid ${c.border}`,
+      borderRadius: 4,
+      padding: small ? "3px 6px" : "4px 8px",
+      minWidth: small ? 42 : 50,
+    }}>
+      <span style={{
+        fontSize: small ? 8 : 9,
+        color: c.text,
+        fontWeight: 600,
+        letterSpacing: 0.5,
+        opacity: 0.8,
+      }}>
+        {race.substring(0, 1)}
+      </span>
+      <span style={{
+        fontSize: small ? 11 : 13,
+        color: c.text,
+        fontWeight: 700,
+        marginTop: small ? 1 : 2,
+      }}>
+        {level || '-'}
+      </span>
+    </div>
   );
 }
 
@@ -597,19 +611,10 @@ function RosterSection({ members }) {
                 <div style={{ display: "flex", gap: 12, alignItems: "center", fontSize: 14, color: textMuted, flexWrap: "wrap" }}>
                   <span style={{ color: gold, fontWeight: 600 }}>{m.rank}</span>
                   <span>•</span>
-                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
-                      <ProtossIcon size={14} />
-                      <span style={{ color: "#c9a84c", fontWeight: 600, fontSize: 12 }}>{m.protossLevel || '-'}</span>
-                    </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
-                      <TerranIcon size={14} />
-                      <span style={{ color: "#7ab8d4", fontWeight: 600, fontSize: 12 }}>{m.terranLevel || '-'}</span>
-                    </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
-                      <ZergIcon size={14} />
-                      <span style={{ color: "#c09ad8", fontWeight: 600, fontSize: 12 }}>{m.zergLevel || '-'}</span>
-                    </div>
+                  <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                    <RaceBadge race="Protoss" level={m.protossLevel} small />
+                    <RaceBadge race="Terran" level={m.terranLevel} small />
+                    <RaceBadge race="Zerg" level={m.zergLevel} small />
                   </div>
                   <span>•</span>
                   <span style={{ background: "rgba(201,168,76,0.08)", padding: "3px 10px", borderRadius: 3 }}>
@@ -894,46 +899,43 @@ function RosterSection({ members }) {
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
                 <div style={{
                   background: "rgba(201,168,76,0.08)",
-                  padding: "12px",
-                  borderRadius: 6,
-                  border: `1px solid rgba(201,168,76,0.2)`,
+                  padding: "16px",
+                  borderRadius: 8,
+                  border: `1px solid rgba(201,168,76,0.3)`,
                   textAlign: "center"
                 }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginBottom: 6 }}>
-                    <ProtossIcon size={16} />
-                    <p style={{ fontSize: 11, color: textMuted, fontWeight: 600, margin: 0 }}>PROTOSS</p>
-                  </div>
-                  <p style={{ fontSize: 20, color: gold, fontWeight: 700, margin: 0 }}>
+                  <p style={{ fontSize: 12, color: "#c9a84c", fontWeight: 700, margin: 0, marginBottom: 8, letterSpacing: 1 }}>
+                    PROTOSS
+                  </p>
+                  <p style={{ fontSize: 28, color: gold, fontWeight: 700, margin: 0 }}>
                     {selectedMember.protossLevel || '-'}
                   </p>
                 </div>
                 <div style={{
                   background: "rgba(100,160,200,0.08)",
-                  padding: "12px",
-                  borderRadius: 6,
-                  border: `1px solid rgba(100,160,200,0.2)`,
+                  padding: "16px",
+                  borderRadius: 8,
+                  border: `1px solid rgba(100,160,200,0.3)`,
                   textAlign: "center"
                 }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginBottom: 6 }}>
-                    <TerranIcon size={16} />
-                    <p style={{ fontSize: 11, color: textMuted, fontWeight: 600, margin: 0 }}>TERRAN</p>
-                  </div>
-                  <p style={{ fontSize: 20, color: "#7ab8d4", fontWeight: 700, margin: 0 }}>
+                  <p style={{ fontSize: 12, color: "#7ab8d4", fontWeight: 700, margin: 0, marginBottom: 8, letterSpacing: 1 }}>
+                    TERRAN
+                  </p>
+                  <p style={{ fontSize: 28, color: "#7ab8d4", fontWeight: 700, margin: 0 }}>
                     {selectedMember.terranLevel || '-'}
                   </p>
                 </div>
                 <div style={{
                   background: "rgba(160,100,180,0.08)",
-                  padding: "12px",
-                  borderRadius: 6,
-                  border: `1px solid rgba(160,100,180,0.2)`,
+                  padding: "16px",
+                  borderRadius: 8,
+                  border: `1px solid rgba(160,100,180,0.3)`,
                   textAlign: "center"
                 }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginBottom: 6 }}>
-                    <ZergIcon size={16} />
-                    <p style={{ fontSize: 11, color: textMuted, fontWeight: 600, margin: 0 }}>ZERG</p>
-                  </div>
-                  <p style={{ fontSize: 20, color: "#c09ad8", fontWeight: 700, margin: 0 }}>
+                  <p style={{ fontSize: 12, color: "#c09ad8", fontWeight: 700, margin: 0, marginBottom: 8, letterSpacing: 1 }}>
+                    ZERG
+                  </p>
+                  <p style={{ fontSize: 28, color: "#c09ad8", fontWeight: 700, margin: 0 }}>
                     {selectedMember.zergLevel || '-'}
                   </p>
                 </div>
