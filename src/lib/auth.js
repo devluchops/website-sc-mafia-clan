@@ -94,6 +94,21 @@ export const authOptions = {
           }
         }
 
+        // Sincronizar discord_id en la tabla members si hay un match por social_discord
+        if (discordId && discordUsername) {
+          try {
+            const sql = getDb();
+            await sql`
+              UPDATE members
+              SET discord_id = ${discordId}
+              WHERE social_discord = ${discordUsername}
+                AND (discord_id IS NULL OR discord_id != ${discordId})
+            `;
+          } catch (error) {
+            console.error("Error syncing discord_id to members:", error);
+          }
+        }
+
         session.user.discordId = discordId;
         session.user.discordUsername = discordUsername;
 
