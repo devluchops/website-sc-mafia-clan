@@ -1090,24 +1090,32 @@ export default function AdminDashboard() {
           placeholder="Nombre del jugador"
         />
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        <h4 style={{ color: gold, fontSize: 14, marginTop: 10, marginBottom: 10 }}>Niveles por Raza</h4>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
           <Select
-            label="Raza Principal"
-            value={memberModal.member?.main_race || "Terran"}
-            onChange={(val) => setMemberModal({ ...memberModal, member: { ...memberModal.member, main_race: val } })}
-            options={["Terran", "Zerg", "Protoss"]}
+            label="Protoss"
+            value={memberModal.member?.protoss_level || "-"}
+            onChange={(val) => setMemberModal({ ...memberModal, member: { ...memberModal.member, protoss_level: val } })}
+            options={["-", "S", "A+", "A", "B+", "B", "C+", "C", "D+", "D"]}
           />
-          <Input
-            label="Razas que Juega"
-            value={memberModal.member?.races_played || ""}
-            onChange={(val) => setMemberModal({ ...memberModal, member: { ...memberModal.member, races_played: val } })}
-            placeholder="Ej: Terran, Zerg, Todas"
+          <Select
+            label="Terran"
+            value={memberModal.member?.terran_level || "-"}
+            onChange={(val) => setMemberModal({ ...memberModal, member: { ...memberModal.member, terran_level: val } })}
+            options={["-", "S", "A+", "A", "B+", "B", "C+", "C", "D+", "D"]}
+          />
+          <Select
+            label="Zerg"
+            value={memberModal.member?.zerg_level || "-"}
+            onChange={(val) => setMemberModal({ ...memberModal, member: { ...memberModal.member, zerg_level: val } })}
+            options={["-", "S", "A+", "A", "B+", "B", "C+", "C", "D+", "D"]}
           />
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           <Select
-            label="Nivel"
+            label="Nivel General"
             value={memberModal.member?.level_rank || "B"}
             onChange={(val) => setMemberModal({ ...memberModal, member: { ...memberModal.member, level_rank: val } })}
             options={["S", "A+", "A", "B+", "B", "C+", "C", "D+", "D"]}

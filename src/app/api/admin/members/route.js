@@ -26,6 +26,7 @@ export async function POST(request) {
     const {
       id, name, race, rank, avatar, mmr,
       main_race, races_played, level_rank,
+      protoss_level, terran_level, zerg_level,
       social_facebook, social_discord, social_tiktok,
       social_kick, social_instagram, social_twitter
     } = await request.json();
@@ -35,11 +36,14 @@ export async function POST(request) {
       // Actualizar
       await sql`
         UPDATE members
-        SET name = ${name}, race = ${main_race || race}, rank = ${rank},
+        SET name = ${name}, race = ${main_race || race || 'Terran'}, rank = ${rank},
             avatar = ${avatar}, mmr = ${mmr},
-            main_race = ${main_race || race},
-            races_played = ${races_played || race},
+            main_race = ${main_race || race || 'Terran'},
+            races_played = ${races_played || race || 'Terran'},
             level_rank = ${level_rank || 'B'},
+            protoss_level = ${protoss_level || '-'},
+            terran_level = ${terran_level || '-'},
+            zerg_level = ${zerg_level || '-'},
             social_facebook = ${social_facebook || ''},
             social_discord = ${social_discord || ''},
             social_tiktok = ${social_tiktok || ''},
@@ -55,12 +59,14 @@ export async function POST(request) {
         INSERT INTO members (
           name, race, rank, avatar, mmr,
           main_race, races_played, level_rank,
+          protoss_level, terran_level, zerg_level,
           social_facebook, social_discord, social_tiktok,
           social_kick, social_instagram, social_twitter
         )
         VALUES (
           ${name}, ${main_race || race || 'Terran'}, ${rank}, ${avatar}, ${mmr},
           ${main_race || race || 'Terran'}, ${races_played || race || 'Terran'}, ${level_rank || 'B'},
+          ${protoss_level || '-'}, ${terran_level || '-'}, ${zerg_level || '-'},
           ${social_facebook || ''}, ${social_discord || ''}, ${social_tiktok || ''},
           ${social_kick || ''}, ${social_instagram || ''}, ${social_twitter || ''}
         )

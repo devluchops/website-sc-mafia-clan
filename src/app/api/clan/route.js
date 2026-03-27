@@ -31,12 +31,13 @@ export async function GET() {
       members: members.map(m => ({
         name: m.name,
         race: m.race,
-        mainRace: m.main_race || m.race,
-        racesPlayed: m.races_played || m.race,
         rank: m.rank,
         level: m.level_rank || 'B',
         avatar: m.avatar,
         mmr: m.mmr,
+        protossLevel: m.protoss_level || '-',
+        terranLevel: m.terran_level || '-',
+        zergLevel: m.zerg_level || '-',
         social: {
           facebook: m.social_facebook || '',
           discord: m.social_discord || '',

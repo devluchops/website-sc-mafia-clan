@@ -569,9 +569,11 @@ function RosterSection({ members }) {
                 <div style={{ display: "flex", gap: 12, alignItems: "center", fontSize: 14, color: textMuted, flexWrap: "wrap" }}>
                   <span style={{ color: gold, fontWeight: 600 }}>{m.rank}</span>
                   <span>•</span>
-                  <span style={{ color: rc.text, fontWeight: 600 }}>{m.mainRace || m.race}</span>
-                  <span>•</span>
-                  <span>{m.racesPlayed || m.race}</span>
+                  <span style={{ fontSize: 12, color: textMuted }}>
+                    P:<span style={{ color: "#c9a84c", fontWeight: 600, marginLeft: 3 }}>{m.protossLevel || '-'}</span>
+                    {' '}T:<span style={{ color: "#7ab8d4", fontWeight: 600, marginLeft: 3 }}>{m.terranLevel || '-'}</span>
+                    {' '}Z:<span style={{ color: "#c09ad8", fontWeight: 600, marginLeft: 3 }}>{m.zergLevel || '-'}</span>
+                  </span>
                   <span>•</span>
                   <span style={{ background: "rgba(201,168,76,0.08)", padding: "3px 10px", borderRadius: 3 }}>
                     {m.mmr} MMR
@@ -851,17 +853,45 @@ function RosterSection({ members }) {
             </div>
 
             <div style={{ marginBottom: 20 }}>
-              <p style={{ fontSize: 12, color: textMuted, marginBottom: 6 }}>RAZA PRINCIPAL</p>
-              <p style={{ fontSize: 16, color: textLight, fontWeight: 600 }}>
-                {selectedMember.mainRace || selectedMember.race}
-              </p>
-            </div>
-
-            <div style={{ marginBottom: 20 }}>
-              <p style={{ fontSize: 12, color: textMuted, marginBottom: 6 }}>RAZAS QUE JUEGA</p>
-              <p style={{ fontSize: 14, color: textLight }}>
-                {selectedMember.racesPlayed || selectedMember.race}
-              </p>
+              <p style={{ fontSize: 12, color: textMuted, marginBottom: 12, fontWeight: 600 }}>NIVELES POR RAZA</p>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+                <div style={{
+                  background: "rgba(201,168,76,0.08)",
+                  padding: "12px",
+                  borderRadius: 6,
+                  border: `1px solid rgba(201,168,76,0.2)`,
+                  textAlign: "center"
+                }}>
+                  <p style={{ fontSize: 11, color: textMuted, marginBottom: 4, fontWeight: 600 }}>PROTOSS</p>
+                  <p style={{ fontSize: 20, color: gold, fontWeight: 700 }}>
+                    {selectedMember.protossLevel || '-'}
+                  </p>
+                </div>
+                <div style={{
+                  background: "rgba(100,160,200,0.08)",
+                  padding: "12px",
+                  borderRadius: 6,
+                  border: `1px solid rgba(100,160,200,0.2)`,
+                  textAlign: "center"
+                }}>
+                  <p style={{ fontSize: 11, color: textMuted, marginBottom: 4, fontWeight: 600 }}>TERRAN</p>
+                  <p style={{ fontSize: 20, color: "#7ab8d4", fontWeight: 700 }}>
+                    {selectedMember.terranLevel || '-'}
+                  </p>
+                </div>
+                <div style={{
+                  background: "rgba(160,100,180,0.08)",
+                  padding: "12px",
+                  borderRadius: 6,
+                  border: `1px solid rgba(160,100,180,0.2)`,
+                  textAlign: "center"
+                }}>
+                  <p style={{ fontSize: 11, color: textMuted, marginBottom: 4, fontWeight: 600 }}>ZERG</p>
+                  <p style={{ fontSize: 20, color: "#c09ad8", fontWeight: 700 }}>
+                    {selectedMember.zergLevel || '-'}
+                  </p>
+                </div>
+              </div>
             </div>
 
             {/* Social Links */}
