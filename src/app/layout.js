@@ -5,8 +5,11 @@ export const metadata = {
   title: "Clan MAFIA — StarCraft",
   description: "El mejor clan del StarCraft en mapa Fastest. Sitio oficial del Clan MAFIA.",
   icons: {
-    icon: "/logo.png",
-    shortcut: "/logo.png",
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/logo.png", sizes: "any" },
+    ],
+    shortcut: "/favicon.svg",
     apple: "/logo.png",
   },
   viewport: {
