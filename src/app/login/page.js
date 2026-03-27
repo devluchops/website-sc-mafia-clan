@@ -10,9 +10,18 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (status === "authenticated") {
-      router.push("/admin");
+      // Redirigir a admin solo si tiene permisos, sino a la página principal
+      const hasAdminAccess = session?.user?.permissions?.is_admin ||
+                            session?.user?.permissions?.can_manage_members ||
+                            session?.user?.permissions?.can_publish_blog ||
+                            session?.user?.permissions?.can_publish_videos ||
+                            session?.user?.permissions?.can_publish_events ||
+                            session?.user?.permissions?.can_edit_rules ||
+                            session?.user?.permissions?.can_manage_permissions;
+
+      router.push(hasAdminAccess ? "/admin" : "/");
     }
-  }, [status, router]);
+  }, [status, router, session]);
 
   if (status === "loading") {
     return (
@@ -70,10 +79,10 @@ export default function LoginPage() {
             letterSpacing: 1,
           }}
         >
-          Panel de Administración
+          Iniciar Sesión
         </p>
         <button
-          onClick={() => signIn("discord", { callbackUrl: "/admin" })}
+          onClick={() => signIn("discord", { callbackUrl: "/" })}
           style={{
             width: "100%",
             padding: "14px 24px",
@@ -106,7 +115,7 @@ export default function LoginPage() {
             lineHeight: 1.6,
           }}
         >
-          Necesitas permisos de administrador para acceder a este panel
+          Inicia sesión para acceder al sitio y comentar en publicaciones
         </p>
       </div>
     </div>
