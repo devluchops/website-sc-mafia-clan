@@ -231,6 +231,7 @@ export default function AdminDashboard() {
   const [logoFile, setLogoFile] = useState(null);
   const [postImageFile, setPostImageFile] = useState(null);
   const [memberFilter, setMemberFilter] = useState("todos");
+  const [memberSearch, setMemberSearch] = useState("");
   const [videoFilter, setVideoFilter] = useState("");
   const [postFilter, setPostFilter] = useState("Todos");
   const [eventFilter, setEventFilter] = useState("Todos");
@@ -781,8 +782,26 @@ export default function AdminDashboard() {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 12 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
               <p style={{ color: textMuted, fontSize: 14 }}>
-                Total: <strong style={{ color: gold }}>{members.filter(m => memberFilter === "todos" || m.level_rank === memberFilter).length}</strong>
+                Total: <strong style={{ color: gold }}>{members.filter(m =>
+                  (memberFilter === "todos" || m.level_rank === memberFilter) &&
+                  (memberSearch === "" || m.name.toLowerCase().includes(memberSearch.toLowerCase()))
+                ).length}</strong>
               </p>
+              <input
+                type="text"
+                placeholder="Buscar por nombre..."
+                value={memberSearch}
+                onChange={(e) => setMemberSearch(e.target.value)}
+                style={{
+                  padding: "6px 12px",
+                  background: bg,
+                  border: `1px solid ${darkGold}`,
+                  borderRadius: 6,
+                  color: textLight,
+                  fontSize: 12,
+                  minWidth: 180,
+                }}
+              />
               <select
                 value={memberFilter}
                 onChange={(e) => setMemberFilter(e.target.value)}
@@ -814,7 +833,10 @@ export default function AdminDashboard() {
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {members
-              .filter(m => memberFilter === "todos" || m.level_rank === memberFilter)
+              .filter(m =>
+                (memberFilter === "todos" || m.level_rank === memberFilter) &&
+                (memberSearch === "" || m.name.toLowerCase().includes(memberSearch.toLowerCase()))
+              )
               .map((member) => (
               <div
                 key={member.id}
