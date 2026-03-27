@@ -5,6 +5,14 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { SocialIcons } from "@/components/SocialIcons";
 
+// Theme colors
+const gold = "#c9a84c";
+const darkGold = "#3d3525";
+const cardBg = "#252220";
+const textMuted = "#8b7b5e";
+const textLight = "#e8dcc0";
+const bg = "#1e1b18";
+
 export default function ProfilePage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -74,15 +82,15 @@ export default function ProfilePage() {
       });
 
       if (res.ok) {
-        setMessage("Perfil actualizado exitosamente");
+        setMessage("✅ Perfil actualizado exitosamente");
         fetchProfile();
       } else {
         const data = await res.json();
-        setMessage(data.error || "Error al actualizar perfil");
+        setMessage("❌ " + (data.error || "Error al actualizar perfil"));
       }
     } catch (error) {
       console.error("Error updating profile:", error);
-      setMessage("Error al actualizar perfil");
+      setMessage("❌ Error al actualizar perfil");
     } finally {
       setSaving(false);
     }
@@ -90,107 +98,223 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <p style={{ color: "var(--text-secondary)" }}>Cargando...</p>
+      <div style={{ minHeight: "100vh", background: bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <p style={{ color: textMuted, fontFamily: "'Cinzel', serif", letterSpacing: 2 }}>Cargando...</p>
       </div>
     );
   }
 
   if (!member) {
     return (
-      <div style={{ minHeight: "100vh", padding: "2rem" }}>
+      <div style={{ minHeight: "100vh", background: bg, padding: "2rem" }}>
         <div style={{ maxWidth: "800px", margin: "0 auto" }}>
-          <h1 style={{ fontSize: "2rem", marginBottom: "1rem", color: "var(--gold)" }}>Mi Perfil</h1>
-          <p style={{ color: "var(--text-secondary)" }}>{message}</p>
+          <button
+            onClick={() => router.push("/")}
+            style={{
+              background: "transparent",
+              border: `1px solid ${gold}`,
+              color: gold,
+              padding: "0.5rem 1rem",
+              cursor: "pointer",
+              borderRadius: "4px",
+              fontFamily: "'Cinzel', serif",
+              fontSize: 12,
+              letterSpacing: 1.5,
+              textTransform: "uppercase",
+              marginBottom: 24,
+            }}
+          >
+            ← Volver
+          </button>
+          <h1 style={{ fontFamily: "'Cinzel', serif", fontSize: "2rem", marginBottom: "1rem", color: gold }}>Mi Perfil</h1>
+          <div style={{
+            background: "rgba(201, 76, 76, 0.1)",
+            border: "1px solid rgba(201, 76, 76, 0.3)",
+            borderRadius: 8,
+            padding: 16,
+          }}>
+            <p style={{ color: textLight, margin: 0 }}>{message}</p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={{ minHeight: "100vh", padding: "2rem" }}>
-      <div style={{ maxWidth: "800px", margin: "0 auto" }}>
-        <div style={{ marginBottom: "2rem" }}>
+    <div style={{ minHeight: "100vh", background: bg, color: textLight }}>
+      {/* Header */}
+      <header style={{
+        background: cardBg,
+        borderBottom: `1px solid ${darkGold}`,
+        padding: "20px 24px",
+      }}>
+        <div style={{ maxWidth: 1000, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+          <div>
+            <h1 style={{
+              fontFamily: "'Cinzel', serif",
+              fontSize: 24,
+              fontWeight: 700,
+              color: gold,
+              letterSpacing: 4,
+              margin: 0,
+            }}>
+              MI PERFIL
+            </h1>
+            <p style={{ fontSize: 12, color: textMuted, marginTop: 4, margin: 0 }}>
+              {session?.user?.name}
+            </p>
+          </div>
           <button
             onClick={() => router.push("/")}
             style={{
               background: "transparent",
-              border: "1px solid var(--gold)",
-              color: "var(--gold)",
-              padding: "0.5rem 1rem",
+              border: `1px solid ${gold}`,
+              color: gold,
+              padding: "10px 20px",
               cursor: "pointer",
-              borderRadius: "4px",
+              borderRadius: 6,
+              fontFamily: "'Cinzel', serif",
+              fontSize: 12,
+              fontWeight: 600,
+              letterSpacing: 1.5,
+              textTransform: "uppercase",
+              transition: "all 0.2s",
             }}
           >
-            ← Volver al inicio
+            ← Volver al Inicio
           </button>
         </div>
+      </header>
 
-        <h1 style={{ fontSize: "2rem", marginBottom: "1rem", color: "var(--gold)" }}>Mi Perfil</h1>
-
-        <div style={{
-          background: "var(--card-bg)",
-          border: "1px solid var(--border)",
-          padding: "1.5rem",
-          marginBottom: "2rem",
-        }}>
-          <h2 style={{ fontSize: "1.5rem", marginBottom: "1rem", color: "var(--gold)" }}>{member.name}</h2>
-          <div style={{ display: "grid", gap: "0.5rem", color: "var(--text-secondary)" }}>
-            <p><strong>Raza:</strong> {member.race}</p>
-            <p><strong>Rango:</strong> {member.rank}</p>
-            <p><strong>Nivel:</strong> {member.level_rank || "B"}</p>
-            <p><strong>MMR:</strong> {member.mmr || "N/A"}</p>
-            <div style={{ display: "flex", gap: "1rem", marginTop: "0.5rem" }}>
-              <p><strong>Protoss:</strong> {member.protoss_level || "-"}</p>
-              <p><strong>Terran:</strong> {member.terran_level || "-"}</p>
-              <p><strong>Zerg:</strong> {member.zerg_level || "-"}</p>
-            </div>
-          </div>
-        </div>
-
+      {/* Main Content */}
+      <main style={{ maxWidth: 1000, margin: "0 auto", padding: "32px 24px" }}>
         {message && (
           <div style={{
-            padding: "1rem",
-            marginBottom: "1rem",
-            background: message.includes("exitosamente") ? "rgba(76, 175, 80, 0.1)" : "rgba(244, 67, 54, 0.1)",
-            border: `1px solid ${message.includes("exitosamente") ? "rgba(76, 175, 80, 0.3)" : "rgba(244, 67, 54, 0.3)"}`,
-            color: message.includes("exitosamente") ? "#4CAF50" : "#F44336",
+            padding: 16,
+            background: message.includes("✅") ? "rgba(76, 201, 130, 0.1)" : "rgba(201, 76, 76, 0.1)",
+            border: `1px solid ${message.includes("✅") ? "rgba(76, 201, 130, 0.3)" : "rgba(201, 76, 76, 0.3)"}`,
+            borderRadius: 8,
+            marginBottom: 24,
+            color: textLight,
           }}>
             {message}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} style={{
-          background: "var(--card-bg)",
-          border: "1px solid var(--border)",
-          padding: "1.5rem",
+        {/* Member Info Card */}
+        <div style={{
+          background: cardBg,
+          border: `1px solid ${darkGold}`,
+          borderRadius: 10,
+          padding: 24,
+          marginBottom: 24,
         }}>
-          <h3 style={{ fontSize: "1.25rem", marginBottom: "1rem", color: "var(--gold)" }}>Editar Información</h3>
+          <h2 style={{
+            fontFamily: "'Cinzel', serif",
+            fontSize: 18,
+            fontWeight: 600,
+            color: gold,
+            marginBottom: 20,
+            letterSpacing: 2,
+          }}>
+            INFORMACIÓN DEL MIEMBRO
+          </h2>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16 }}>
+            <div>
+              <p style={{ fontSize: 12, color: textMuted, marginBottom: 4, letterSpacing: 1 }}>NOMBRE</p>
+              <p style={{ fontSize: 16, color: textLight, fontWeight: 600, margin: 0 }}>{member.name}</p>
+            </div>
+            <div>
+              <p style={{ fontSize: 12, color: textMuted, marginBottom: 4, letterSpacing: 1 }}>RANGO</p>
+              <p style={{ fontSize: 16, color: gold, fontWeight: 600, margin: 0 }}>{member.rank}</p>
+            </div>
+            <div>
+              <p style={{ fontSize: 12, color: textMuted, marginBottom: 4, letterSpacing: 1 }}>NIVEL</p>
+              <p style={{ fontSize: 16, color: textLight, fontWeight: 600, margin: 0 }}>{member.level_rank || "B"}</p>
+            </div>
+            <div>
+              <p style={{ fontSize: 12, color: textMuted, marginBottom: 4, letterSpacing: 1 }}>MMR</p>
+              <p style={{ fontSize: 16, color: textLight, fontWeight: 600, margin: 0 }}>{member.mmr || 0}</p>
+            </div>
+          </div>
+          <div style={{ marginTop: 20, paddingTop: 20, borderTop: `1px solid ${darkGold}` }}>
+            <p style={{ fontSize: 12, color: textMuted, marginBottom: 12, letterSpacing: 1 }}>NIVELES POR RAZA</p>
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+              <div style={{ flex: 1, minWidth: 100, textAlign: "center", background: "rgba(201,168,76,0.08)", padding: 12, borderRadius: 6, border: `1px solid rgba(201,168,76,0.2)` }}>
+                <p style={{ fontSize: 10, color: gold, margin: 0, marginBottom: 4, letterSpacing: 1 }}>PROTOSS</p>
+                <p style={{ fontSize: 20, color: gold, fontWeight: 700, margin: 0 }}>{member.protoss_level || '-'}</p>
+              </div>
+              <div style={{ flex: 1, minWidth: 100, textAlign: "center", background: "rgba(100,160,200,0.08)", padding: 12, borderRadius: 6, border: `1px solid rgba(100,160,200,0.2)` }}>
+                <p style={{ fontSize: 10, color: "#7ab8d4", margin: 0, marginBottom: 4, letterSpacing: 1 }}>TERRAN</p>
+                <p style={{ fontSize: 20, color: "#7ab8d4", fontWeight: 700, margin: 0 }}>{member.terran_level || '-'}</p>
+              </div>
+              <div style={{ flex: 1, minWidth: 100, textAlign: "center", background: "rgba(160,100,180,0.08)", padding: 12, borderRadius: 6, border: `1px solid rgba(160,100,180,0.2)` }}>
+                <p style={{ fontSize: 10, color: "#c09ad8", margin: 0, marginBottom: 4, letterSpacing: 1 }}>ZERG</p>
+                <p style={{ fontSize: 20, color: "#c09ad8", fontWeight: 700, margin: 0 }}>{member.zerg_level || '-'}</p>
+              </div>
+            </div>
+          </div>
+        </div>
 
-          <div style={{ marginBottom: "1.5rem" }}>
-            <label style={{ display: "block", marginBottom: "0.5rem", color: "var(--text-primary)" }}>
+        {/* Edit Form */}
+        <form onSubmit={handleSubmit} style={{
+          background: cardBg,
+          border: `1px solid ${darkGold}`,
+          borderRadius: 10,
+          padding: 24,
+        }}>
+          <h3 style={{
+            fontFamily: "'Cinzel', serif",
+            fontSize: 18,
+            fontWeight: 600,
+            color: gold,
+            marginBottom: 20,
+            letterSpacing: 2,
+          }}>
+            EDITAR INFORMACIÓN
+          </h3>
+
+          <div style={{ marginBottom: 20 }}>
+            <label style={{
+              display: "block",
+              fontSize: 12,
+              fontWeight: 600,
+              color: textMuted,
+              marginBottom: 8,
+              letterSpacing: 1,
+              textTransform: "uppercase",
+            }}>
               Sobre mí
             </label>
             <textarea
               value={formData.about_me}
               onChange={(e) => setFormData({ ...formData, about_me: e.target.value })}
               rows={4}
-              placeholder="Escribe una breve descripción sobre ti..."
+              placeholder="Cuéntanos algo sobre ti..."
               style={{
                 width: "100%",
-                padding: "0.75rem",
-                background: "var(--bg-primary)",
-                border: "1px solid var(--border)",
-                color: "var(--text-primary)",
-                borderRadius: "4px",
-                fontSize: "1rem",
+                padding: 12,
+                background: bg,
+                border: `1px solid ${darkGold}`,
+                borderRadius: 6,
+                color: textLight,
+                fontSize: 14,
                 fontFamily: "inherit",
+                resize: "vertical",
               }}
             />
           </div>
 
-          <div style={{ marginBottom: "1.5rem" }}>
-            <label style={{ display: "block", marginBottom: "0.5rem", color: "var(--text-primary)" }}>
+          <div style={{ marginBottom: 20 }}>
+            <label style={{
+              display: "block",
+              fontSize: 12,
+              fontWeight: 600,
+              color: textMuted,
+              marginBottom: 8,
+              letterSpacing: 1,
+              textTransform: "uppercase",
+            }}>
               Avatar URL
             </label>
             <input
@@ -200,19 +324,28 @@ export default function ProfilePage() {
               placeholder="https://ejemplo.com/imagen.jpg"
               style={{
                 width: "100%",
-                padding: "0.75rem",
-                background: "var(--bg-primary)",
-                border: "1px solid var(--border)",
-                color: "var(--text-primary)",
-                borderRadius: "4px",
-                fontSize: "1rem",
+                padding: 12,
+                background: bg,
+                border: `1px solid ${darkGold}`,
+                borderRadius: 6,
+                color: textLight,
+                fontSize: 14,
               }}
             />
           </div>
 
-          <h4 style={{ fontSize: "1rem", marginBottom: "1rem", color: "var(--text-primary)" }}>Redes Sociales</h4>
+          <h4 style={{
+            fontSize: 14,
+            fontWeight: 600,
+            color: gold,
+            marginBottom: 16,
+            letterSpacing: 1,
+            textTransform: "uppercase",
+          }}>
+            Redes Sociales
+          </h4>
 
-          <div style={{ display: "grid", gap: "1rem" }}>
+          <div style={{ display: "grid", gap: 16 }}>
             {[
               { key: "social_facebook", label: "Facebook", icon: "Facebook" },
               { key: "social_discord", label: "Discord", icon: "Discord" },
@@ -225,7 +358,16 @@ export default function ProfilePage() {
               const Icon = SocialIcons[icon];
               return (
                 <div key={key}>
-                  <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem", color: "var(--text-primary)" }}>
+                  <label style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    fontSize: 12,
+                    fontWeight: 600,
+                    color: textMuted,
+                    marginBottom: 8,
+                    letterSpacing: 1,
+                  }}>
                     <Icon size={16} />
                     {label}
                   </label>
@@ -236,12 +378,12 @@ export default function ProfilePage() {
                     placeholder={`URL de ${label}`}
                     style={{
                       width: "100%",
-                      padding: "0.75rem",
-                      background: "var(--bg-primary)",
-                      border: "1px solid var(--border)",
-                      color: "var(--text-primary)",
-                      borderRadius: "4px",
-                      fontSize: "1rem",
+                      padding: 12,
+                      background: bg,
+                      border: `1px solid ${darkGold}`,
+                      borderRadius: 6,
+                      color: textLight,
+                      fontSize: 14,
                     }}
                   />
                 </div>
@@ -253,21 +395,26 @@ export default function ProfilePage() {
             type="submit"
             disabled={saving}
             style={{
-              marginTop: "1.5rem",
-              padding: "0.75rem 1.5rem",
-              background: "var(--gold)",
-              color: "#000",
+              marginTop: 24,
+              padding: "12px 24px",
+              background: gold,
+              color: bg,
               border: "none",
+              borderRadius: 6,
               cursor: saving ? "not-allowed" : "pointer",
-              fontWeight: "bold",
-              fontSize: "1rem",
+              fontFamily: "'Cinzel', serif",
+              fontWeight: 600,
+              fontSize: 14,
+              letterSpacing: 1.5,
+              textTransform: "uppercase",
               opacity: saving ? 0.6 : 1,
+              transition: "all 0.2s",
             }}
           >
             {saving ? "Guardando..." : "Guardar Cambios"}
           </button>
         </form>
-      </div>
+      </main>
     </div>
   );
 }
