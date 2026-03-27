@@ -82,6 +82,14 @@ function Avatar({ name, race, avatar, size = 48 }) {
   const [err, setErr] = useState(false);
 
   if (avatar && !err) {
+    // Usar proxy para imágenes externas
+    let imageSrc = avatar;
+    if (avatar.startsWith('http://') || avatar.startsWith('https://')) {
+      // Si es URL externa, usar proxy de imágenes
+      const externalUrl = avatar.replace(/^https?:\/\//, '');
+      imageSrc = `https://images.weserv.nl/?url=${externalUrl}&w=${size * 2}&h=${size * 2}&fit=cover`;
+    }
+
     return (
       <div
         style={{
@@ -94,10 +102,11 @@ function Avatar({ name, race, avatar, size = 48 }) {
         }}
       >
         <img
-          src={avatar}
+          src={imageSrc}
           alt={name}
           onError={() => setErr(true)}
           style={{ width: "100%", height: "100%", objectFit: "cover" }}
+          crossOrigin="anonymous"
         />
       </div>
     );
