@@ -35,6 +35,34 @@ const RANK_ORDER = { Lider: 0, Oficial: 1, Miembro: 2, Recruit: 3 };
 //  SMALL COMPONENTS
 // ============================================================
 
+// Race Icons
+function ProtossIcon({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ display: "inline-block", verticalAlign: "middle" }}>
+      <path d="M12 2L4 8v8l8 6 8-6V8l-8-6z" fill="#c9a84c" opacity="0.2" stroke="#c9a84c" strokeWidth="1.5"/>
+      <path d="M12 2v20M4 8l8 6 8-6M4 16l8-6 8 6" stroke="#c9a84c" strokeWidth="1.5" strokeLinecap="round"/>
+    </svg>
+  );
+}
+
+function TerranIcon({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ display: "inline-block", verticalAlign: "middle" }}>
+      <circle cx="12" cy="12" r="9" fill="#7ab8d4" opacity="0.2" stroke="#7ab8d4" strokeWidth="1.5"/>
+      <path d="M12 6v12M6 12h12M8.5 8.5l7 7M15.5 8.5l-7 7" stroke="#7ab8d4" strokeWidth="1.5" strokeLinecap="round"/>
+    </svg>
+  );
+}
+
+function ZergIcon({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ display: "inline-block", verticalAlign: "middle" }}>
+      <path d="M12 2C8 2 5 5 5 9c0 3 2 5 4 6-2 1-4 3-4 6 0 4 3 7 7 7s7-3 7-7c0-3-2-5-4-6 2-1 4-3 4-6 0-4-3-7-7-7z" fill="#c09ad8" opacity="0.2" stroke="#c09ad8" strokeWidth="1.5"/>
+      <path d="M12 2v20M8 12h8" stroke="#c09ad8" strokeWidth="1.5" strokeLinecap="round"/>
+    </svg>
+  );
+}
+
 function Avatar({ name, race, avatar, size = 48 }) {
   const rc = RACE_COLORS[race] || RACE_COLORS.Terran;
   const [err, setErr] = useState(false);
@@ -569,11 +597,20 @@ function RosterSection({ members }) {
                 <div style={{ display: "flex", gap: 12, alignItems: "center", fontSize: 14, color: textMuted, flexWrap: "wrap" }}>
                   <span style={{ color: gold, fontWeight: 600 }}>{m.rank}</span>
                   <span>•</span>
-                  <span style={{ fontSize: 12, color: textMuted }}>
-                    P:<span style={{ color: "#c9a84c", fontWeight: 600, marginLeft: 3 }}>{m.protossLevel || '-'}</span>
-                    {' '}T:<span style={{ color: "#7ab8d4", fontWeight: 600, marginLeft: 3 }}>{m.terranLevel || '-'}</span>
-                    {' '}Z:<span style={{ color: "#c09ad8", fontWeight: 600, marginLeft: 3 }}>{m.zergLevel || '-'}</span>
-                  </span>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
+                      <ProtossIcon size={14} />
+                      <span style={{ color: "#c9a84c", fontWeight: 600, fontSize: 12 }}>{m.protossLevel || '-'}</span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
+                      <TerranIcon size={14} />
+                      <span style={{ color: "#7ab8d4", fontWeight: 600, fontSize: 12 }}>{m.terranLevel || '-'}</span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
+                      <ZergIcon size={14} />
+                      <span style={{ color: "#c09ad8", fontWeight: 600, fontSize: 12 }}>{m.zergLevel || '-'}</span>
+                    </div>
+                  </div>
                   <span>•</span>
                   <span style={{ background: "rgba(201,168,76,0.08)", padding: "3px 10px", borderRadius: 3 }}>
                     {m.mmr} MMR
@@ -862,8 +899,11 @@ function RosterSection({ members }) {
                   border: `1px solid rgba(201,168,76,0.2)`,
                   textAlign: "center"
                 }}>
-                  <p style={{ fontSize: 11, color: textMuted, marginBottom: 4, fontWeight: 600 }}>PROTOSS</p>
-                  <p style={{ fontSize: 20, color: gold, fontWeight: 700 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginBottom: 6 }}>
+                    <ProtossIcon size={16} />
+                    <p style={{ fontSize: 11, color: textMuted, fontWeight: 600, margin: 0 }}>PROTOSS</p>
+                  </div>
+                  <p style={{ fontSize: 20, color: gold, fontWeight: 700, margin: 0 }}>
                     {selectedMember.protossLevel || '-'}
                   </p>
                 </div>
@@ -874,8 +914,11 @@ function RosterSection({ members }) {
                   border: `1px solid rgba(100,160,200,0.2)`,
                   textAlign: "center"
                 }}>
-                  <p style={{ fontSize: 11, color: textMuted, marginBottom: 4, fontWeight: 600 }}>TERRAN</p>
-                  <p style={{ fontSize: 20, color: "#7ab8d4", fontWeight: 700 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginBottom: 6 }}>
+                    <TerranIcon size={16} />
+                    <p style={{ fontSize: 11, color: textMuted, fontWeight: 600, margin: 0 }}>TERRAN</p>
+                  </div>
+                  <p style={{ fontSize: 20, color: "#7ab8d4", fontWeight: 700, margin: 0 }}>
                     {selectedMember.terranLevel || '-'}
                   </p>
                 </div>
@@ -886,8 +929,11 @@ function RosterSection({ members }) {
                   border: `1px solid rgba(160,100,180,0.2)`,
                   textAlign: "center"
                 }}>
-                  <p style={{ fontSize: 11, color: textMuted, marginBottom: 4, fontWeight: 600 }}>ZERG</p>
-                  <p style={{ fontSize: 20, color: "#c09ad8", fontWeight: 700 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginBottom: 6 }}>
+                    <ZergIcon size={16} />
+                    <p style={{ fontSize: 11, color: textMuted, fontWeight: 600, margin: 0 }}>ZERG</p>
+                  </div>
+                  <p style={{ fontSize: 20, color: "#c09ad8", fontWeight: 700, margin: 0 }}>
                     {selectedMember.zergLevel || '-'}
                   </p>
                 </div>
