@@ -219,6 +219,7 @@ export default function AdminDashboard() {
   const [videos, setVideos] = useState([]);
   const [events, setEvents] = useState([]);
   const [rules, setRules] = useState([]);
+  const [discordUsers, setDiscordUsers] = useState([]);
 
   // Modal states
   const [memberModal, setMemberModal] = useState({ isOpen: false, member: null });
@@ -226,6 +227,7 @@ export default function AdminDashboard() {
   const [videoModal, setVideoModal] = useState({ isOpen: false, video: null });
   const [eventModal, setEventModal] = useState({ isOpen: false, event: null });
   const [ruleModal, setRuleModal] = useState({ isOpen: false, rule: null });
+  const [discordUserModal, setDiscordUserModal] = useState({ isOpen: false, user: null });
   const [logoFile, setLogoFile] = useState(null);
   const [postImageFile, setPostImageFile] = useState(null);
   const [memberFilter, setMemberFilter] = useState("todos");
@@ -273,6 +275,12 @@ export default function AdminDashboard() {
     fetch("/api/admin/rules")
       .then((res) => res.json())
       .then((data) => setRules(data))
+      .catch((err) => console.error(err));
+
+    // Cargar usuarios de Discord autorizados
+    fetch("/api/admin/discord-users")
+      .then((res) => res.json())
+      .then((data) => setDiscordUsers(data))
       .catch((err) => console.error(err));
   };
 
@@ -583,6 +591,53 @@ export default function AdminDashboard() {
       });
       if (res.ok) {
         showMessage("✅ Regla eliminada");
+        loadData();
+      } else {
+        showMessage("❌ Error al eliminar");
+      }
+    } catch (error) {
+      showMessage("❌ Error: " + error.message);
+    }
+    setLoading(false);
+  };
+
+  // ============================================================
+  // DISCORD USER HANDLERS
+  // ============================================================
+
+  const handleSaveDiscordUser = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/discord-users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(discordUserModal.user),
+      });
+      if (res.ok) {
+        showMessage("✅ Usuario guardado correctamente");
+        setDiscordUserModal({ isOpen: false, user: null });
+        loadData();
+      } else {
+        showMessage("❌ Error al guardar usuario");
+      }
+    } catch (error) {
+      showMessage("❌ Error: " + error.message);
+    }
+    setLoading(false);
+  };
+
+  const handleDeleteDiscordUser = async (id) => {
+    if (!confirm("¿Estás seguro de eliminar este usuario?")) return;
+
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/discord-users", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      if (res.ok) {
+        showMessage("✅ Usuario eliminado");
         loadData();
       } else {
         showMessage("❌ Error al eliminar");
@@ -1019,6 +1074,62 @@ export default function AdminDashboard() {
           </div>
         </AdminCard>
 
+        {/* Usuarios Autorizados Discord */}
+        <AdminCard title="Usuarios Autorizados (Discord)" style={{ marginBottom: 24 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <p style={{ color: textMuted, fontSize: 14 }}>
+              Total: <strong style={{ color: gold }}>{discordUsers.length}</strong>
+            </p>
+            <Button onClick={() => setDiscordUserModal({ isOpen: true, user: { discord_id: "", discord_username: "", email: "" } })}>
+              + Agregar Usuario
+            </Button>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {discordUsers.map((user) => (
+              <div
+                key={user.id}
+                style={{
+                  background: bg,
+                  padding: 14,
+                  borderRadius: 8,
+                  border: `1px solid ${darkGold}`,
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: 12,
+                }}
+              >
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontWeight: 600, color: textLight, marginBottom: 4 }}>
+                    {user.discord_username || user.email || user.discord_id}
+                  </p>
+                  <p style={{ fontSize: 12, color: textMuted }}>
+                    {user.discord_id && `ID: ${user.discord_id}`}
+                    {user.discord_id && user.email && " • "}
+                    {user.email && `Email: ${user.email}`}
+                  </p>
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <Button
+                    variant="secondary"
+                    style={{ padding: "6px 12px", fontSize: 10 }}
+                    onClick={() => setDiscordUserModal({ isOpen: true, user })}
+                  >
+                    Editar
+                  </Button>
+                  <Button
+                    variant="danger"
+                    style={{ padding: "6px 12px", fontSize: 10 }}
+                    onClick={() => handleDeleteDiscordUser(user.id)}
+                  >
+                    Eliminar
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </AdminCard>
+
         {/* Reglas del Clan */}
         <AdminCard title="Reglas del Clan">
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
@@ -1427,6 +1538,44 @@ export default function AdminDashboard() {
             Guardar
           </Button>
           <Button variant="secondary" onClick={() => setRuleModal({ isOpen: false, rule: null })} style={{ flex: 1 }}>
+            Cancelar
+          </Button>
+        </div>
+      </Modal>
+
+      {/* Discord User Modal */}
+      <Modal
+        isOpen={discordUserModal.isOpen}
+        onClose={() => setDiscordUserModal({ isOpen: false, user: null })}
+        title={discordUserModal.user?.id ? "Editar Usuario" : "Agregar Usuario"}
+      >
+        <Input
+          label="Discord ID"
+          value={discordUserModal.user?.discord_id || ""}
+          onChange={(val) => setDiscordUserModal({ ...discordUserModal, user: { ...discordUserModal.user, discord_id: val } })}
+          placeholder="123456789012345678"
+        />
+        <Input
+          label="Discord Username"
+          value={discordUserModal.user?.discord_username || ""}
+          onChange={(val) => setDiscordUserModal({ ...discordUserModal, user: { ...discordUserModal.user, discord_username: val } })}
+          placeholder="username"
+        />
+        <Input
+          label="Email"
+          type="email"
+          value={discordUserModal.user?.email || ""}
+          onChange={(val) => setDiscordUserModal({ ...discordUserModal, user: { ...discordUserModal.user, email: val } })}
+          placeholder="usuario@example.com"
+        />
+        <p style={{ fontSize: 12, color: textMuted, marginTop: 12 }}>
+          💡 Puedes usar Discord ID, Username o Email. Se verificará contra cualquiera que coincida.
+        </p>
+        <div style={{ display: "flex", gap: 12, marginTop: 20 }}>
+          <Button onClick={handleSaveDiscordUser} loading={loading} style={{ flex: 1 }}>
+            Guardar
+          </Button>
+          <Button variant="secondary" onClick={() => setDiscordUserModal({ isOpen: false, user: null })} style={{ flex: 1 }}>
             Cancelar
           </Button>
         </div>

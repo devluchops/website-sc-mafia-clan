@@ -1,4 +1,5 @@
 import DiscordProvider from "next-auth/providers/discord";
+import { getDb } from "@/lib/db";
 
 export const authOptions = {
   providers: [
@@ -17,25 +18,36 @@ export const authOptions = {
       console.log("Global Name:", profile.global_name);
       console.log("========================");
 
-      // Solo permite login de usuarios autorizados
-      const allowedUsers = process.env.DISCORD_ALLOWED_USERS?.split(",").map(u => u.trim()) || [];
-      console.log("Allowed users:", allowedUsers);
+      try {
+        // Verificar contra la base de datos
+        const sql = getDb();
+        const authorizedUsers = await sql`
+          SELECT * FROM discord_authorized_users
+          WHERE discord_id = ${profile.id}
+             OR discord_username = ${profile.username}
+             OR email = ${user.email}
+        `;
 
-      if (allowedUsers.length === 0) {
-        console.log("No restrictions - allowing all users");
-        return true;
+        const isAllowed = authorizedUsers.length > 0;
+        console.log("Is user allowed (from DB)?", isAllowed);
+
+        return isAllowed;
+      } catch (error) {
+        console.error("Error checking authorization:", error);
+        // Fallback a variable de entorno si hay error
+        const allowedUsers = process.env.DISCORD_ALLOWED_USERS?.split(",").map(u => u.trim()) || [];
+
+        if (allowedUsers.length === 0) {
+          return false; // Por seguridad, denegar si no hay configuración
+        }
+
+        const isAllowed = allowedUsers.includes(user.email) ||
+                         allowedUsers.includes(profile.username) ||
+                         allowedUsers.includes(profile.id);
+
+        console.log("Is user allowed (from env fallback)?", isAllowed);
+        return isAllowed;
       }
-
-      // Permitir por Discord username (sin discriminador), ID o email
-      const discordId = profile.id;
-      const username = profile.username;
-
-      const isAllowed = allowedUsers.includes(user.email) ||
-                       allowedUsers.includes(username) ||
-                       allowedUsers.includes(discordId);
-
-      console.log("Is user allowed?", isAllowed);
-      return isAllowed;
     },
   },
   pages: {
