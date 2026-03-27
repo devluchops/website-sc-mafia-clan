@@ -1314,6 +1314,12 @@ export default function AdminDashboard() {
           onChange={(val) => setMemberModal({ ...memberModal, member: { ...memberModal.member, social_twitter: val } })}
           placeholder="@username"
         />
+        <Input
+          label="YouTube"
+          value={memberModal.member?.social_youtube || ""}
+          onChange={(val) => setMemberModal({ ...memberModal, member: { ...memberModal.member, social_youtube: val } })}
+          placeholder="https://youtube.com/@canal"
+        />
 
         <div style={{ display: "flex", gap: 12, marginTop: 20 }}>
           <Button onClick={handleSaveMember} loading={loading} style={{ flex: 1 }}>

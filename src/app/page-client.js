@@ -536,7 +536,8 @@ function RosterSection({ members }) {
       member.social.tiktok ||
       member.social.kick ||
       member.social.instagram ||
-      member.social.twitter
+      member.social.twitter ||
+      member.social.youtube
     );
   };
 
@@ -819,6 +820,36 @@ function RosterSection({ members }) {
                       <SocialIcons.Twitter size={18} />
                     </a>
                   )}
+                  {m.social.youtube && (
+                    <a
+                      href={m.social.youtube}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: 36,
+                        height: 36,
+                        background: "rgba(201,168,76,0.08)",
+                        border: `1px solid ${darkGold}`,
+                        borderRadius: 6,
+                        color: textMuted,
+                        transition: "all 0.2s",
+                      }}
+                      onMouseOver={(e) => {
+                        e.currentTarget.style.borderColor = gold;
+                        e.currentTarget.style.color = gold;
+                      }}
+                      onMouseOut={(e) => {
+                        e.currentTarget.style.borderColor = darkGold;
+                        e.currentTarget.style.color = textMuted;
+                      }}
+                    >
+                      <SocialIcons.YouTube size={18} />
+                    </a>
+                  )}
                 </div>
               )}
             </Card>
@@ -1092,6 +1123,28 @@ function RosterSection({ members }) {
                     >
                       <span style={{ fontSize: 18 }}>🐦</span>
                       Twitter/X: {selectedMember.social.twitter}
+                    </a>
+                  )}
+                  {selectedMember.social.youtube && (
+                    <a
+                      href={selectedMember.social.youtube}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 10,
+                        padding: "10px 14px",
+                        background: "rgba(201,168,76,0.08)",
+                        border: `1px solid ${darkGold}`,
+                        borderRadius: 6,
+                        color: textLight,
+                        textDecoration: "none",
+                        fontSize: 13,
+                      }}
+                    >
+                      <span style={{ fontSize: 18 }}>📺</span>
+                      YouTube: {selectedMember.social.youtube}
                     </a>
                   )}
                 </div>

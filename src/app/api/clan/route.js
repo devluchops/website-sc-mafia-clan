@@ -45,6 +45,7 @@ export async function GET() {
           kick: m.social_kick || '',
           instagram: m.social_instagram || '',
           twitter: m.social_twitter || '',
+          youtube: m.social_youtube || '',
         },
       })),
       posts: posts.map(p => ({

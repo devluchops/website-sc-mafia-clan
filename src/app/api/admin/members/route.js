@@ -28,7 +28,7 @@ export async function POST(request) {
       main_race, races_played, level_rank,
       protoss_level, terran_level, zerg_level,
       social_facebook, social_discord, social_tiktok,
-      social_kick, social_instagram, social_twitter
+      social_kick, social_instagram, social_twitter, social_youtube
     } = await request.json();
     const sql = getDb();
 
@@ -50,6 +50,7 @@ export async function POST(request) {
             social_kick = ${social_kick || ''},
             social_instagram = ${social_instagram || ''},
             social_twitter = ${social_twitter || ''},
+            social_youtube = ${social_youtube || ''},
             updated_at = NOW()
         WHERE id = ${id}
       `;
@@ -61,14 +62,14 @@ export async function POST(request) {
           main_race, races_played, level_rank,
           protoss_level, terran_level, zerg_level,
           social_facebook, social_discord, social_tiktok,
-          social_kick, social_instagram, social_twitter
+          social_kick, social_instagram, social_twitter, social_youtube
         )
         VALUES (
           ${name}, ${main_race || race || 'Terran'}, ${rank}, ${avatar}, ${mmr},
           ${main_race || race || 'Terran'}, ${races_played || race || 'Terran'}, ${level_rank || 'B'},
           ${protoss_level || '-'}, ${terran_level || '-'}, ${zerg_level || '-'},
           ${social_facebook || ''}, ${social_discord || ''}, ${social_tiktok || ''},
-          ${social_kick || ''}, ${social_instagram || ''}, ${social_twitter || ''}
+          ${social_kick || ''}, ${social_instagram || ''}, ${social_twitter || ''}, ${social_youtube || ''}
         )
       `;
     }
