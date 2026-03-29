@@ -10,17 +10,17 @@
 
 ### Build Order:
 
-- **7 supply** - Pylon
-- **Gateway search** (o 3 Gateways si no harass) - Si encuentras Terran/Zerg, harass
-- **1 Zealot** luego Pylon
+- **7** - Pylon
+- **9** - Gateway search (o 3 Gateways si no harass)
+- **9** - 1 Zealot, luego Pylon
 - **15** - Forge
 - **23** (2:07) - Pylon + Cannon
 - **24** - Gas (después de Cannon)
-- Cuando termine Pylon - Otro Pylon
-- **32** (2:51) - Cybernetics Core + 2nd Gas (a 200 gas)
+- **31** - Pylon (cuando termine anterior)
+- **32** (2:51) - Cybernetics Core + 2nd Gas
 - **(3:34)** - 3 Dragoons (cuando termine Core)
 - **(3:42)** - 2 Pylons + Dragoon Range
-- **(4:07)** - 2 más Gateways (total 5)
+- **40** (4:07) - 2 más Gateways (total 5)
 - 3 Goons más (cuando terminen primeros 3)
 - **(5:03)** - Si opponent va DT: Robotics
 - **(5:34)** - **START BLASTING** con Range - destruir cannons desde lejos
