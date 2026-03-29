@@ -97,3 +97,23 @@ await sql\`
 ```
 
 Or use the script: `scripts/create-simple-test-member.js`
+
+## Multi-Language Support
+
+**Language System:**
+- Site supports multiple languages (currently Spanish primary)
+- Can be extended to support English, Portuguese, etc.
+- User language preference should be stored in session/cookies
+- All UI text should be externalized for translation
+
+**Implementation Notes:**
+- Currently all content is in Spanish
+- When adding features, keep text separate from logic
+- Consider using i18n library for future expansion
+- Database content (blog posts, rules) can have language field
+
+**Future Enhancements:**
+- Add language selector in UI
+- Store user language preference
+- Translate UI components
+- Multi-language blog posts

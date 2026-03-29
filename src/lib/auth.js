@@ -74,6 +74,19 @@ export const authOptions = {
       if (profile) {
         token.discordId = profile.id;
         token.discordUsername = profile.username;
+
+        // Obtener email_verified status
+        try {
+          const sql = getDb();
+          const [member] = await sql`
+            SELECT email_verified FROM members
+            WHERE discord_id = ${profile.id}
+          `;
+          token.emailVerified = member?.email_verified || false;
+        } catch (error) {
+          console.error("Error loading email_verified in JWT:", error);
+          token.emailVerified = false;
+        }
       }
 
       // Si no hay discordId pero hay account, obtenerlo del user
