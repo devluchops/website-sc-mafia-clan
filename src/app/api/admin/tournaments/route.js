@@ -7,7 +7,10 @@ import {
   createTournament,
   deleteTournament,
   startTournament,
-  addParticipant
+  addParticipant,
+  deleteParticipant,
+  getMatches,
+  updateMatch
 } from "@/lib/challonge";
 
 // GET: Obtener todos los torneos
@@ -15,8 +18,13 @@ export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     const tournamentId = searchParams.get('id');
+    const getMatchesOnly = searchParams.get('matches');
 
-    if (tournamentId) {
+    if (tournamentId && getMatchesOnly === 'true') {
+      // Obtener solo los matches de un torneo
+      const matches = await getMatches(tournamentId);
+      return NextResponse.json(matches);
+    } else if (tournamentId) {
       // Obtener un torneo específico con participantes y partidos
       const tournament = await getTournament(tournamentId);
       return NextResponse.json(tournament);
@@ -52,7 +60,7 @@ export async function POST(request) {
 
   try {
     const body = await request.json();
-    const { action, tournamentData, tournamentId, participant } = body;
+    const { action, tournamentData, tournamentId, participant, participantId, matchId, matchData } = body;
 
     if (action === 'create') {
       // Crear nuevo torneo
@@ -77,6 +85,21 @@ export async function POST(request) {
         success: true,
         participant: result,
         message: 'Participante agregado correctamente'
+      });
+    } else if (action === 'delete_participant') {
+      // Eliminar participante
+      const result = await deleteParticipant(tournamentId, participantId);
+      return NextResponse.json({
+        success: true,
+        message: 'Participante eliminado correctamente'
+      });
+    } else if (action === 'update_match') {
+      // Actualizar resultado de un partido
+      const result = await updateMatch(tournamentId, matchId, matchData);
+      return NextResponse.json({
+        success: true,
+        match: result,
+        message: 'Resultado actualizado correctamente'
       });
     } else {
       return NextResponse.json(

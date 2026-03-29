@@ -201,6 +201,101 @@ export async function addParticipant(tournamentId, participant) {
 }
 
 /**
+ * Delete a participant from a tournament
+ * @param {string} tournamentId - Tournament ID or URL
+ * @param {string} participantId - Participant ID
+ * @returns {Promise<Object>} Deletion confirmation
+ */
+export async function deleteParticipant(tournamentId, participantId) {
+  const params = new URLSearchParams({
+    api_key: CHALLONGE_API_KEY
+  });
+
+  const url = `${CHALLONGE_API_BASE}/tournaments/${tournamentId}/participants/${participantId}.json?${params}`;
+
+  try {
+    const response = await fetch(url, {
+      method: 'DELETE'
+    });
+
+    if (!response.ok) {
+      throw new Error(`Challonge API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error deleting participant:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get matches for a tournament
+ * @param {string} tournamentId - Tournament ID or URL
+ * @returns {Promise<Array>} List of matches
+ */
+export async function getMatches(tournamentId) {
+  const params = new URLSearchParams({
+    api_key: CHALLONGE_API_KEY
+  });
+
+  const url = `${CHALLONGE_API_BASE}/tournaments/${tournamentId}/matches.json?${params}`;
+
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Challonge API error: ${response.status}`);
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching matches:', error);
+    throw error;
+  }
+}
+
+/**
+ * Update match result
+ * @param {string} tournamentId - Tournament ID or URL
+ * @param {string} matchId - Match ID
+ * @param {Object} matchData - Match update data
+ * @returns {Promise<Object>} Updated match
+ */
+export async function updateMatch(tournamentId, matchId, matchData) {
+  const body = {
+    api_key: CHALLONGE_API_KEY,
+    match: {
+      scores_csv: matchData.scores_csv, // e.g., "1-3,3-0,3-2"
+      winner_id: matchData.winner_id
+    }
+  };
+
+  const url = `${CHALLONGE_API_BASE}/tournaments/${tournamentId}/matches/${matchId}.json`;
+
+  try {
+    const response = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body)
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(`Challonge API error: ${JSON.stringify(error)}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error updating match:', error);
+    throw error;
+  }
+}
+
+/**
  * Get embed iframe code for a tournament
  * @param {string} tournamentUrl - Tournament URL identifier
  * @returns {string} Iframe HTML code

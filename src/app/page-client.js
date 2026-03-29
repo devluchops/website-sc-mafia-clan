@@ -1917,10 +1917,8 @@ function TournamentsSection({ tournaments }) {
                 </div>
               </div>
               <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-                <a
-                  href={tournament.full_challonge_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <Link
+                  href={`/tournaments/${tournament.url}`}
                   style={{
                     display: "inline-flex",
                     alignItems: "center",
@@ -1936,11 +1934,9 @@ function TournamentsSection({ tournaments }) {
                     border: "none",
                     cursor: "pointer",
                   }}
-                  onMouseEnter={(e) => e.target.style.transform = "translateY(-2px)"}
-                  onMouseLeave={(e) => e.target.style.transform = "translateY(0)"}
                 >
-                  Ver Bracket →
-                </a>
+                  Ver Torneo →
+                </Link>
               </div>
             </Card>
           );

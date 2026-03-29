@@ -151,7 +151,7 @@ function Button({ onClick, children, variant = "primary", loading, disabled, sty
   );
 }
 
-function Modal({ isOpen, onClose, title, children }) {
+function Modal({ isOpen, onClose, title, children, zIndex = 1000 }) {
   if (!isOpen) return null;
 
   return (
@@ -166,7 +166,7 @@ function Modal({ isOpen, onClose, title, children }) {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        zIndex: 1000,
+        zIndex: zIndex,
         padding: 20,
       }}
       onClick={onClose}
@@ -231,6 +231,11 @@ export default function AdminDashboard() {
   const [ruleModal, setRuleModal] = useState({ isOpen: false, rule: null });
   const [buildOrderModal, setBuildOrderModal] = useState({ isOpen: false, buildOrder: null });
   const [tournamentModal, setTournamentModal] = useState({ isOpen: false, tournament: null });
+  const [participantModal, setParticipantModal] = useState({ isOpen: false, tournamentId: null, participant: null });
+  const [selectedTournament, setSelectedTournament] = useState(null);
+  const [bracketRefreshKey, setBracketRefreshKey] = useState(0);
+  const [tournamentMatches, setTournamentMatches] = useState([]);
+  const [matchModal, setMatchModal] = useState({ isOpen: false, match: null, tournamentId: null });
   const [discordUserModal, setDiscordUserModal] = useState({ isOpen: false, user: null });
   const [logoFile, setLogoFile] = useState(null);
   const [postImageFile, setPostImageFile] = useState(null);
@@ -239,7 +244,14 @@ export default function AdminDashboard() {
   const [videoFilter, setVideoFilter] = useState("");
   const [postFilter, setPostFilter] = useState("Todos");
   const [eventFilter, setEventFilter] = useState("Todos");
-  const [activeSection, setActiveSection] = useState("info");
+  const [activeSection, setActiveSection] = useState(() => {
+    // Leer el hash de la URL al cargar
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash.replace('#', '');
+      return hash || "info";
+    }
+    return "info";
+  });
   const [permissionsPage, setPermissionsPage] = useState(1);
   const [membersPage, setMembersPage] = useState(1);
   const [postsPage, setPostsPage] = useState(1);
@@ -252,9 +264,13 @@ export default function AdminDashboard() {
     loadData();
   }, []);
 
-  // Set initial active section based on permissions
+  // Set initial active section based on permissions (only if no hash in URL)
   useEffect(() => {
     if (session?.user?.permissions) {
+      // Solo establecer sección por defecto si NO hay hash en la URL
+      const hash = typeof window !== 'undefined' ? window.location.hash.replace('#', '') : '';
+      if (hash) return; // Si hay hash, no sobrescribir
+
       const perms = session.user.permissions;
       if (perms.is_admin) {
         setActiveSection("info");
@@ -274,6 +290,18 @@ export default function AdminDashboard() {
         setActiveSection("permissions");
       }
     }
+  }, [session]);
+
+  // Actualizar hash cuando cambia activeSection
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.location.hash = activeSection;
+    }
+  }, [activeSection]);
+
+  useEffect(() => {
+    if (!session) return;
+    loadData();
   }, [session]);
 
   const loadData = () => {
@@ -709,7 +737,12 @@ export default function AdminDashboard() {
       if (res.ok) {
         showMessage("✅ Torneo creado correctamente en Challonge");
         setTournamentModal({ isOpen: false, tournament: null });
-        loadData();
+
+        // Recargar torneos inmediatamente
+        fetch("/api/admin/tournaments")
+          .then((res) => res.json())
+          .then((data) => setTournaments(data || []))
+          .catch((err) => console.error(err));
       } else {
         showMessage("❌ " + (data.error || "Error al crear torneo"));
       }
@@ -765,6 +798,156 @@ export default function AdminDashboard() {
         loadData();
       } else {
         showMessage("❌ " + (data.error || "Error al iniciar torneo"));
+      }
+    } catch (error) {
+      showMessage("❌ Error: " + error.message);
+    }
+    setLoading(false);
+  };
+
+  const handleAddParticipant = async () => {
+    setLoading(true);
+    try {
+      const { tournamentId, participant } = participantModal;
+
+      if (!participant.name || participant.name.trim() === "") {
+        showMessage("❌ El nombre del participante es requerido");
+        setLoading(false);
+        return;
+      }
+
+      // Validar duplicados
+      if (selectedTournament?.tournament?.participants) {
+        const exists = selectedTournament.tournament.participants.some(
+          p => p.participant.name.toLowerCase() === participant.name.trim().toLowerCase()
+        );
+        if (exists) {
+          showMessage("❌ Ya existe un participante con ese nombre");
+          setLoading(false);
+          return;
+        }
+      }
+
+      const res = await fetch("/api/admin/tournaments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: 'add_participant',
+          tournamentId,
+          participant: {
+            name: participant.name,
+            seed: participant.seed || null,
+            misc: participant.misc || null
+          }
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        showMessage("✅ Participante agregado correctamente");
+        setParticipantModal({ isOpen: false, tournamentId: null, participant: null });
+        // Recargar el torneo seleccionado si existe
+        if (selectedTournament?.tournament?.id) {
+          loadTournamentDetails(selectedTournament.tournament.id);
+        }
+      } else {
+        showMessage("❌ " + (data.error || "Error al agregar participante"));
+      }
+    } catch (error) {
+      showMessage("❌ Error: " + error.message);
+    }
+    setLoading(false);
+  };
+
+  const handleDeleteParticipant = async (tournamentId, participantId, participantName) => {
+    if (!confirm(`¿Eliminar a ${participantName} del torneo?`)) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/tournaments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: 'delete_participant',
+          tournamentId,
+          participantId
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        showMessage("✅ Participante eliminado correctamente");
+        // Recargar el torneo seleccionado
+        if (selectedTournament?.tournament?.id) {
+          loadTournamentDetails(selectedTournament.tournament.id);
+        }
+      } else {
+        showMessage("❌ " + (data.error || "Error al eliminar participante"));
+      }
+    } catch (error) {
+      showMessage("❌ Error: " + error.message);
+    }
+    setLoading(false);
+  };
+
+  const loadTournamentDetails = async (tournamentId) => {
+    try {
+      const res = await fetch(`/api/admin/tournaments?id=${tournamentId}`);
+      const data = await res.json();
+      setSelectedTournament(data);
+      setBracketRefreshKey(prev => prev + 1); // Forzar refresh del iframe
+
+      // También cargar los matches si el torneo está en curso
+      if (data.tournament?.state === 'underway' || data.tournament?.state === 'awaiting_review') {
+        const matchesRes = await fetch(`/api/admin/tournaments?id=${tournamentId}&matches=true`);
+        const matchesData = await matchesRes.json();
+        setTournamentMatches(matchesData);
+      } else {
+        setTournamentMatches([]);
+      }
+    } catch (error) {
+      console.error("Error loading tournament details:", error);
+    }
+  };
+
+  const handleUpdateMatch = async () => {
+    setLoading(true);
+    try {
+      const { tournamentId, match } = matchModal;
+
+      if (!match.winner_id) {
+        showMessage("❌ Debes seleccionar un ganador");
+        setLoading(false);
+        return;
+      }
+
+      const res = await fetch("/api/admin/tournaments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: 'update_match',
+          tournamentId,
+          matchId: match.id,
+          matchData: {
+            winner_id: match.winner_id,
+            scores_csv: match.scores_csv || ""
+          }
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        showMessage("✅ Resultado actualizado correctamente");
+        setMatchModal({ isOpen: false, match: null, tournamentId: null });
+        // Recargar detalles del torneo
+        loadTournamentDetails(tournamentId);
+      } else {
+        showMessage("❌ " + (data.error || "Error al actualizar resultado"));
       }
     } catch (error) {
       showMessage("❌ Error: " + error.message);
@@ -2018,11 +2201,17 @@ export default function AdminDashboard() {
                         </a>
                       </div>
                       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                        <Button
+                          style={{ padding: "6px 12px", fontSize: 10, whiteSpace: "nowrap" }}
+                          onClick={() => loadTournamentDetails(tournament.url || tournament.id)}
+                        >
+                          Ver Detalles
+                        </Button>
                         {tournament.state === 'pending' && (
                           <Button
                             variant="secondary"
                             style={{ padding: "6px 12px", fontSize: 10, whiteSpace: "nowrap" }}
-                            onClick={() => handleStartTournament(tournament.id)}
+                            onClick={() => handleStartTournament(tournament.url || tournament.id)}
                           >
                             Iniciar
                           </Button>
@@ -2030,7 +2219,7 @@ export default function AdminDashboard() {
                         <Button
                           variant="danger"
                           style={{ padding: "6px 12px", fontSize: 10 }}
-                          onClick={() => handleDeleteTournament(tournament.id)}
+                          onClick={() => handleDeleteTournament(tournament.url || tournament.id)}
                         >
                           Eliminar
                         </Button>
@@ -2858,12 +3047,42 @@ export default function AdminDashboard() {
           onChange={(val) => setTournamentModal({ ...tournamentModal, tournament: { ...tournamentModal.tournament, name: val } })}
           placeholder="Ej: Copa MAFIA 2025"
         />
-        <Input
-          label="URL Única (challonge.com/lvalencia1286/...)"
-          value={tournamentModal.tournament?.url || ""}
-          onChange={(val) => setTournamentModal({ ...tournamentModal, tournament: { ...tournamentModal.tournament, url: val } })}
-          placeholder="Ej: copa-mafia-2025"
-        />
+        <div style={{ marginBottom: 16 }}>
+          <label style={{
+            display: "block",
+            fontSize: 12,
+            fontWeight: 600,
+            color: textMuted,
+            marginBottom: 6,
+            letterSpacing: 1,
+            textTransform: "uppercase",
+          }}>
+            URL Única (solo letras, números y _)
+          </label>
+          <input
+            type="text"
+            value={tournamentModal.tournament?.url || ""}
+            onChange={(e) => {
+              // Sanitizar: solo letras, números y guiones bajos
+              const sanitized = e.target.value.replace(/[^a-zA-Z0-9_]/g, '_');
+              setTournamentModal({ ...tournamentModal, tournament: { ...tournamentModal.tournament, url: sanitized } });
+            }}
+            placeholder="copa_mafia_2025"
+            style={{
+              width: "100%",
+              padding: "10px 14px",
+              background: bg,
+              border: `1px solid ${darkGold}`,
+              borderRadius: 6,
+              color: textLight,
+              fontSize: 14,
+              fontFamily: "inherit",
+            }}
+          />
+          <p style={{ fontSize: 11, color: textMuted, marginTop: 6, fontStyle: "italic" }}>
+            Espacios y guiones se convertirán automáticamente en _
+          </p>
+        </div>
         <Select
           label="Tipo de Torneo"
           value={tournamentModal.tournament?.tournament_type || "single elimination"}
@@ -2918,6 +3137,281 @@ export default function AdminDashboard() {
           </Button>
         </div>
       </Modal>
+
+      {/* Add Participant Modal */}
+      <Modal
+        isOpen={participantModal.isOpen}
+        onClose={() => setParticipantModal({ isOpen: false, tournamentId: null, participant: null })}
+        title="Agregar Participante"
+        zIndex={1100}
+      >
+        <div style={{ marginBottom: 16 }}>
+          <label style={{
+            display: "block",
+            fontSize: 12,
+            fontWeight: 600,
+            color: textMuted,
+            marginBottom: 8,
+            letterSpacing: 1,
+            textTransform: "uppercase",
+          }}>
+            Tipo de Participante
+          </label>
+          <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
+            <button
+              onClick={() => setParticipantModal({
+                ...participantModal,
+                participant: { ...participantModal.participant, type: 'member' }
+              })}
+              style={{
+                flex: 1,
+                padding: "10px 14px",
+                background: participantModal.participant?.type === 'member' ? gold : bg,
+                color: participantModal.participant?.type === 'member' ? bg : textLight,
+                border: `1px solid ${darkGold}`,
+                borderRadius: 6,
+                cursor: "pointer",
+                fontSize: 13,
+                fontWeight: 600
+              }}
+            >
+              Miembro del Clan
+            </button>
+            <button
+              onClick={() => setParticipantModal({
+                ...participantModal,
+                participant: { ...participantModal.participant, type: 'external', name: '', memberId: null }
+              })}
+              style={{
+                flex: 1,
+                padding: "10px 14px",
+                background: participantModal.participant?.type === 'external' ? gold : bg,
+                color: participantModal.participant?.type === 'external' ? bg : textLight,
+                border: `1px solid ${darkGold}`,
+                borderRadius: 6,
+                cursor: "pointer",
+                fontSize: 13,
+                fontWeight: 600
+              }}
+            >
+              Jugador Externo
+            </button>
+          </div>
+        </div>
+
+        {participantModal.participant?.type === 'member' ? (
+          <Select
+            label="Seleccionar Miembro"
+            value={participantModal.participant?.memberId || ""}
+            onChange={(val) => {
+              const member = members.find(m => m.id === parseInt(val));
+              setParticipantModal({
+                ...participantModal,
+                participant: {
+                  ...participantModal.participant,
+                  memberId: val,
+                  name: member ? member.name : ''
+                }
+              });
+            }}
+            options={[
+              "-- Seleccionar miembro --",
+              ...members.map(m => `${m.id}:${m.name}`)
+            ]}
+          />
+        ) : participantModal.participant?.type === 'external' ? (
+          <Input
+            label="Nombre del Participante"
+            value={participantModal.participant?.name || ""}
+            onChange={(val) => setParticipantModal({
+              ...participantModal,
+              participant: { ...participantModal.participant, name: val }
+            })}
+            placeholder="Nombre del jugador"
+          />
+        ) : (
+          <div style={{ padding: 20, textAlign: "center", color: textMuted }}>
+            Selecciona el tipo de participante
+          </div>
+        )}
+
+        {participantModal.participant?.type && (
+          <>
+            <Input
+              label="Seed (opcional)"
+              type="number"
+              value={participantModal.participant?.seed || ""}
+              onChange={(val) => setParticipantModal({
+                ...participantModal,
+                participant: { ...participantModal.participant, seed: parseInt(val) || null }
+              })}
+              placeholder="Posición inicial (1, 2, 3...)"
+            />
+            <div style={{ display: "flex", gap: 12, marginTop: 20 }}>
+              <Button onClick={handleAddParticipant} loading={loading} style={{ flex: 1 }}>
+                Agregar
+              </Button>
+              <Button variant="secondary" onClick={() => setParticipantModal({ isOpen: false, tournamentId: null, participant: null })} style={{ flex: 1 }}>
+                Cancelar
+              </Button>
+            </div>
+          </>
+        )}
+      </Modal>
+
+      {/* Tournament Details Modal */}
+      {selectedTournament && (
+        <Modal
+          isOpen={!!selectedTournament}
+          onClose={() => setSelectedTournament(null)}
+          title={selectedTournament.tournament?.name || "Detalles del Torneo"}
+        >
+          {/* Tournament Info */}
+          <div style={{ marginBottom: 20, padding: 16, background: bg, borderRadius: 6, border: `1px solid ${darkGold}` }}>
+            <div style={{ display: "flex", gap: 12, marginBottom: 12, flexWrap: "wrap", alignItems: "center" }}>
+              <span style={{
+                fontSize: 11,
+                padding: "4px 10px",
+                borderRadius: 4,
+                background: selectedTournament.tournament?.state === 'pending' ? "rgba(201,168,76,0.1)" :
+                           selectedTournament.tournament?.state === 'underway' ? "rgba(76,201,130,0.1)" : "rgba(139,92,92,0.1)",
+                color: selectedTournament.tournament?.state === 'pending' ? gold :
+                       selectedTournament.tournament?.state === 'underway' ? "#4cc982" : "#c9a08a",
+                fontWeight: 600,
+                textTransform: "uppercase",
+                letterSpacing: 0.5
+              }}>
+                {selectedTournament.tournament?.state === 'pending' ? 'Pendiente' :
+                 selectedTournament.tournament?.state === 'underway' ? 'En Curso' :
+                 selectedTournament.tournament?.state === 'complete' ? 'Completado' :
+                 selectedTournament.tournament?.state}
+              </span>
+              <span style={{ color: textMuted, fontSize: 13 }}>
+                Tipo: <span style={{ color: textLight, fontWeight: 600 }}>{selectedTournament.tournament?.tournament_type}</span>
+              </span>
+              <span style={{ color: textMuted, fontSize: 13 }}>
+                Participantes: <span style={{ color: gold, fontWeight: 600 }}>{selectedTournament.tournament?.participants_count || 0}</span>
+              </span>
+            </div>
+            {selectedTournament.tournament?.description && (
+              <p style={{ color: textLight, fontSize: 13, margin: 0, lineHeight: 1.6 }}>
+                {selectedTournament.tournament.description}
+              </p>
+            )}
+            <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${darkGold}` }}>
+              <a
+                href={selectedTournament.tournament?.full_challonge_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: "#7ab8d4", fontSize: 12, textDecoration: "none" }}
+              >
+                Abrir en Challonge.com →
+              </a>
+            </div>
+          </div>
+
+          <div style={{ marginBottom: 20 }}>
+            <h4 style={{ color: gold, fontSize: 14, marginBottom: 12, fontWeight: 600 }}>Participantes ({selectedTournament.tournament?.participants?.length || 0})</h4>
+
+            {selectedTournament.tournament?.state === 'pending' && (
+              <Button
+                style={{ marginBottom: 12, width: "100%" }}
+                onClick={() => {
+                  setParticipantModal({
+                    isOpen: true,
+                    tournamentId: selectedTournament.tournament.id,
+                    participant: { type: null, name: '', seed: null }
+                  });
+                }}
+              >
+                + Agregar Participante
+              </Button>
+            )}
+
+            <div style={{ maxHeight: 300, overflowY: "auto", border: `1px solid ${darkGold}`, borderRadius: 6, padding: 8 }}>
+              {selectedTournament.tournament?.participants && selectedTournament.tournament.participants.length > 0 ? (
+                selectedTournament.tournament.participants.map((p) => {
+                  const participant = p.participant;
+                  return (
+                    <div
+                      key={participant.id}
+                      style={{
+                        padding: "8px 12px",
+                        background: bg,
+                        borderRadius: 4,
+                        marginBottom: 6,
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center"
+                      }}
+                    >
+                      <div>
+                        <span style={{ color: textLight, fontSize: 14, fontWeight: 600 }}>{participant.name}</span>
+                        {participant.seed && (
+                          <span style={{ color: textMuted, fontSize: 12, marginLeft: 8 }}>Seed: {participant.seed}</span>
+                        )}
+                      </div>
+
+                      {selectedTournament.tournament?.state === 'pending' && (
+                        <Button
+                          variant="danger"
+                          style={{ padding: "4px 10px", fontSize: 11 }}
+                          onClick={() => handleDeleteParticipant(
+                            selectedTournament.tournament.id,
+                            participant.id,
+                            participant.name
+                          )}
+                        >
+                          Eliminar
+                        </Button>
+                      )}
+                    </div>
+                  );
+                })
+              ) : (
+                <p style={{ color: textMuted, fontSize: 13, textAlign: "center", padding: 20 }}>
+                  No hay participantes aún
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div style={{ marginTop: 20 }}>
+            <h4 style={{ color: gold, fontSize: 14, marginBottom: 12, fontWeight: 600 }}>Bracket</h4>
+            {selectedTournament.tournament?.full_challonge_url ? (
+              <div
+                style={{
+                  border: `1px solid ${darkGold}`,
+                  borderRadius: 6,
+                  overflow: "hidden",
+                  background: "#fff"
+                }}
+              >
+                <iframe
+                  key={`bracket-${selectedTournament.tournament.id}-${bracketRefreshKey}`}
+                  src={`${selectedTournament.tournament.full_challonge_url}/module?v=${bracketRefreshKey}`}
+                  width="100%"
+                  height="500"
+                  frameBorder="0"
+                  scrolling="auto"
+                  allowTransparency="true"
+                  style={{ border: 0 }}
+                />
+              </div>
+            ) : (
+              <p style={{ color: textMuted, fontSize: 13, padding: 20, textAlign: "center" }}>
+                El bracket estará disponible una vez que el torneo inicie
+              </p>
+            )}
+          </div>
+
+          <div style={{ display: "flex", gap: 12, marginTop: 20 }}>
+            <Button variant="secondary" onClick={() => setSelectedTournament(null)} style={{ flex: 1 }}>
+              Cerrar
+            </Button>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
