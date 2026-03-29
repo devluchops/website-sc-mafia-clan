@@ -2,9 +2,9 @@
 
 import { useSession } from "next-auth/react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
   const { data: session, status } = useSession();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -425,3 +425,19 @@ const styles = {
     marginBottom: "0",
   },
 };
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense
+      fallback={
+        <div style={styles.container}>
+          <div style={styles.card}>
+            <p style={styles.loading}>Cargando...</p>
+          </div>
+        </div>
+      }
+    >
+      <VerifyEmailContent />
+    </Suspense>
+  );
+}
