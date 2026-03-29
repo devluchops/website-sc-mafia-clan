@@ -469,3 +469,157 @@ export async function sendCommentReplyNotification({
     throw error;
   }
 }
+
+/**
+ * Envía email de verificación de cuenta
+ */
+export async function sendVerificationEmail({ email, name, token }) {
+  if (!resend) {
+    console.warn('⚠️  Resend no está configurado. No se enviará email de verificación.');
+    return null;
+  }
+
+  if (!email) {
+    throw new Error('Email no proporcionado para verificación');
+  }
+
+  const verificationUrl = `${SITE_URL}/api/verify-token?token=${token}`;
+
+  try {
+    const data = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: email,
+      subject: 'Verifica tu email - Clan MAFIA 🔐',
+      html: `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <style>
+              body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background-color: #0a0a0a;
+                color: #e8dcc0;
+                margin: 0;
+                padding: 20px;
+              }
+              .container {
+                max-width: 600px;
+                margin: 0 auto;
+                background-color: #1e1b18;
+                border: 1px solid #3d3525;
+                border-radius: 10px;
+                overflow: hidden;
+              }
+              .header {
+                background-color: #252220;
+                padding: 30px;
+                text-align: center;
+                border-bottom: 2px solid #c9a84c;
+              }
+              .header h1 {
+                color: #c9a84c;
+                font-size: 32px;
+                margin: 0;
+                letter-spacing: 4px;
+                font-weight: 700;
+              }
+              .content {
+                padding: 40px 30px;
+              }
+              .content h2 {
+                color: #c9a84c;
+                font-size: 24px;
+                margin-top: 0;
+              }
+              .content p {
+                line-height: 1.6;
+                color: #e8dcc0;
+                margin: 16px 0;
+              }
+              .button {
+                display: inline-block;
+                padding: 16px 40px;
+                background-color: #c9a84c;
+                color: #1e1b18;
+                text-decoration: none;
+                border-radius: 8px;
+                font-weight: 700;
+                margin: 24px 0;
+                letter-spacing: 2px;
+                text-transform: uppercase;
+                font-size: 16px;
+              }
+              .button:hover {
+                background-color: #d4b660;
+              }
+              .warning {
+                background-color: #3d2a1a;
+                border-left: 4px solid #d97706;
+                padding: 16px;
+                margin: 20px 0;
+                border-radius: 4px;
+              }
+              .warning p {
+                margin: 0;
+                color: #fbbf24;
+                font-size: 14px;
+              }
+              .footer {
+                padding: 20px 30px;
+                text-align: center;
+                font-size: 12px;
+                color: #8b7b5e;
+                border-top: 1px solid #3d3525;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">
+                <h1>🔐 VERIFICA TU EMAIL</h1>
+              </div>
+              <div class="content">
+                <h2>¡Hola ${name}!</h2>
+                <p>
+                  Gracias por unirte al <strong>Clan MAFIA</strong>. Para completar tu registro
+                  y acceder a todas las funciones del sitio, necesitamos verificar tu dirección
+                  de email.
+                </p>
+                <p>
+                  Haz click en el botón de abajo para verificar tu cuenta:
+                </p>
+                <center>
+                  <a href="${verificationUrl}" class="button">✓ Verificar Email</a>
+                </center>
+                <div class="warning">
+                  <p>
+                    ⏰ <strong>Este link expira en 24 horas.</strong><br>
+                    Si no verificas tu email en este tiempo, deberás solicitar un nuevo link de verificación.
+                  </p>
+                </div>
+                <p style="color: #8b7b5e; font-size: 14px; margin-top: 30px;">
+                  Si no creaste una cuenta en Clan MAFIA, puedes ignorar este email.
+                </p>
+                <p style="color: #8b7b5e; font-size: 12px; margin-top: 20px;">
+                  Si el botón no funciona, copia y pega este link en tu navegador:<br>
+                  <span style="color: #c9a84c; word-break: break-all;">${verificationUrl}</span>
+                </p>
+              </div>
+              <div class="footer">
+                <p>Este email fue enviado automáticamente por el sistema de verificación.</p>
+                <p>© ${new Date().getFullYear()} Clan MAFIA - StarCraft Community</p>
+              </div>
+            </div>
+          </body>
+        </html>
+      `,
+    });
+
+    console.log('✅ Email de verificación enviado a:', email);
+    return data;
+  } catch (error) {
+    console.error('❌ Error enviando email de verificación:', error);
+    throw error;
+  }
+}

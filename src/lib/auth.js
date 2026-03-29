@@ -148,6 +148,20 @@ export const authOptions = {
           console.error("Error loading permissions:", error);
           session.user.permissions = { is_admin: false };
         }
+
+        // Verificar estado de email verification
+        try {
+          const sql = getDb();
+          const [member] = await sql`
+            SELECT email, email_verified FROM members
+            WHERE discord_id = ${discordId}
+          `;
+          session.user.email = member?.email || null;
+          session.user.emailVerified = member?.email_verified || false;
+        } catch (error) {
+          console.error("Error loading email verification status:", error);
+          session.user.emailVerified = false;
+        }
       }
       return session;
     },
