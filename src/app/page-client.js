@@ -1833,6 +1833,123 @@ function RosterSection({ members }) {
   );
 }
 
+function TournamentsSection({ tournaments }) {
+  const stateLabels = {
+    pending: "Pendiente",
+    underway: "En Curso",
+    awaiting_review: "En Revisión",
+    complete: "Completado"
+  };
+
+  const stateColors = {
+    pending: { bg: "rgba(201,168,76,0.1)", text: gold },
+    underway: { bg: "rgba(76,201,130,0.1)", text: "#4cc982" },
+    awaiting_review: { bg: "rgba(100,160,200,0.1)", text: "#7ab8d4" },
+    complete: { bg: "rgba(139,92,92,0.1)", text: "#c9a08a" }
+  };
+
+  if (!tournaments || tournaments.length === 0) {
+    return (
+      <div>
+        <SectionTitle>Torneos</SectionTitle>
+        <Card style={{ textAlign: "center", padding: 40 }}>
+          <p style={{ color: textMuted, fontSize: 14 }}>
+            No hay torneos activos en este momento.
+          </p>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <SectionTitle>Torneos Activos</SectionTitle>
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        {tournaments.map((t, i) => {
+          const tournament = t.tournament;
+          const stateColor = stateColors[tournament.state] || stateColors.pending;
+
+          return (
+            <Card
+              key={i}
+              style={{
+                padding: 16,
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, marginBottom: 12 }}>
+                <div style={{ flex: 1 }}>
+                  <h3
+                    style={{
+                      fontFamily: "'Cinzel', serif",
+                      fontSize: 18,
+                      fontWeight: 600,
+                      color: gold,
+                      margin: "0 0 8px 0",
+                    }}
+                  >
+                    {tournament.name}
+                  </h3>
+                  {tournament.description && (
+                    <p style={{ fontSize: 14, color: textBody, margin: "0 0 12px 0", lineHeight: 1.6 }}>
+                      {tournament.description}
+                    </p>
+                  )}
+                  <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+                    <span style={{
+                      fontSize: 11,
+                      padding: "4px 10px",
+                      borderRadius: 4,
+                      background: stateColor.bg,
+                      color: stateColor.text,
+                      fontWeight: 600,
+                      textTransform: "uppercase",
+                      letterSpacing: 0.5
+                    }}>
+                      {stateLabels[tournament.state] || tournament.state}
+                    </span>
+                    <span style={{ color: textMuted, fontSize: 13 }}>
+                      {tournament.tournament_type}
+                    </span>
+                    <span style={{ color: textMuted, fontSize: 13 }}>
+                      {tournament.participants_count || 0} participantes
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                <a
+                  href={tournament.full_challonge_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "8px 16px",
+                    background: gold,
+                    color: bg,
+                    borderRadius: 6,
+                    fontSize: 13,
+                    fontWeight: 600,
+                    textDecoration: "none",
+                    transition: "all 0.2s",
+                    border: "none",
+                    cursor: "pointer",
+                  }}
+                  onMouseEnter={(e) => e.target.style.transform = "translateY(-2px)"}
+                  onMouseLeave={(e) => e.target.style.transform = "translateY(0)"}
+                >
+                  Ver Bracket →
+                </a>
+              </div>
+            </Card>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function EventsSection({ events }) {
   const [selectedEvent, setSelectedEvent] = useState(null);
 
@@ -2235,6 +2352,7 @@ const TABS = [
   { id: "videos", label: "Videos" },
   { id: "roster", label: "Miembros" },
   { id: "events", label: "Eventos" },
+  { id: "tournaments", label: "Torneos" },
   { id: "rules", label: "Reglas" },
   { id: "build-orders", label: "Build Orders" },
 ];
@@ -2252,6 +2370,7 @@ export default function HomePage() {
   const [logoErr, setLogoErr] = useState(false);
   const [data, setData] = useState(null);
   const [buildOrders, setBuildOrders] = useState([]);
+  const [tournaments, setTournaments] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Actualizar hash cuando cambia activeTab
@@ -2278,6 +2397,12 @@ export default function HomePage() {
     fetch("/api/admin/build-orders")
       .then((res) => res.json())
       .then((builds) => setBuildOrders(builds))
+      .catch((err) => console.error(err));
+
+    // Cargar torneos activos
+    fetch("/api/tournaments")
+      .then((res) => res.json())
+      .then((tourns) => setTournaments(tourns))
       .catch((err) => console.error(err));
   }, []);
 
@@ -2537,6 +2662,7 @@ export default function HomePage() {
         {activeTab === "videos" && <VideosSection videos={videos} />}
         {activeTab === "roster" && <RosterSection members={members} />}
         {activeTab === "events" && <EventsSection events={events} />}
+        {activeTab === "tournaments" && <TournamentsSection tournaments={tournaments} />}
         {activeTab === "rules" && <RulesSection rules={rules || []} />}
         {activeTab === "build-orders" && <BuildOrdersSection builds={buildOrders} />}
       </main>
