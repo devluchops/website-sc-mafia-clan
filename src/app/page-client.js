@@ -2329,6 +2329,60 @@ export default function HomePage() {
           </a>
         </div>
 
+        {/* Contact Info */}
+        <div
+          style={{
+            fontSize: 13,
+            color: "#6b5c3e",
+            letterSpacing: 1,
+            marginBottom: 16,
+            display: "flex",
+            flexDirection: "column",
+            gap: 8,
+            alignItems: "center",
+          }}
+        >
+          <p style={{ margin: 0, fontWeight: 600, color: gold, fontSize: 14 }}>
+            CONTACTO DEL ADMINISTRADOR
+          </p>
+          <div style={{ display: "flex", gap: 16, flexWrap: "wrap", justifyContent: "center" }}>
+            <a
+              href="mailto:lvalencia1286@gmail.com"
+              style={{
+                color: "#6b5c3e",
+                textDecoration: "none",
+                transition: "color 0.2s",
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+              }}
+              onMouseOver={(e) => e.currentTarget.style.color = gold}
+              onMouseOut={(e) => e.currentTarget.style.color = "#6b5c3e"}
+            >
+              <span style={{ fontSize: 16 }}>📧</span>
+              lvalencia1286@gmail.com
+            </a>
+            <a
+              href="https://wa.me/51966346424"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                color: "#6b5c3e",
+                textDecoration: "none",
+                transition: "color 0.2s",
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+              }}
+              onMouseOver={(e) => e.currentTarget.style.color = gold}
+              onMouseOut={(e) => e.currentTarget.style.color = "#6b5c3e"}
+            >
+              <span style={{ fontSize: 16 }}>💬</span>
+              +51 966 346 424
+            </a>
+          </div>
+        </div>
+
         {/* Copyright */}
         <p
           style={{
