@@ -57,3 +57,43 @@ These defaults are optimized for AI coding agents (and humans) working on apps t
 1. **Member Invites**: Automatic when email + Discord username configured (only if user hasn't logged in)
 2. **Comment Replies**: Sent when someone replies to your comment
 3. **New Posts**: All members with email notified when new blog post published
+
+**Testing Email System:**
+
+1. **Verify Domain First:**
+   - Go to https://resend.com/domains
+   - Check that `devluchops.space` shows ✅ green checkmarks
+   - DNS propagation can take 2-15 minutes
+
+2. **Test Invite Email:**
+   ```bash
+   # Create test member via admin panel at https://clanmafia.devluchops.space/admin
+   # OR use this script:
+   DATABASE_URL='your_db_url' \
+   RESEND_FROM_EMAIL='Clan MAFIA <noreply@devluchops.space>' \
+   NEXT_PUBLIC_SITE_URL='https://clanmafia.devluchops.space' \
+   node scripts/create-simple-test-member.js
+   ```
+   - Email will only send from Vercel (production) where RESEND_API_KEY exists
+   - Local scripts won't send emails unless you set RESEND_API_KEY locally
+
+3. **Check Email Logs:**
+   - View all sent emails at https://resend.com/emails
+   - Check delivery status (Delivered, Queued, Failed)
+   - View email content and metadata
+
+**Creating Test Data:**
+
+```bash
+# Create a test member with email
+node -e "
+import { neon } from '@neondatabase/serverless';
+const sql = neon(process.env.DATABASE_URL);
+await sql\`
+  INSERT INTO members (name, email, social_discord, race, rank, avatar, mmr, created_at, updated_at)
+  VALUES ('Test_User', 'test@example.com', 'test_discord', 'Protoss', 'Miembro', '', 0, NOW(), NOW())
+\`;
+"
+```
+
+Or use the script: `scripts/create-simple-test-member.js`
