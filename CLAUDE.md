@@ -22,3 +22,25 @@ These defaults are optimized for AI coding agents (and humans) working on apps t
   needed. Always curl https://ai-gateway.vercel.sh/v1/models first; never trust model IDs from memory
 - For durable agent loops or untrusted code: use Workflow (pause/resume/state) + Sandbox; use Vercel MCP for secure infra access
 <!-- VERCEL BEST PRACTICES END -->
+
+## Vercel MCP Integration
+
+**ALWAYS use Vercel MCP when available** for managing Vercel infrastructure:
+
+- **Environment Variables**: Use `vercel env add/rm/ls` commands via Bash instead of manual dashboard changes
+- **Deployments**: Use `mcp__vercel__list_deployments`, `mcp__vercel__get_deployment` to check deployment status
+- **Projects**: Use `mcp__vercel__list_projects`, `mcp__vercel__get_project` to get project information
+- **Documentation**: Use `mcp__vercel__search_vercel_documentation` to search Vercel docs when needed
+- **Logs**: Use `mcp__vercel__get_runtime_logs` to debug deployment issues
+
+**Workflow for configuration changes:**
+1. Check if user has authenticated with Vercel MCP (`/mcp` command)
+2. If authenticated, use MCP tools and Vercel CLI via Bash
+3. If not authenticated, provide manual instructions for Vercel dashboard
+
+**Project Information:**
+- Team ID: `team_3qdITWUtIGbwk7lA7TrcRele`
+- Team Slug: `lvalencia1286-2164s-projects`
+- Project ID: `prj_Q1wY8w8gKgCGlvKOuaysDpArcjLP`
+- Project Name: `website-sc-mafia-clan`
+- Production Domain: `clanmafia.devluchops.space`
