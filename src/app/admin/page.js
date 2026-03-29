@@ -228,6 +228,7 @@ export default function AdminDashboard() {
   const [videoModal, setVideoModal] = useState({ isOpen: false, video: null });
   const [eventModal, setEventModal] = useState({ isOpen: false, event: null });
   const [ruleModal, setRuleModal] = useState({ isOpen: false, rule: null });
+  const [buildOrderModal, setBuildOrderModal] = useState({ isOpen: false, buildOrder: null });
   const [discordUserModal, setDiscordUserModal] = useState({ isOpen: false, user: null });
   const [logoFile, setLogoFile] = useState(null);
   const [postImageFile, setPostImageFile] = useState(null);
@@ -630,6 +631,49 @@ export default function AdminDashboard() {
       });
       if (res.ok) {
         showMessage("✅ Regla eliminada");
+        loadData();
+      } else {
+        showMessage("❌ Error al eliminar");
+      }
+    } catch (error) {
+      showMessage("❌ Error: " + error.message);
+    }
+    setLoading(false);
+  };
+
+  const handleSaveBuildOrder = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/build-orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(buildOrderModal.buildOrder),
+      });
+      if (res.ok) {
+        showMessage("✅ Build Order guardado correctamente");
+        setBuildOrderModal({ isOpen: false, buildOrder: null });
+        loadData();
+      } else {
+        showMessage("❌ Error al guardar Build Order");
+      }
+    } catch (error) {
+      showMessage("❌ Error: " + error.message);
+    }
+    setLoading(false);
+  };
+
+  const handleDeleteBuildOrder = async (id) => {
+    if (!confirm("¿Estás seguro de eliminar este Build Order?")) return;
+
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/build-orders", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      if (res.ok) {
+        showMessage("✅ Build Order eliminado");
         loadData();
       } else {
         showMessage("❌ Error al eliminar");
@@ -1593,68 +1637,93 @@ export default function AdminDashboard() {
         {/* Build Orders */}
         {activeSection === "build-orders" && (session?.user?.permissions?.is_admin || session?.user?.permissions?.can_manage_build_orders) && (
           <AdminCard title="Gestión de Build Orders">
-            <div style={{ marginBottom: 20 }}>
-              <p style={{ color: textMuted, fontSize: 13, marginBottom: 16 }}>
-                Gestiona los build orders del clan. Actualmente hay {buildOrders.length} builds registrados.
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+              <p style={{ color: textMuted, fontSize: 14 }}>
+                Total: <strong style={{ color: gold }}>{buildOrders.length}</strong>
               </p>
-              <p style={{ color: gold, fontSize: 12, fontStyle: "italic" }}>
-                Nota: Para gestionar build orders de forma completa (crear, editar pasos, etc.),
-                considera crear scripts en la carpeta /scripts como los existentes
-                (translate-builds-spanish.js, add-missing-times.js, etc.)
-              </p>
+              <Button onClick={() => setBuildOrderModal({
+                isOpen: true,
+                buildOrder: {
+                  name: "",
+                  race: "Terran",
+                  matchups: "",
+                  description: "",
+                  build_steps: [],
+                  video_url: "",
+                  difficulty: "Intermedio",
+                  tags: []
+                }
+              })}>
+                + Agregar Build Order
+              </Button>
             </div>
 
-            {buildOrders.length > 0 && (
-              <div style={{ marginTop: 20 }}>
-                <h3 style={{ color: gold, fontSize: 14, marginBottom: 12, fontWeight: 600 }}>
-                  Builds Existentes
-                </h3>
-                {buildOrders.map((build) => (
-                  <div
-                    key={build.id}
-                    style={{
-                      background: bg,
-                      border: `1px solid ${darkGold}`,
-                      borderRadius: 6,
-                      padding: 16,
-                      marginBottom: 12,
-                    }}
-                  >
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                      <div style={{ flex: 1 }}>
-                        <h4 style={{ color: gold, fontSize: 15, fontWeight: 600, marginBottom: 6 }}>
-                          {build.name}
-                        </h4>
-                        <div style={{ display: "flex", gap: 12, marginBottom: 8 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {buildOrders.map((build) => (
+                <div
+                  key={build.id}
+                  style={{
+                    background: bg,
+                    border: `1px solid ${darkGold}`,
+                    borderRadius: 6,
+                    padding: 16,
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                    <div style={{ flex: 1 }}>
+                      <h4 style={{ color: gold, fontSize: 15, fontWeight: 600, marginBottom: 6 }}>
+                        {build.name}
+                      </h4>
+                      <div style={{ display: "flex", gap: 12, marginBottom: 8, flexWrap: "wrap" }}>
+                        <span style={{ color: textMuted, fontSize: 12 }}>
+                          Raza: <span style={{ color: textLight }}>{build.race}</span>
+                        </span>
+                        {build.matchups && (
                           <span style={{ color: textMuted, fontSize: 12 }}>
-                            Raza: <span style={{ color: textLight }}>{build.race}</span>
+                            Matchups: <span style={{ color: textLight }}>{build.matchups}</span>
                           </span>
-                          <span style={{ color: textMuted, fontSize: 12 }}>
-                            Dificultad: <span style={{ color: textLight }}>{build.difficulty}</span>
-                          </span>
-                          <span style={{ color: textMuted, fontSize: 12 }}>
-                            Pasos: <span style={{ color: textLight }}>{build.build_steps?.length || 0}</span>
-                          </span>
-                        </div>
-                        <p style={{ color: textLight, fontSize: 13, marginBottom: 8, lineHeight: 1.5 }}>
-                          {build.description}
-                        </p>
-                        {build.video_url && (
-                          <a
-                            href={build.video_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{ color: "#7ab8d4", fontSize: 12, textDecoration: "none" }}
-                          >
-                            Ver video →
-                          </a>
                         )}
+                        <span style={{ color: textMuted, fontSize: 12 }}>
+                          Dificultad: <span style={{ color: textLight }}>{build.difficulty}</span>
+                        </span>
+                        <span style={{ color: textMuted, fontSize: 12 }}>
+                          Pasos: <span style={{ color: textLight }}>{build.build_steps?.length || 0}</span>
+                        </span>
                       </div>
+                      <p style={{ color: textLight, fontSize: 13, marginBottom: 8, lineHeight: 1.5 }}>
+                        {build.description}
+                      </p>
+                      {build.video_url && (
+                        <a
+                          href={build.video_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ color: "#7ab8d4", fontSize: 12, textDecoration: "none" }}
+                        >
+                          Ver video →
+                        </a>
+                      )}
+                    </div>
+                    <div style={{ display: "flex", gap: 8, marginLeft: 16 }}>
+                      <Button
+                        variant="secondary"
+                        style={{ padding: "6px 12px", fontSize: 10 }}
+                        onClick={() => setBuildOrderModal({ isOpen: true, buildOrder: build })}
+                      >
+                        Editar
+                      </Button>
+                      <Button
+                        variant="danger"
+                        style={{ padding: "6px 12px", fontSize: 10 }}
+                        onClick={() => handleDeleteBuildOrder(build.id)}
+                      >
+                        Eliminar
+                      </Button>
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
+                </div>
+              ))}
+            </div>
           </AdminCard>
         )}
 
@@ -2434,6 +2503,108 @@ export default function AdminDashboard() {
             Agregar
           </Button>
           <Button variant="secondary" onClick={() => setDiscordUserModal({ isOpen: false, selectedMemberId: null })} style={{ flex: 1 }}>
+            Cancelar
+          </Button>
+        </div>
+      </Modal>
+
+      {/* Build Order Modal */}
+      <Modal
+        isOpen={buildOrderModal.isOpen}
+        onClose={() => setBuildOrderModal({ isOpen: false, buildOrder: null })}
+        title={buildOrderModal.buildOrder?.id ? "Editar Build Order" : "Agregar Build Order"}
+      >
+        <Input
+          label="Nombre del Build"
+          value={buildOrderModal.buildOrder?.name || ""}
+          onChange={(val) => setBuildOrderModal({ ...buildOrderModal, buildOrder: { ...buildOrderModal.buildOrder, name: val } })}
+          placeholder="Ej: Terran FD into Valks"
+        />
+        <Select
+          label="Raza"
+          value={buildOrderModal.buildOrder?.race || "Terran"}
+          onChange={(val) => setBuildOrderModal({ ...buildOrderModal, buildOrder: { ...buildOrderModal.buildOrder, race: val } })}
+          options={["Terran", "Protoss", "Zerg"]}
+        />
+        <Input
+          label="Matchups"
+          value={buildOrderModal.buildOrder?.matchups || ""}
+          onChange={(val) => setBuildOrderModal({ ...buildOrderModal, buildOrder: { ...buildOrderModal.buildOrder, matchups: val } })}
+          placeholder="Ej: TvP, TvZ"
+        />
+        <Input
+          label="Descripción"
+          textarea
+          value={buildOrderModal.buildOrder?.description || ""}
+          onChange={(val) => setBuildOrderModal({ ...buildOrderModal, buildOrder: { ...buildOrderModal.buildOrder, description: val } })}
+          placeholder="Descripción del build order"
+        />
+        <Select
+          label="Dificultad"
+          value={buildOrderModal.buildOrder?.difficulty || "Intermedio"}
+          onChange={(val) => setBuildOrderModal({ ...buildOrderModal, buildOrder: { ...buildOrderModal.buildOrder, difficulty: val } })}
+          options={["Fácil", "Intermedio", "Difícil", "Avanzado"]}
+        />
+        <Input
+          label="URL del Video (opcional)"
+          value={buildOrderModal.buildOrder?.video_url || ""}
+          onChange={(val) => setBuildOrderModal({ ...buildOrderModal, buildOrder: { ...buildOrderModal.buildOrder, video_url: val } })}
+          placeholder="https://youtube.com/..."
+        />
+        <div style={{ marginBottom: 16 }}>
+          <label style={{
+            display: "block",
+            fontSize: 12,
+            fontWeight: 600,
+            color: textMuted,
+            marginBottom: 6,
+            letterSpacing: 1,
+            textTransform: "uppercase",
+          }}>
+            Build Steps (JSON)
+          </label>
+          <textarea
+            value={JSON.stringify(buildOrderModal.buildOrder?.build_steps || [], null, 2)}
+            onChange={(e) => {
+              try {
+                const parsed = JSON.parse(e.target.value);
+                setBuildOrderModal({
+                  ...buildOrderModal,
+                  buildOrder: { ...buildOrderModal.buildOrder, build_steps: parsed }
+                });
+              } catch (err) {
+                // Invalid JSON, update anyway to allow editing
+                setBuildOrderModal({
+                  ...buildOrderModal,
+                  buildOrder: { ...buildOrderModal.buildOrder, build_steps: e.target.value }
+                });
+              }
+            }}
+            placeholder='[{"supply": 8, "action": "Scout"}, ...]'
+            style={{
+              width: "100%",
+              padding: "10px 14px",
+              background: bg,
+              border: `1px solid ${darkGold}`,
+              borderRadius: 6,
+              color: textLight,
+              fontSize: 12,
+              fontFamily: "monospace",
+              minHeight: 200,
+              resize: "vertical",
+            }}
+          />
+          <p style={{ fontSize: 11, color: textMuted, marginTop: 6, fontStyle: "italic" }}>
+            Formato: [{"{"}"supply": 8, "action": "Scout"{"}"}]
+            <br />
+            También puedes usar scripts en /scripts para gestionar builds complejos
+          </p>
+        </div>
+        <div style={{ display: "flex", gap: 12, marginTop: 20 }}>
+          <Button onClick={handleSaveBuildOrder} loading={loading} style={{ flex: 1 }}>
+            Guardar
+          </Button>
+          <Button variant="secondary" onClick={() => setBuildOrderModal({ isOpen: false, buildOrder: null })} style={{ flex: 1 }}>
             Cancelar
           </Button>
         </div>
