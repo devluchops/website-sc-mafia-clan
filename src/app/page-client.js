@@ -2166,7 +2166,7 @@ export default function HomePage() {
                 Mi Perfil
               </Link>
               {session.user?.permissions?.is_admin && (
-                <Link
+                <a
                   href="/admin"
                   style={{
                     background: "rgba(201,168,76,0.1)",
@@ -2194,7 +2194,7 @@ export default function HomePage() {
                   }}
                 >
                   Admin
-                </Link>
+                </a>
               )}
             </>
           ) : (
@@ -2411,7 +2411,7 @@ export default function HomePage() {
               {session.user?.permissions?.is_admin && (
                 <>
                   {" "}&bull;{" "}
-                  <Link
+                  <a
                     href="/admin"
                     style={{
                       color: "#3d3525",
@@ -2422,7 +2422,7 @@ export default function HomePage() {
                     onMouseOut={(e) => e.currentTarget.style.color = "#3d3525"}
                   >
                     Admin
-                  </Link>
+                  </a>
                 </>
               )}
             </>
