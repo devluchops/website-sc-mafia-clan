@@ -1125,59 +1125,121 @@ export default function AdminDashboard() {
                 </Button>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {paginatedMembers.map((member) => (
-                  <div
-                    key={member.id}
-                    style={{
-                      background: bg,
-                      padding: 14,
-                      borderRadius: 8,
-                      border: `1px solid ${darkGold}`,
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      gap: 16,
-                    }}
-                  >
-                    <div style={{ flex: 1 }}>
-                      <p style={{ fontWeight: 600, color: textLight, marginBottom: 6, fontSize: 15 }}>
-                        {member.name}
-                        {member.level_rank && (
-                          <span style={{
-                            marginLeft: 8,
-                            padding: "2px 8px",
-                            fontSize: 11,
-                            fontWeight: 700,
-                            background: "rgba(201,168,76,0.15)",
-                            color: gold,
-                            borderRadius: 4,
-                          }}>
-                            {member.level_rank}
+                {paginatedMembers.map((member) => {
+                  const hasEmail = !!member.email;
+                  const isVerified = member.email_verified;
+                  const hasDiscord = !!member.social_discord;
+                  const canResendInvite = hasEmail && hasDiscord && !isVerified;
+                  const lastLogin = member.last_login_at
+                    ? new Date(member.last_login_at).toLocaleDateString('es-ES', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })
+                    : 'Nunca';
+
+                  return (
+                    <div
+                      key={member.id}
+                      style={{
+                        background: bg,
+                        padding: 14,
+                        borderRadius: 8,
+                        border: `1px solid ${darkGold}`,
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        gap: 16,
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      <div style={{ flex: 1, minWidth: 200 }}>
+                        <p style={{ fontWeight: 600, color: textLight, marginBottom: 6, fontSize: 15 }}>
+                          {member.name}
+                          {member.level_rank && (
+                            <span style={{
+                              marginLeft: 8,
+                              padding: "2px 8px",
+                              fontSize: 11,
+                              fontWeight: 700,
+                              background: "rgba(201,168,76,0.15)",
+                              color: gold,
+                              borderRadius: 4,
+                            }}>
+                              {member.level_rank}
+                            </span>
+                          )}
+                        </p>
+                        <p style={{ fontSize: 12, color: textMuted, marginBottom: 4 }}>
+                          <strong style={{ color: gold }}>{member.rank}</strong> • {member.main_race || member.race} • MMR: {member.mmr}
+                        </p>
+                        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 6 }}>
+                          {hasEmail && (
+                            <span style={{
+                              fontSize: 11,
+                              padding: "2px 8px",
+                              borderRadius: 4,
+                              background: isVerified ? "rgba(76, 201, 76, 0.15)" : "rgba(201, 76, 76, 0.15)",
+                              color: isVerified ? "#4CAF50" : "#f44336",
+                              fontWeight: 600,
+                            }}>
+                              {isVerified ? "✓ Verificado" : "✗ Sin verificar"}
+                            </span>
+                          )}
+                          <span style={{ fontSize: 11, color: textMuted }}>
+                            Último ingreso: <strong style={{ color: textLight }}>{lastLogin}</strong>
                           </span>
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                        {canResendInvite && (
+                          <Button
+                            variant="secondary"
+                            style={{ padding: "6px 12px", fontSize: 10, whiteSpace: "nowrap" }}
+                            onClick={async () => {
+                              if (confirm(`¿Reenviar invitación a ${member.email}?`)) {
+                                try {
+                                  const res = await fetch("/api/admin/resend-invite", {
+                                    method: "POST",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({ memberId: member.id }),
+                                  });
+                                  const data = await res.json();
+                                  if (res.ok) {
+                                    alert(data.message);
+                                    loadData();
+                                  } else {
+                                    alert("Error: " + data.error);
+                                  }
+                                } catch (err) {
+                                  alert("Error al reenviar invitación");
+                                }
+                              }
+                            }}
+                          >
+                            📧 Resend
+                          </Button>
                         )}
-                      </p>
-                      <p style={{ fontSize: 12, color: textMuted, marginBottom: 0 }}>
-                        <strong style={{ color: gold }}>{member.rank}</strong> • {member.main_race || member.race} • MMR: {member.mmr}
-                      </p>
+                        <Button
+                          variant="secondary"
+                          style={{ padding: "6px 12px", fontSize: 10 }}
+                          onClick={() => setMemberModal({ isOpen: true, member })}
+                        >
+                          Editar
+                        </Button>
+                        <Button
+                          variant="danger"
+                          style={{ padding: "6px 12px", fontSize: 10 }}
+                          onClick={() => handleDeleteMember(member.id)}
+                        >
+                          Eliminar
+                        </Button>
+                      </div>
                     </div>
-                    <div style={{ display: "flex", gap: 8 }}>
-                      <Button
-                        variant="secondary"
-                        style={{ padding: "6px 12px", fontSize: 10 }}
-                        onClick={() => setMemberModal({ isOpen: true, member })}
-                      >
-                        Editar
-                      </Button>
-                      <Button
-                        variant="danger"
-                        style={{ padding: "6px 12px", fontSize: 10 }}
-                        onClick={() => handleDeleteMember(member.id)}
-                      >
-                        Eliminar
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               {/* Paginación */}
