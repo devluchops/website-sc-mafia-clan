@@ -725,20 +725,22 @@ function BuildOrdersSection({ builds }) {
 
           <div>
             <h4 style={{ fontSize: 16, fontWeight: 600, color: gold, marginBottom: 12 }}>Build Order</h4>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {selectedBuild.build_steps && selectedBuild.build_steps.map((step, idx) => (
                 <div
                   key={idx}
                   style={{
-                    display: "flex",
+                    display: "grid",
+                    gridTemplateColumns: "40px 70px 60px 1fr",
                     gap: 12,
                     background: bg,
-                    padding: 14,
+                    padding: "12px 16px",
                     borderRadius: 6,
                     border: `1px solid ${darkGold}`,
                     alignItems: "center",
                   }}
                 >
+                  {/* Número */}
                   <div
                     style={{
                       background: gold,
@@ -750,24 +752,53 @@ function BuildOrdersSection({ builds }) {
                       alignItems: "center",
                       justifyContent: "center",
                       fontWeight: 700,
-                      fontSize: 13,
-                      flexShrink: 0,
+                      fontSize: 12,
                     }}
                   >
                     {idx + 1}
                   </div>
-                  <div style={{ flex: 1, display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
-                    {step.time && (
-                      <span style={{ background: "rgba(100,160,200,0.15)", color: "#7ab8d4", padding: "4px 10px", borderRadius: 4, fontSize: 12, fontWeight: 700 }}>
+
+                  {/* Tiempo */}
+                  <div style={{ display: "flex", alignItems: "center", minWidth: 60 }}>
+                    {step.time ? (
+                      <span style={{
+                        background: "rgba(100,160,200,0.15)",
+                        color: "#7ab8d4",
+                        padding: "4px 8px",
+                        borderRadius: 4,
+                        fontSize: 11,
+                        fontWeight: 700,
+                        whiteSpace: "nowrap"
+                      }}>
                         {step.time}
                       </span>
+                    ) : (
+                      <span style={{ color: textMuted, fontSize: 11 }}>—</span>
                     )}
-                    {step.supply && (
-                      <span style={{ background: "rgba(201,168,76,0.15)", color: gold, padding: "4px 10px", borderRadius: 4, fontSize: 12, fontWeight: 700 }}>
+                  </div>
+
+                  {/* Supply */}
+                  <div style={{ display: "flex", alignItems: "center", minWidth: 50 }}>
+                    {step.supply ? (
+                      <span style={{
+                        background: "rgba(201,168,76,0.15)",
+                        color: gold,
+                        padding: "4px 8px",
+                        borderRadius: 4,
+                        fontSize: 11,
+                        fontWeight: 700,
+                        whiteSpace: "nowrap"
+                      }}>
                         {step.supply}
                       </span>
+                    ) : (
+                      <span style={{ color: textMuted, fontSize: 11 }}>—</span>
                     )}
-                    <span style={{ color: textLight, fontSize: 14, fontWeight: 600 }}>
+                  </div>
+
+                  {/* Acción */}
+                  <div style={{ flex: 1 }}>
+                    <span style={{ color: textLight, fontSize: 14, fontWeight: 600, lineHeight: 1.4 }}>
                       {step.action}
                     </span>
                   </div>
