@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { useTranslation } from "@/lib/i18n";
 import { SocialIcons } from "@/components/SocialIcons";
 
 // ============================================================
