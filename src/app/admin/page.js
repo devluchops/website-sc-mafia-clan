@@ -1140,6 +1140,10 @@ export default function AdminDashboard() {
                       })
                     : 'Nunca';
 
+                  // Determinar estado general
+                  const isComplete = hasEmail && isVerified && hasDiscord;
+                  const needsSetup = !hasEmail || !hasDiscord;
+
                   return (
                     <div
                       key={member.id}
@@ -1171,25 +1175,84 @@ export default function AdminDashboard() {
                               {member.level_rank}
                             </span>
                           )}
+                          {isComplete && (
+                            <span style={{
+                              marginLeft: 8,
+                              padding: "2px 8px",
+                              fontSize: 11,
+                              fontWeight: 700,
+                              background: "rgba(76, 201, 76, 0.15)",
+                              color: "#4CAF50",
+                              borderRadius: 4,
+                            }}>
+                              ✓ Completo
+                            </span>
+                          )}
                         </p>
                         <p style={{ fontSize: 12, color: textMuted, marginBottom: 4 }}>
                           <strong style={{ color: gold }}>{member.rank}</strong> • {member.main_race || member.race} • MMR: {member.mmr}
                         </p>
-                        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 6 }}>
-                          {hasEmail && (
+                        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 6, alignItems: "center" }}>
+                          {/* Estado de Email */}
+                          {hasEmail ? (
                             <span style={{
-                              fontSize: 11,
-                              padding: "2px 8px",
+                              fontSize: 10,
+                              padding: "3px 8px",
                               borderRadius: 4,
-                              background: isVerified ? "rgba(76, 201, 76, 0.15)" : "rgba(201, 76, 76, 0.15)",
-                              color: isVerified ? "#4CAF50" : "#f44336",
+                              background: isVerified ? "rgba(76, 201, 76, 0.15)" : "rgba(201, 140, 76, 0.15)",
+                              color: isVerified ? "#4CAF50" : "#FF9800",
                               fontWeight: 600,
+                              border: `1px solid ${isVerified ? "#4CAF50" : "#FF9800"}`,
                             }}>
-                              {isVerified ? "✓ Verificado" : "✗ Sin verificar"}
+                              {isVerified ? "✓ Email verificado" : "⏳ Email pendiente"}
+                            </span>
+                          ) : (
+                            <span style={{
+                              fontSize: 10,
+                              padding: "3px 8px",
+                              borderRadius: 4,
+                              background: "rgba(201, 76, 76, 0.15)",
+                              color: "#f44336",
+                              fontWeight: 600,
+                              border: "1px solid #f44336",
+                            }}>
+                              ✗ Sin email
                             </span>
                           )}
+
+                          {/* Estado de Discord */}
+                          {hasDiscord ? (
+                            <span style={{
+                              fontSize: 10,
+                              padding: "3px 8px",
+                              borderRadius: 4,
+                              background: "rgba(76, 201, 76, 0.15)",
+                              color: "#4CAF50",
+                              fontWeight: 600,
+                              border: "1px solid #4CAF50",
+                            }}>
+                              ✓ Discord: {member.social_discord}
+                            </span>
+                          ) : (
+                            <span style={{
+                              fontSize: 10,
+                              padding: "3px 8px",
+                              borderRadius: 4,
+                              background: "rgba(201, 76, 76, 0.15)",
+                              color: "#f44336",
+                              fontWeight: 600,
+                              border: "1px solid #f44336",
+                            }}>
+                              ✗ Sin Discord
+                            </span>
+                          )}
+
+                          {/* Último ingreso */}
                           <span style={{ fontSize: 11, color: textMuted }}>
-                            Último ingreso: <strong style={{ color: textLight }}>{lastLogin}</strong>
+                            •
+                          </span>
+                          <span style={{ fontSize: 11, color: textMuted }}>
+                            Último ingreso: <strong style={{ color: lastLogin === 'Nunca' ? '#f44336' : textLight }}>{lastLogin}</strong>
                           </span>
                         </div>
                       </div>
