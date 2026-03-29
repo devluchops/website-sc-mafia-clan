@@ -12,8 +12,11 @@ export default function VerifyEmailPage() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loadingMember, setLoadingMember] = useState(true);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [existingEmail, setExistingEmail] = useState(null);
+  const [existingPhone, setExistingPhone] = useState(null);
 
   // Manejar errores de URL
   useEffect(() => {
@@ -33,6 +36,36 @@ export default function VerifyEmailPage() {
       router.push("/login");
     }
   }, [status, router]);
+
+  // Cargar datos del miembro si ya tiene email registrado
+  useEffect(() => {
+    async function loadMemberData() {
+      if (session?.user?.discordId) {
+        try {
+          const response = await fetch(`/api/member-info?discordId=${session.user.discordId}`);
+          if (response.ok) {
+            const data = await response.json();
+            if (data.email) {
+              setExistingEmail(data.email);
+              setEmail(data.email); // Pre-llenar el campo
+            }
+            if (data.phone) {
+              setExistingPhone(data.phone);
+              setPhone(data.phone); // Pre-llenar el campo
+            }
+          }
+        } catch (err) {
+          console.error("Error loading member data:", err);
+        } finally {
+          setLoadingMember(false);
+        }
+      }
+    }
+
+    if (status === "authenticated") {
+      loadMemberData();
+    }
+  }, [session, status]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -66,7 +99,7 @@ export default function VerifyEmailPage() {
     }
   };
 
-  if (status === "loading") {
+  if (status === "loading" || loadingMember) {
     return (
       <div style={styles.container}>
         <div style={styles.card}>
@@ -101,14 +134,34 @@ export default function VerifyEmailPage() {
 
         {/* Instrucciones */}
         <div style={styles.instructions}>
-          <p>
-            Para garantizar la seguridad y calidad de nuestra comunidad,
-            necesitamos verificar tu dirección de email.
-          </p>
-          <p>
-            <strong>Ingresa tu email</strong> y te enviaremos un link de
-            verificación.
-          </p>
+          {existingEmail ? (
+            <>
+              <p>
+                Ya tienes un email registrado. Si no has recibido el email de
+                verificación, puedes reenviarlo o cambiar tu email.
+              </p>
+              <div style={styles.infoBox}>
+                <p style={{ margin: 0 }}>
+                  <strong>Email actual:</strong> {existingEmail}
+                </p>
+              </div>
+              <p>
+                <strong>Reenvía el código</strong> o cambia tu email si es
+                incorrecto.
+              </p>
+            </>
+          ) : (
+            <>
+              <p>
+                Para garantizar la seguridad y calidad de nuestra comunidad,
+                necesitamos verificar tu dirección de email.
+              </p>
+              <p>
+                <strong>Ingresa tu email</strong> y te enviaremos un link de
+                verificación.
+              </p>
+            </>
+          )}
         </div>
 
         {/* Mensajes */}
@@ -168,7 +221,11 @@ export default function VerifyEmailPage() {
             }}
             disabled={loading}
           >
-            {loading ? "Enviando..." : "Enviar Código de Verificación"}
+            {loading
+              ? "Enviando..."
+              : existingEmail
+              ? "Reenviar Código de Verificación"
+              : "Enviar Código de Verificación"}
           </button>
         </form>
 
@@ -254,6 +311,14 @@ const styles = {
     color: "#e8dcc0",
     lineHeight: "1.6",
     fontSize: "15px",
+  },
+  infoBox: {
+    backgroundColor: "#252220",
+    border: "1px solid #3d3525",
+    borderLeft: "4px solid #c9a84c",
+    padding: "16px",
+    margin: "16px 0",
+    borderRadius: "4px",
   },
   form: {
     padding: "0 30px 30px",
