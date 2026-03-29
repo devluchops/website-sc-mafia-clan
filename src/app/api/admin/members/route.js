@@ -131,9 +131,24 @@ export async function DELETE(request) {
     const { id } = await request.json();
     const sql = getDb();
 
+    // Obtener discord_id antes de eliminar
+    const [member] = await sql`SELECT discord_id FROM members WHERE id = ${id}`;
+
+    if (member && member.discord_id) {
+      // Eliminar permisos asociados
+      await sql`DELETE FROM user_permissions WHERE discord_id = ${member.discord_id}`;
+
+      // Eliminar de usuarios autorizados
+      await sql`DELETE FROM discord_authorized_users WHERE discord_id = ${member.discord_id}`;
+    }
+
+    // Eliminar miembro
     await sql`DELETE FROM members WHERE id = ${id}`;
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({
+      success: true,
+      message: "Miembro y sus permisos eliminados correctamente"
+    });
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
