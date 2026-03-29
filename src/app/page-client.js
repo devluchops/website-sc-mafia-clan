@@ -2398,8 +2398,19 @@ export default function HomePage() {
     // Cargar torneos activos
     fetch("/api/tournaments")
       .then((res) => res.json())
-      .then((tourns) => setTournaments(tourns))
-      .catch((err) => console.error(err));
+      .then((tourns) => {
+        // Verificar que sea un array antes de asignar
+        if (Array.isArray(tourns)) {
+          setTournaments(tourns);
+        } else {
+          console.error('Error cargando torneos:', tourns);
+          setTournaments([]);
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+        setTournaments([]);
+      });
   }, []);
 
   if (loading || !data) {
