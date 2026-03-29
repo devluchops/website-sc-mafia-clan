@@ -632,127 +632,291 @@ function CommentItem({ comment, session, onReply, onDelete, depth = 0 }) {
 //  SECTIONS
 // ============================================================
 
-function BuildOrdersSection() {
+function BuildOrdersSection({ builds }) {
+  const [selectedRace, setSelectedRace] = useState("all");
+  const [selectedBuild, setSelectedBuild] = useState(null);
+
+  const filteredBuilds = builds.filter(
+    (build) => selectedRace === "all" || build.race === selectedRace
+  );
+
+  const getYouTubeEmbedUrl = (url) => {
+    if (!url) return null;
+    const videoId = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&\s]+)/);
+    return videoId ? `https://www.youtube.com/embed/${videoId[1]}` : null;
+  };
+
+  if (selectedBuild) {
+    const embedUrl = getYouTubeEmbedUrl(selectedBuild.video_url);
+    const raceColor = RACE_COLORS[selectedBuild.race];
+
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+        <button
+          onClick={() => setSelectedBuild(null)}
+          style={{
+            background: "transparent",
+            border: `1px solid ${darkGold}`,
+            color: textMuted,
+            padding: "8px 16px",
+            borderRadius: 6,
+            fontSize: 14,
+            cursor: "pointer",
+            alignSelf: "flex-start",
+            transition: "all 0.2s",
+          }}
+        >
+          ← Volver a builds
+        </button>
+
+        <div
+          style={{
+            background: cardBg,
+            border: `1px solid ${darkGold}`,
+            borderRadius: 10,
+            padding: 32,
+          }}
+        >
+          <div
+            style={{
+              borderLeft: `4px solid ${raceColor.border}`,
+              paddingLeft: 20,
+              marginBottom: 24,
+            }}
+          >
+            <h3 style={{ fontSize: 24, fontWeight: 700, color: raceColor.text, margin: "0 0 12px 0" }}>
+              {selectedBuild.name}
+            </h3>
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
+              <span style={{ ...styles.raceBadge, background: raceColor.bg, color: raceColor.text, border: `1px solid ${raceColor.border}` }}>
+                {selectedBuild.race}
+              </span>
+              <span style={{ fontSize: 13, color: textMuted, fontWeight: 600 }}>
+                {selectedBuild.difficulty}
+              </span>
+              {selectedBuild.matchups && selectedBuild.matchups.map((m) => (
+                <span key={m} style={{ background: "rgba(201,168,76,0.1)", color: gold, padding: "2px 8px", borderRadius: 4, fontSize: 11, fontWeight: 600 }}>
+                  {m}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {embedUrl && (
+            <div style={{ width: "100%", paddingBottom: "56.25%", position: "relative", marginBottom: 24, borderRadius: 10, overflow: "hidden" }}>
+              <iframe
+                width="100%"
+                height="100%"
+                src={embedUrl}
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", borderRadius: 10 }}
+              />
+            </div>
+          )}
+
+          <div style={{ marginBottom: 24 }}>
+            <h4 style={{ fontSize: 16, fontWeight: 600, color: gold, marginBottom: 12 }}>Descripción</h4>
+            <p style={{ color: textLight, fontSize: 15, lineHeight: 1.6, margin: 0 }}>
+              {selectedBuild.description}
+            </p>
+          </div>
+
+          <div>
+            <h4 style={{ fontSize: 16, fontWeight: 600, color: gold, marginBottom: 12 }}>Build Order</h4>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {selectedBuild.build_steps && selectedBuild.build_steps.map((step, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    display: "flex",
+                    gap: 12,
+                    background: bg,
+                    padding: 14,
+                    borderRadius: 6,
+                    border: `1px solid ${darkGold}`,
+                    alignItems: "center",
+                  }}
+                >
+                  <div
+                    style={{
+                      background: gold,
+                      color: bg,
+                      width: 28,
+                      height: 28,
+                      borderRadius: "50%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontWeight: 700,
+                      fontSize: 13,
+                      flexShrink: 0,
+                    }}
+                  >
+                    {idx + 1}
+                  </div>
+                  <div style={{ flex: 1, display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+                    {step.time && (
+                      <span style={{ background: "rgba(100,160,200,0.15)", color: "#7ab8d4", padding: "4px 10px", borderRadius: 4, fontSize: 12, fontWeight: 700 }}>
+                        {step.time}
+                      </span>
+                    )}
+                    {step.supply && (
+                      <span style={{ background: "rgba(201,168,76,0.15)", color: gold, padding: "4px 10px", borderRadius: 4, fontSize: 12, fontWeight: 700 }}>
+                        {step.supply}
+                      </span>
+                    )}
+                    <span style={{ color: textLight, fontSize: 14, fontWeight: 600 }}>
+                      {step.action}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {selectedBuild.tags && selectedBuild.tags.length > 0 && (
+            <div style={{ marginTop: 24 }}>
+              <h4 style={{ fontSize: 16, fontWeight: 600, color: gold, marginBottom: 12 }}>Tags</h4>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {selectedBuild.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    style={{
+                      background: "rgba(201,168,76,0.1)",
+                      color: gold,
+                      padding: "6px 12px",
+                      borderRadius: 6,
+                      fontSize: 12,
+                      fontWeight: 600,
+                      border: `1px solid ${darkGold}`,
+                    }}
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       <SectionTitle>Build Orders</SectionTitle>
 
+      <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
+        {["all", "Protoss", "Terran", "Zerg"].map((race) => (
+          <button
+            key={race}
+            onClick={() => setSelectedRace(race)}
+            style={{
+              background: selectedRace === race ? gold : "transparent",
+              border: `1px solid ${selectedRace === race ? gold : darkGold}`,
+              color: selectedRace === race ? bg : textMuted,
+              padding: "8px 16px",
+              borderRadius: 6,
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: "pointer",
+              transition: "all 0.2s",
+            }}
+          >
+            {race === "all" ? "Todas" : race}
+          </button>
+        ))}
+      </div>
+
       <div
         style={{
-          background: cardBg,
-          border: `2px solid ${gold}`,
-          borderRadius: 12,
-          padding: 40,
-          textAlign: "center",
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+          gap: 16,
         }}
       >
-        <div
-          style={{
-            fontFamily: "'Cinzel', serif",
-            fontSize: 32,
-            fontWeight: 700,
-            color: gold,
-            marginBottom: 16,
-            letterSpacing: 2,
-          }}
-        >
-          GUÍAS DE BUILD ORDERS
-        </div>
+        {filteredBuilds.map((build) => {
+          const raceColor = RACE_COLORS[build.race];
+          return (
+            <Card
+              key={build.id}
+              style={{
+                borderLeft: `4px solid ${raceColor.border}`,
+                cursor: "pointer",
+              }}
+              onClick={() => setSelectedBuild(build)}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10, marginBottom: 10 }}>
+                <h4 style={{ fontSize: 16, fontWeight: 700, color: raceColor.text, margin: 0, flex: 1 }}>
+                  {build.name}
+                </h4>
+                <span
+                  style={{
+                    background: raceColor.bg,
+                    color: raceColor.text,
+                    padding: "3px 10px",
+                    borderRadius: 4,
+                    fontSize: 11,
+                    fontWeight: 700,
+                    border: `1px solid ${raceColor.border}`,
+                  }}
+                >
+                  {build.race}
+                </span>
+              </div>
 
-        <p
-          style={{
-            fontSize: 16,
-            color: textMuted,
-            lineHeight: 1.8,
-            marginBottom: 32,
-            maxWidth: 600,
-            margin: "0 auto 32px",
-          }}
-        >
-          Descubre las mejores estrategias y build orders para StarCraft Fastest League.
-          Guías completas con pasos detallados, timing, y videos explicativos para
-          Protoss, Terran y Zerg.
-        </p>
+              <p style={{ color: textMuted, fontSize: 13, lineHeight: 1.5, marginBottom: 12 }}>
+                {build.description.substring(0, 100)}
+                {build.description.length > 100 ? "..." : ""}
+              </p>
 
-        <Link
-          href="/build-orders"
-          style={{
-            display: "inline-block",
-            background: gold,
-            color: bg,
-            fontFamily: "'Cinzel', serif",
-            fontSize: 14,
-            fontWeight: 700,
-            letterSpacing: 2,
-            textTransform: "uppercase",
-            padding: "16px 40px",
-            borderRadius: 8,
-            textDecoration: "none",
-            transition: "all 0.3s",
-            border: `2px solid ${gold}`,
-          }}
-          onMouseOver={(e) => {
-            e.currentTarget.style.background = "transparent";
-            e.currentTarget.style.color = gold;
-          }}
-          onMouseOut={(e) => {
-            e.currentTarget.style.background = gold;
-            e.currentTarget.style.color = bg;
-          }}
-        >
-          Ver Build Orders →
-        </Link>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                  {build.matchups && build.matchups.slice(0, 2).map((m) => (
+                    <span key={m} style={{ background: "rgba(201,168,76,0.1)", color: gold, padding: "2px 6px", borderRadius: 3, fontSize: 10, fontWeight: 600 }}>
+                      {m}
+                    </span>
+                  ))}
+                  {build.matchups && build.matchups.length > 2 && (
+                    <span style={{ background: "rgba(201,168,76,0.1)", color: gold, padding: "2px 6px", borderRadius: 3, fontSize: 10, fontWeight: 600 }}>
+                      +{build.matchups.length - 2}
+                    </span>
+                  )}
+                </div>
+                <span style={{ color: textMuted, fontSize: 11, fontWeight: 600 }}>
+                  {build.difficulty}
+                </span>
+              </div>
 
-        <div
-          style={{
-            display: "flex",
-            gap: 16,
-            justifyContent: "center",
-            marginTop: 32,
-            flexWrap: "wrap",
-          }}
-        >
-          <div
-            style={{
-              background: "rgba(201,168,76,0.15)",
-              border: "1px solid #c9a84c",
-              borderRadius: 8,
-              padding: "12px 24px",
-              color: "#c9a84c",
-              fontWeight: 600,
-            }}
-          >
-            Protoss
-          </div>
-          <div
-            style={{
-              background: "rgba(100,160,200,0.15)",
-              border: "1px solid #7ab8d4",
-              borderRadius: 8,
-              padding: "12px 24px",
-              color: "#7ab8d4",
-              fontWeight: 600,
-            }}
-          >
-            Terran
-          </div>
-          <div
-            style={{
-              background: "rgba(160,100,180,0.15)",
-              border: "1px solid #c09ad8",
-              borderRadius: 8,
-              padding: "12px 24px",
-              color: "#c09ad8",
-              fontWeight: 600,
-            }}
-          >
-            Zerg
-          </div>
-        </div>
+              {build.video_url && (
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 10, paddingTop: 10, borderTop: `1px solid ${darkGold}`, color: gold, fontSize: 11, fontWeight: 600 }}>
+                  <span style={{ fontSize: 9 }}>▶</span> Video disponible
+                </div>
+              )}
+            </Card>
+          );
+        })}
       </div>
+
+      {filteredBuilds.length === 0 && (
+        <div style={{ textAlign: "center", color: textMuted, fontSize: 15, padding: 40 }}>
+          No hay build orders para esta raza
+        </div>
+      )}
     </div>
   );
 }
+
+const styles = {
+  raceBadge: {
+    padding: "4px 12px",
+    borderRadius: 4,
+    fontSize: 12,
+    fontWeight: 700,
+  },
+};
 
 function BlogSection({ posts }) {
   const { data: session } = useSession();
@@ -2089,6 +2253,7 @@ export default function HomePage() {
   const [activeTab, setActiveTab] = useState("blog");
   const [logoErr, setLogoErr] = useState(false);
   const [data, setData] = useState(null);
+  const [buildOrders, setBuildOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -2103,6 +2268,12 @@ export default function HomePage() {
         console.error(err);
         setLoading(false);
       });
+
+    // Cargar build orders
+    fetch("/api/admin/build-orders")
+      .then((res) => res.json())
+      .then((builds) => setBuildOrders(builds))
+      .catch((err) => console.error(err));
   }, []);
 
   if (loading || !data) {
@@ -2362,7 +2533,7 @@ export default function HomePage() {
         {activeTab === "roster" && <RosterSection members={members} />}
         {activeTab === "events" && <EventsSection events={events} />}
         {activeTab === "rules" && <RulesSection rules={rules || []} />}
-        {activeTab === "build-orders" && <BuildOrdersSection />}
+        {activeTab === "build-orders" && <BuildOrdersSection builds={buildOrders} />}
       </main>
 
       {/* FOOTER */}
