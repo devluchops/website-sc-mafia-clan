@@ -2137,6 +2137,35 @@ export default function HomePage() {
           {session ? (
             <>
               <Link
+                href="/build-orders"
+                style={{
+                  background: "transparent",
+                  border: `1px solid ${gold}`,
+                  color: gold,
+                  fontFamily: "'Cinzel', serif",
+                  fontSize: 11,
+                  fontWeight: 600,
+                  letterSpacing: 1.5,
+                  textTransform: "uppercase",
+                  padding: "12px 20px",
+                  cursor: "pointer",
+                  borderRadius: 6,
+                  textDecoration: "none",
+                  display: "inline-block",
+                  transition: "all 0.2s",
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.background = gold;
+                  e.currentTarget.style.color = bg;
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.background = "transparent";
+                  e.currentTarget.style.color = gold;
+                }}
+              >
+                Build Orders
+              </Link>
+              <Link
                 href="/profile"
                 style={{
                   background: "transparent",
@@ -2393,6 +2422,19 @@ export default function HomePage() {
           }}
         >
           {clan.name} &bull; {new Date().getFullYear()}
+          {" "}&bull;{" "}
+          <Link
+            href="/build-orders"
+            style={{
+              color: "#3d3525",
+              textDecoration: "none",
+              transition: "color 0.2s",
+            }}
+            onMouseOver={(e) => e.currentTarget.style.color = gold}
+            onMouseOut={(e) => e.currentTarget.style.color = "#3d3525"}
+          >
+            Build Orders
+          </Link>
           {session && (
             <>
               {" "}&bull;{" "}
