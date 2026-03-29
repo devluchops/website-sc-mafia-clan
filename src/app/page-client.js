@@ -725,85 +725,46 @@ function BuildOrdersSection({ builds }) {
 
           <div>
             <h4 style={{ fontSize: 16, fontWeight: 600, color: gold, marginBottom: 12 }}>Build Order</h4>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {selectedBuild.build_steps && selectedBuild.build_steps.map((step, idx) => (
-                <div
-                  key={idx}
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "40px 70px 60px 1fr",
-                    gap: 12,
-                    background: bg,
-                    padding: "12px 16px",
-                    borderRadius: 6,
-                    border: `1px solid ${darkGold}`,
-                    alignItems: "center",
-                  }}
-                >
-                  {/* Número */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {selectedBuild.build_steps && selectedBuild.build_steps.map((step, idx) => {
+                const parts = [];
+                if (step.time) parts.push(step.time);
+                if (step.supply) parts.push(`${step.supply} Supply`);
+
+                return (
                   <div
+                    key={idx}
                     style={{
-                      background: gold,
-                      color: bg,
-                      width: 28,
-                      height: 28,
-                      borderRadius: "50%",
                       display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontWeight: 700,
-                      fontSize: 12,
+                      gap: 8,
+                      padding: "10px 12px",
+                      background: bg,
+                      borderRadius: 6,
+                      border: `1px solid ${darkGold}`,
+                      alignItems: "flex-start",
                     }}
                   >
-                    {idx + 1}
-                  </div>
-
-                  {/* Tiempo */}
-                  <div style={{ display: "flex", alignItems: "center", minWidth: 60 }}>
-                    {step.time ? (
-                      <span style={{
-                        background: "rgba(100,160,200,0.15)",
-                        color: "#7ab8d4",
-                        padding: "4px 8px",
-                        borderRadius: 4,
-                        fontSize: 11,
-                        fontWeight: 700,
-                        whiteSpace: "nowrap"
-                      }}>
-                        {step.time}
-                      </span>
-                    ) : (
-                      <span style={{ color: textMuted, fontSize: 11 }}>—</span>
-                    )}
-                  </div>
-
-                  {/* Supply */}
-                  <div style={{ display: "flex", alignItems: "center", minWidth: 50 }}>
-                    {step.supply ? (
-                      <span style={{
-                        background: "rgba(201,168,76,0.15)",
-                        color: gold,
-                        padding: "4px 8px",
-                        borderRadius: 4,
-                        fontSize: 11,
-                        fontWeight: 700,
-                        whiteSpace: "nowrap"
-                      }}>
-                        {step.supply}
-                      </span>
-                    ) : (
-                      <span style={{ color: textMuted, fontSize: 11 }}>—</span>
-                    )}
-                  </div>
-
-                  {/* Acción */}
-                  <div style={{ flex: 1 }}>
-                    <span style={{ color: textLight, fontSize: 14, fontWeight: 600, lineHeight: 1.4 }}>
+                    <span style={{
+                      color: gold,
+                      fontWeight: 700,
+                      fontSize: 13,
+                      minWidth: 24,
+                      flexShrink: 0
+                    }}>
+                      {idx + 1}.
+                    </span>
+                    <span style={{ color: textLight, fontSize: 14, lineHeight: 1.5, flex: 1 }}>
+                      {parts.length > 0 && (
+                        <span style={{ color: "#7ab8d4", fontWeight: 600 }}>
+                          [{parts.join(' • ')}]
+                        </span>
+                      )}
+                      {parts.length > 0 && ' '}
                       {step.action}
                     </span>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
@@ -2281,11 +2242,25 @@ const TABS = [
 
 export default function HomePage() {
   const { data: session } = useSession();
-  const [activeTab, setActiveTab] = useState("blog");
+  const [activeTab, setActiveTab] = useState(() => {
+    // Leer el hash de la URL al cargar
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash.replace('#', '');
+      return hash || "blog";
+    }
+    return "blog";
+  });
   const [logoErr, setLogoErr] = useState(false);
   const [data, setData] = useState(null);
   const [buildOrders, setBuildOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Actualizar hash cuando cambia activeTab
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.location.hash = activeTab;
+    }
+  }, [activeTab]);
 
   useEffect(() => {
     // Cargar datos desde la API
