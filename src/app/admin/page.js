@@ -221,6 +221,7 @@ export default function AdminDashboard() {
   const [rules, setRules] = useState([]);
   const [permissions, setPermissions] = useState([]);
   const [buildOrders, setBuildOrders] = useState([]);
+  const [tournaments, setTournaments] = useState([]);
 
   // Modal states
   const [memberModal, setMemberModal] = useState({ isOpen: false, member: null });
@@ -229,6 +230,7 @@ export default function AdminDashboard() {
   const [eventModal, setEventModal] = useState({ isOpen: false, event: null });
   const [ruleModal, setRuleModal] = useState({ isOpen: false, rule: null });
   const [buildOrderModal, setBuildOrderModal] = useState({ isOpen: false, buildOrder: null });
+  const [tournamentModal, setTournamentModal] = useState({ isOpen: false, tournament: null });
   const [discordUserModal, setDiscordUserModal] = useState({ isOpen: false, user: null });
   const [logoFile, setLogoFile] = useState(null);
   const [postImageFile, setPostImageFile] = useState(null);
@@ -321,6 +323,12 @@ export default function AdminDashboard() {
     fetch("/api/admin/build-orders")
       .then((res) => res.json())
       .then((data) => setBuildOrders(data || []))
+      .catch((err) => console.error(err));
+
+    // Cargar torneos de Challonge
+    fetch("/api/admin/tournaments")
+      .then((res) => res.json())
+      .then((data) => setTournaments(data || []))
       .catch((err) => console.error(err));
   };
 
@@ -684,6 +692,86 @@ export default function AdminDashboard() {
     setLoading(false);
   };
 
+  const handleSaveTournament = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/tournaments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: 'create',
+          tournamentData: tournamentModal.tournament
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        showMessage("✅ Torneo creado correctamente en Challonge");
+        setTournamentModal({ isOpen: false, tournament: null });
+        loadData();
+      } else {
+        showMessage("❌ " + (data.error || "Error al crear torneo"));
+      }
+    } catch (error) {
+      showMessage("❌ Error: " + error.message);
+    }
+    setLoading(false);
+  };
+
+  const handleDeleteTournament = async (tournamentId) => {
+    if (!confirm("¿Estás seguro de eliminar este torneo de Challonge?")) return;
+
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/tournaments", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tournamentId }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        showMessage("✅ Torneo eliminado");
+        loadData();
+      } else {
+        showMessage("❌ " + (data.error || "Error al eliminar"));
+      }
+    } catch (error) {
+      showMessage("❌ Error: " + error.message);
+    }
+    setLoading(false);
+  };
+
+  const handleStartTournament = async (tournamentId) => {
+    if (!confirm("¿Iniciar este torneo? No podrás agregar más participantes después.")) return;
+
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/tournaments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: 'start',
+          tournamentId
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        showMessage("✅ Torneo iniciado correctamente");
+        loadData();
+      } else {
+        showMessage("❌ " + (data.error || "Error al iniciar torneo"));
+      }
+    } catch (error) {
+      showMessage("❌ Error: " + error.message);
+    }
+    setLoading(false);
+  };
+
   // ============================================================
   // USER MANAGEMENT (for Permissions section)
   // ============================================================
@@ -1003,6 +1091,28 @@ export default function AdminDashboard() {
               }}
             >
               Eventos
+            </button>
+          )}
+          {(session?.user?.permissions?.is_admin || session?.user?.permissions?.can_publish_events) && (
+            <button
+              onClick={() => setActiveSection("tournaments")}
+              style={{
+                background: activeSection === "tournaments" ? "rgba(201,168,76,0.08)" : "transparent",
+                border: "none",
+                color: activeSection === "tournaments" ? gold : textMuted,
+                fontFamily: "'Cinzel', serif",
+                fontSize: 12,
+                fontWeight: 600,
+                letterSpacing: 1.5,
+                textTransform: "uppercase",
+                padding: "16px 20px",
+                cursor: "pointer",
+                borderBottom: activeSection === "tournaments" ? `2px solid ${gold}` : "2px solid transparent",
+                transition: "all 0.2s",
+                whiteSpace: "nowrap",
+              }}
+            >
+              Torneos
             </button>
           )}
           {(session?.user?.permissions?.is_admin || session?.user?.permissions?.can_edit_rules) && (
@@ -1814,6 +1924,132 @@ export default function AdminDashboard() {
           );
         })()}
 
+        {/* Torneos de Challonge */}
+        {activeSection === "tournaments" && (session?.user?.permissions?.is_admin || session?.user?.permissions?.can_publish_events) && (
+          <AdminCard title="Gestión de Torneos (Challonge)">
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+              <p style={{ color: textMuted, fontSize: 14 }}>
+                Total: <strong style={{ color: gold }}>{tournaments.length}</strong>
+              </p>
+              <Button onClick={() => setTournamentModal({
+                isOpen: true,
+                tournament: {
+                  name: "",
+                  url: "",
+                  tournament_type: "single elimination",
+                  description: "",
+                  open_signup: false
+                }
+              })}>
+                + Crear Torneo
+              </Button>
+            </div>
+
+            <div style={{ marginBottom: 16, padding: 12, background: "rgba(201,168,76,0.05)", borderRadius: 6 }}>
+              <p style={{ fontSize: 12, color: textMuted, margin: 0 }}>
+                <strong>💡 Sobre Challonge:</strong> Los torneos se crean en Challonge.com y se sincronizan aquí.
+                Podrás compartir el enlace del torneo con los participantes.
+              </p>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {tournaments.map((t) => {
+                const tournament = t.tournament;
+                const stateColors = {
+                  pending: { bg: "rgba(201,168,76,0.1)", text: gold },
+                  underway: { bg: "rgba(76,201,130,0.1)", text: "#4cc982" },
+                  awaiting_review: { bg: "rgba(100,160,200,0.1)", text: "#7ab8d4" },
+                  complete: { bg: "rgba(139,92,92,0.1)", text: "#c9a08a" }
+                };
+                const stateColor = stateColors[tournament.state] || stateColors.pending;
+                const stateLabels = {
+                  pending: "Pendiente",
+                  underway: "En Curso",
+                  awaiting_review: "En Revisión",
+                  complete: "Completado"
+                };
+
+                return (
+                  <div
+                    key={tournament.id}
+                    style={{
+                      background: bg,
+                      border: `1px solid ${darkGold}`,
+                      borderRadius: 6,
+                      padding: 16,
+                    }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16 }}>
+                      <div style={{ flex: 1 }}>
+                        <h4 style={{ color: gold, fontSize: 15, fontWeight: 600, marginBottom: 6 }}>
+                          {tournament.name}
+                        </h4>
+                        <div style={{ display: "flex", gap: 12, marginBottom: 8, flexWrap: "wrap", alignItems: "center" }}>
+                          <span style={{
+                            fontSize: 11,
+                            padding: "4px 8px",
+                            borderRadius: 4,
+                            background: stateColor.bg,
+                            color: stateColor.text,
+                            fontWeight: 600,
+                            textTransform: "uppercase"
+                          }}>
+                            {stateLabels[tournament.state] || tournament.state}
+                          </span>
+                          <span style={{ color: textMuted, fontSize: 12 }}>
+                            Tipo: <span style={{ color: textLight }}>{tournament.tournament_type}</span>
+                          </span>
+                          <span style={{ color: textMuted, fontSize: 12 }}>
+                            Participantes: <span style={{ color: textLight }}>{tournament.participants_count || 0}</span>
+                          </span>
+                        </div>
+                        {tournament.description && (
+                          <p style={{ color: textLight, fontSize: 13, marginBottom: 8, lineHeight: 1.5 }}>
+                            {tournament.description}
+                          </p>
+                        )}
+                        <a
+                          href={tournament.full_challonge_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ color: "#7ab8d4", fontSize: 12, textDecoration: "none" }}
+                        >
+                          Ver en Challonge →
+                        </a>
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                        {tournament.state === 'pending' && (
+                          <Button
+                            variant="secondary"
+                            style={{ padding: "6px 12px", fontSize: 10, whiteSpace: "nowrap" }}
+                            onClick={() => handleStartTournament(tournament.id)}
+                          >
+                            Iniciar
+                          </Button>
+                        )}
+                        <Button
+                          variant="danger"
+                          style={{ padding: "6px 12px", fontSize: 10 }}
+                          onClick={() => handleDeleteTournament(tournament.id)}
+                        >
+                          Eliminar
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {tournaments.length === 0 && (
+                <div style={{ textAlign: "center", padding: 40, color: textMuted }}>
+                  <p style={{ fontSize: 14 }}>No hay torneos creados aún.</p>
+                  <p style={{ fontSize: 12, marginTop: 8 }}>Crea tu primer torneo en Challonge usando el botón de arriba.</p>
+                </div>
+              )}
+            </div>
+          </AdminCard>
+        )}
+
         {/* Permisos de Usuarios */}
         {activeSection === "permissions" && (session?.user?.permissions?.is_admin || session?.user?.permissions?.can_manage_permissions) && (() => {
           const ITEMS_PER_PAGE = 10;
@@ -2605,6 +2841,79 @@ export default function AdminDashboard() {
             Guardar
           </Button>
           <Button variant="secondary" onClick={() => setBuildOrderModal({ isOpen: false, buildOrder: null })} style={{ flex: 1 }}>
+            Cancelar
+          </Button>
+        </div>
+      </Modal>
+
+      {/* Tournament Modal */}
+      <Modal
+        isOpen={tournamentModal.isOpen}
+        onClose={() => setTournamentModal({ isOpen: false, tournament: null })}
+        title="Crear Torneo en Challonge"
+      >
+        <Input
+          label="Nombre del Torneo"
+          value={tournamentModal.tournament?.name || ""}
+          onChange={(val) => setTournamentModal({ ...tournamentModal, tournament: { ...tournamentModal.tournament, name: val } })}
+          placeholder="Ej: Copa MAFIA 2025"
+        />
+        <Input
+          label="URL Única (challonge.com/lvalencia1286/...)"
+          value={tournamentModal.tournament?.url || ""}
+          onChange={(val) => setTournamentModal({ ...tournamentModal, tournament: { ...tournamentModal.tournament, url: val } })}
+          placeholder="Ej: copa-mafia-2025"
+        />
+        <Select
+          label="Tipo de Torneo"
+          value={tournamentModal.tournament?.tournament_type || "single elimination"}
+          onChange={(val) => setTournamentModal({ ...tournamentModal, tournament: { ...tournamentModal.tournament, tournament_type: val } })}
+          options={[
+            "single elimination",
+            "double elimination",
+            "round robin",
+            "swiss"
+          ]}
+        />
+        <Input
+          label="Descripción (opcional)"
+          textarea
+          value={tournamentModal.tournament?.description || ""}
+          onChange={(val) => setTournamentModal({ ...tournamentModal, tournament: { ...tournamentModal.tournament, description: val } })}
+          placeholder="Descripción del torneo"
+        />
+        <div style={{ marginBottom: 16 }}>
+          <label style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            fontSize: 12,
+            color: textMuted,
+            cursor: "pointer"
+          }}>
+            <input
+              type="checkbox"
+              checked={tournamentModal.tournament?.open_signup || false}
+              onChange={(e) => setTournamentModal({
+                ...tournamentModal,
+                tournament: { ...tournamentModal.tournament, open_signup: e.target.checked }
+              })}
+              style={{ cursor: "pointer" }}
+            />
+            Permitir registro público
+          </label>
+        </div>
+        <div style={{ marginBottom: 16, padding: 12, background: "rgba(201,168,76,0.05)", borderRadius: 6 }}>
+          <p style={{ fontSize: 11, color: textMuted, margin: 0, lineHeight: 1.5 }}>
+            <strong>Nota:</strong> El torneo se creará en Challonge.com bajo tu cuenta.
+            Podrás gestionar participantes y resultados desde Challonge o este panel.
+          </p>
+        </div>
+        <div style={{ display: "flex", gap: 12, marginTop: 20 }}>
+          <Button onClick={handleSaveTournament} loading={loading} style={{ flex: 1 }}>
+            Crear en Challonge
+          </Button>
+          <Button variant="secondary" onClick={() => setTournamentModal({ isOpen: false, tournament: null })} style={{ flex: 1 }}>
             Cancelar
           </Button>
         </div>
