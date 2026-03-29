@@ -632,6 +632,128 @@ function CommentItem({ comment, session, onReply, onDelete, depth = 0 }) {
 //  SECTIONS
 // ============================================================
 
+function BuildOrdersSection() {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      <SectionTitle>Build Orders</SectionTitle>
+
+      <div
+        style={{
+          background: cardBg,
+          border: `2px solid ${gold}`,
+          borderRadius: 12,
+          padding: 40,
+          textAlign: "center",
+        }}
+      >
+        <div
+          style={{
+            fontFamily: "'Cinzel', serif",
+            fontSize: 32,
+            fontWeight: 700,
+            color: gold,
+            marginBottom: 16,
+            letterSpacing: 2,
+          }}
+        >
+          GUÍAS DE BUILD ORDERS
+        </div>
+
+        <p
+          style={{
+            fontSize: 16,
+            color: textMuted,
+            lineHeight: 1.8,
+            marginBottom: 32,
+            maxWidth: 600,
+            margin: "0 auto 32px",
+          }}
+        >
+          Descubre las mejores estrategias y build orders para StarCraft Fastest League.
+          Guías completas con pasos detallados, timing, y videos explicativos para
+          Protoss, Terran y Zerg.
+        </p>
+
+        <Link
+          href="/build-orders"
+          style={{
+            display: "inline-block",
+            background: gold,
+            color: bg,
+            fontFamily: "'Cinzel', serif",
+            fontSize: 14,
+            fontWeight: 700,
+            letterSpacing: 2,
+            textTransform: "uppercase",
+            padding: "16px 40px",
+            borderRadius: 8,
+            textDecoration: "none",
+            transition: "all 0.3s",
+            border: `2px solid ${gold}`,
+          }}
+          onMouseOver={(e) => {
+            e.currentTarget.style.background = "transparent";
+            e.currentTarget.style.color = gold;
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.background = gold;
+            e.currentTarget.style.color = bg;
+          }}
+        >
+          Ver Build Orders →
+        </Link>
+
+        <div
+          style={{
+            display: "flex",
+            gap: 16,
+            justifyContent: "center",
+            marginTop: 32,
+            flexWrap: "wrap",
+          }}
+        >
+          <div
+            style={{
+              background: "rgba(201,168,76,0.15)",
+              border: "1px solid #c9a84c",
+              borderRadius: 8,
+              padding: "12px 24px",
+              color: "#c9a84c",
+              fontWeight: 600,
+            }}
+          >
+            Protoss
+          </div>
+          <div
+            style={{
+              background: "rgba(100,160,200,0.15)",
+              border: "1px solid #7ab8d4",
+              borderRadius: 8,
+              padding: "12px 24px",
+              color: "#7ab8d4",
+              fontWeight: 600,
+            }}
+          >
+            Terran
+          </div>
+          <div
+            style={{
+              background: "rgba(160,100,180,0.15)",
+              border: "1px solid #c09ad8",
+              borderRadius: 8,
+              padding: "12px 24px",
+              color: "#c09ad8",
+              fontWeight: 600,
+            }}
+          >
+            Zerg
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function BlogSection({ posts }) {
   const { data: session } = useSession();
   const [selectedPost, setSelectedPost] = useState(null);
@@ -1959,6 +2081,7 @@ const TABS = [
   { id: "roster", label: "Miembros" },
   { id: "events", label: "Eventos" },
   { id: "rules", label: "Reglas" },
+  { id: "build-orders", label: "Build Orders" },
 ];
 
 export default function HomePage() {
@@ -2137,35 +2260,6 @@ export default function HomePage() {
           {session ? (
             <>
               <Link
-                href="/build-orders"
-                style={{
-                  background: "transparent",
-                  border: `1px solid ${gold}`,
-                  color: gold,
-                  fontFamily: "'Cinzel', serif",
-                  fontSize: 11,
-                  fontWeight: 600,
-                  letterSpacing: 1.5,
-                  textTransform: "uppercase",
-                  padding: "12px 20px",
-                  cursor: "pointer",
-                  borderRadius: 6,
-                  textDecoration: "none",
-                  display: "inline-block",
-                  transition: "all 0.2s",
-                }}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.background = gold;
-                  e.currentTarget.style.color = bg;
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.background = "transparent";
-                  e.currentTarget.style.color = gold;
-                }}
-              >
-                Build Orders
-              </Link>
-              <Link
                 href="/profile"
                 style={{
                   background: "transparent",
@@ -2268,6 +2362,7 @@ export default function HomePage() {
         {activeTab === "roster" && <RosterSection members={members} />}
         {activeTab === "events" && <EventsSection events={events} />}
         {activeTab === "rules" && <RulesSection rules={rules || []} />}
+        {activeTab === "build-orders" && <BuildOrdersSection />}
       </main>
 
       {/* FOOTER */}
@@ -2422,19 +2517,6 @@ export default function HomePage() {
           }}
         >
           {clan.name} &bull; {new Date().getFullYear()}
-          {" "}&bull;{" "}
-          <Link
-            href="/build-orders"
-            style={{
-              color: "#3d3525",
-              textDecoration: "none",
-              transition: "color 0.2s",
-            }}
-            onMouseOver={(e) => e.currentTarget.style.color = gold}
-            onMouseOut={(e) => e.currentTarget.style.color = "#3d3525"}
-          >
-            Build Orders
-          </Link>
           {session && (
             <>
               {" "}&bull;{" "}
