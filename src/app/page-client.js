@@ -2359,7 +2359,7 @@ export default function HomePage() {
               onMouseOver={(e) => e.currentTarget.style.color = gold}
               onMouseOut={(e) => e.currentTarget.style.color = "#6b5c3e"}
             >
-              <span style={{ fontSize: 16 }}>📧</span>
+              <SocialIcons.Gmail size={18} />
               lvalencia1286@gmail.com
             </a>
             <a
@@ -2377,7 +2377,7 @@ export default function HomePage() {
               onMouseOver={(e) => e.currentTarget.style.color = gold}
               onMouseOut={(e) => e.currentTarget.style.color = "#6b5c3e"}
             >
-              <span style={{ fontSize: 16 }}>💬</span>
+              <SocialIcons.WhatsApp size={18} />
               +51 966 346 424
             </a>
           </div>
