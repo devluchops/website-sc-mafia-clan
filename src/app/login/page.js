@@ -1,12 +1,20 @@
 "use client";
 
 import { signIn, useSession } from "next-auth/react";
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function LoginPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const [showVerified, setShowVerified] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get("verified") === "true") {
+      setShowVerified(true);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (status === "authenticated") {
@@ -81,6 +89,22 @@ export default function LoginPage() {
         >
           Iniciar Sesión
         </p>
+        {showVerified && (
+          <div
+            style={{
+              background: "rgba(76, 201, 76, 0.15)",
+              border: "1px solid #4CAF50",
+              borderRadius: 6,
+              padding: "12px 16px",
+              marginBottom: 24,
+              color: "#4CAF50",
+              fontSize: 14,
+              fontWeight: 600,
+            }}
+          >
+            ✓ Email verificado exitosamente
+          </div>
+        )}
         <button
           onClick={() => signIn("discord", { callbackUrl: "/" })}
           style={{

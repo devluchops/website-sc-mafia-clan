@@ -94,13 +94,20 @@ export async function POST(request) {
       if (member.length > 0) {
         try {
           console.log(`Enviando invite automático a ${email}...`);
-          await sendInviteEmail(member[0]);
+
+          // Generar token de verificación
+          const { createVerificationToken } = await import('@/lib/verification');
+          const verificationToken = await createVerificationToken(memberId);
+
+          // Enviar email de invitación con token de verificación
+          await sendInviteEmail(member[0], verificationToken);
+
           await sql`
             UPDATE members
             SET invite_sent_at = NOW()
             WHERE id = ${memberId}
           `;
-          console.log(`✅ Invite enviado a ${email}`);
+          console.log(`✅ Invite con verificación enviado a ${email}`);
         } catch (emailError) {
           // No fallar la operación si el email falla
           console.error('Error enviando invite automático:', emailError);

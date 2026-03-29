@@ -21,9 +21,9 @@ export async function GET(request) {
       );
     }
 
-    // Redirect al home con mensaje de éxito
+    // Redirect al login con mensaje de éxito
     return NextResponse.redirect(
-      new URL("/?verified=true", request.url)
+      new URL("/login?verified=true", request.url)
     );
   } catch (error) {
     console.error("Error verificando token:", error);

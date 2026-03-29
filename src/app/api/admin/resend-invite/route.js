@@ -49,9 +49,13 @@ export async function POST(request) {
       );
     }
 
-    // Enviar email de invitación
-    console.log(`Reenviando invite a ${member.email}...`);
-    const result = await sendInviteEmail(member);
+    // Generar token de verificación
+    const { createVerificationToken } = await import("@/lib/verification");
+    const verificationToken = await createVerificationToken(memberId);
+
+    // Enviar email de invitación con token de verificación
+    console.log(`Reenviando invite con verificación a ${member.email}...`);
+    const result = await sendInviteEmail(member, verificationToken);
 
     if (result) {
       // Actualizar invite_sent_at
@@ -63,7 +67,7 @@ export async function POST(request) {
 
       return NextResponse.json({
         success: true,
-        message: `Invitación reenviada exitosamente a ${member.email}`,
+        message: `Invitación con verificación reenviada exitosamente a ${member.email}`,
         emailId: result.id,
       });
     } else {

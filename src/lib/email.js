@@ -12,8 +12,10 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
 /**
  * Envía un email de invitación a un miembro del clan
+ * @param {Object} member - Datos del miembro
+ * @param {string} verificationToken - Token de verificación (opcional, si no se incluye solo invita a login)
  */
-export async function sendInviteEmail(member) {
+export async function sendInviteEmail(member, verificationToken = null) {
   if (!resend) {
     console.warn('⚠️  Resend no está configurado. No se enviará el email.');
     return null;
@@ -23,7 +25,10 @@ export async function sendInviteEmail(member) {
     throw new Error('El miembro no tiene email configurado');
   }
 
-  const inviteUrl = `${SITE_URL}/login`;
+  // Si hay token, usar link de verificación; si no, link de login
+  const inviteUrl = verificationToken
+    ? `${SITE_URL}/api/verify-token?token=${verificationToken}`
+    : `${SITE_URL}/login`;
 
   try {
     const data = await resend.emails.send({
@@ -127,11 +132,21 @@ export async function sendInviteEmail(member) {
                   </p>
                 </div>
                 <p>
-                  Para acceder al sitio, simplemente inicia sesión con tu cuenta de Discord:
+                  ${verificationToken
+                    ? 'Para activar tu cuenta, primero verifica tu email haciendo clic en el botón de abajo. Luego podrás iniciar sesión con Discord:'
+                    : 'Para acceder al sitio, simplemente inicia sesión con tu cuenta de Discord:'}
                 </p>
                 <center>
-                  <a href="${inviteUrl}" class="button">Iniciar Sesión con Discord</a>
+                  <a href="${inviteUrl}" class="button">${verificationToken ? '✓ Verificar Email y Continuar' : 'Iniciar Sesión con Discord'}</a>
                 </center>
+                ${verificationToken ? `
+                <div class="info-box" style="background-color: #3d2a1a; border-left: 4px solid #d97706;">
+                  <p style="margin: 0; color: #fbbf24; font-size: 14px;">
+                    ⏰ <strong>Este link expira en 24 horas.</strong><br>
+                    Después de verificar tu email, podrás iniciar sesión con Discord.
+                  </p>
+                </div>
+                ` : ''}
                 <p>
                   Una vez dentro podrás:
                 </p>
