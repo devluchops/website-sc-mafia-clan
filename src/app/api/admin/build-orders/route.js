@@ -26,7 +26,7 @@ export async function POST(request) {
   }
 
   const permissions = session.user?.permissions;
-  if (!permissions?.is_admin) {
+  if (!permissions?.is_admin && !permissions?.can_manage_build_orders) {
     return NextResponse.json(
       { error: "No tienes permisos para gestionar build orders" },
       { status: 403 }
@@ -92,7 +92,7 @@ export async function DELETE(request) {
   }
 
   const permissions = session.user?.permissions;
-  if (!permissions?.is_admin) {
+  if (!permissions?.is_admin && !permissions?.can_manage_build_orders) {
     return NextResponse.json(
       { error: "No tienes permisos para eliminar build orders" },
       { status: 403 }

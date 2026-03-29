@@ -220,6 +220,7 @@ export default function AdminDashboard() {
   const [events, setEvents] = useState([]);
   const [rules, setRules] = useState([]);
   const [permissions, setPermissions] = useState([]);
+  const [buildOrders, setBuildOrders] = useState([]);
 
   // Modal states
   const [memberModal, setMemberModal] = useState({ isOpen: false, member: null });
@@ -260,6 +261,8 @@ export default function AdminDashboard() {
         setActiveSection("blog");
       } else if (perms.can_publish_videos) {
         setActiveSection("videos");
+      } else if (perms.can_manage_build_orders) {
+        setActiveSection("build-orders");
       } else if (perms.can_publish_events) {
         setActiveSection("events");
       } else if (perms.can_edit_rules) {
@@ -311,6 +314,12 @@ export default function AdminDashboard() {
     fetch("/api/admin/permissions")
       .then((res) => res.json())
       .then((data) => setPermissions(data.members || []))
+      .catch((err) => console.error(err));
+
+    // Cargar build orders
+    fetch("/api/admin/build-orders")
+      .then((res) => res.json())
+      .then((data) => setBuildOrders(data || []))
       .catch((err) => console.error(err));
   };
 
@@ -731,6 +740,7 @@ export default function AdminDashboard() {
         is_admin: user.is_admin,
         can_publish_blog: user.can_publish_blog,
         can_publish_videos: user.can_publish_videos,
+        can_manage_build_orders: user.can_manage_build_orders,
         can_publish_events: user.can_publish_events,
         can_edit_rules: user.can_edit_rules,
         can_manage_members: user.can_manage_members,
@@ -905,6 +915,28 @@ export default function AdminDashboard() {
               }}
             >
               Videos
+            </button>
+          )}
+          {(session?.user?.permissions?.is_admin || session?.user?.permissions?.can_manage_build_orders) && (
+            <button
+              onClick={() => setActiveSection("build-orders")}
+              style={{
+                background: activeSection === "build-orders" ? "rgba(201,168,76,0.08)" : "transparent",
+                border: "none",
+                color: activeSection === "build-orders" ? gold : textMuted,
+                fontFamily: "'Cinzel', serif",
+                fontSize: 12,
+                fontWeight: 600,
+                letterSpacing: 1.5,
+                textTransform: "uppercase",
+                padding: "16px 20px",
+                cursor: "pointer",
+                borderBottom: activeSection === "build-orders" ? `2px solid ${gold}` : "2px solid transparent",
+                transition: "all 0.2s",
+                whiteSpace: "nowrap",
+              }}
+            >
+              Build Orders
             </button>
           )}
           {(session?.user?.permissions?.is_admin || session?.user?.permissions?.can_publish_events) && (
@@ -1558,6 +1590,74 @@ export default function AdminDashboard() {
           );
         })()}
 
+        {/* Build Orders */}
+        {activeSection === "build-orders" && (session?.user?.permissions?.is_admin || session?.user?.permissions?.can_manage_build_orders) && (
+          <AdminCard title="Gestión de Build Orders">
+            <div style={{ marginBottom: 20 }}>
+              <p style={{ color: textMuted, fontSize: 13, marginBottom: 16 }}>
+                Gestiona los build orders del clan. Actualmente hay {buildOrders.length} builds registrados.
+              </p>
+              <p style={{ color: gold, fontSize: 12, fontStyle: "italic" }}>
+                Nota: Para gestionar build orders de forma completa (crear, editar pasos, etc.),
+                considera crear scripts en la carpeta /scripts como los existentes
+                (translate-builds-spanish.js, add-missing-times.js, etc.)
+              </p>
+            </div>
+
+            {buildOrders.length > 0 && (
+              <div style={{ marginTop: 20 }}>
+                <h3 style={{ color: gold, fontSize: 14, marginBottom: 12, fontWeight: 600 }}>
+                  Builds Existentes
+                </h3>
+                {buildOrders.map((build) => (
+                  <div
+                    key={build.id}
+                    style={{
+                      background: bg,
+                      border: `1px solid ${darkGold}`,
+                      borderRadius: 6,
+                      padding: 16,
+                      marginBottom: 12,
+                    }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                      <div style={{ flex: 1 }}>
+                        <h4 style={{ color: gold, fontSize: 15, fontWeight: 600, marginBottom: 6 }}>
+                          {build.name}
+                        </h4>
+                        <div style={{ display: "flex", gap: 12, marginBottom: 8 }}>
+                          <span style={{ color: textMuted, fontSize: 12 }}>
+                            Raza: <span style={{ color: textLight }}>{build.race}</span>
+                          </span>
+                          <span style={{ color: textMuted, fontSize: 12 }}>
+                            Dificultad: <span style={{ color: textLight }}>{build.difficulty}</span>
+                          </span>
+                          <span style={{ color: textMuted, fontSize: 12 }}>
+                            Pasos: <span style={{ color: textLight }}>{build.build_steps?.length || 0}</span>
+                          </span>
+                        </div>
+                        <p style={{ color: textLight, fontSize: 13, marginBottom: 8, lineHeight: 1.5 }}>
+                          {build.description}
+                        </p>
+                        {build.video_url && (
+                          <a
+                            href={build.video_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ color: "#7ab8d4", fontSize: 12, textDecoration: "none" }}
+                          >
+                            Ver video →
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </AdminCard>
+        )}
+
         {/* Events */}
         {activeSection === "events" && (session?.user?.permissions?.is_admin || session?.user?.permissions?.can_publish_events) && (() => {
           const ITEMS_PER_PAGE = 10;
@@ -1671,6 +1771,7 @@ export default function AdminDashboard() {
                       <th style={{ padding: "12px 8px", textAlign: "center", color: gold, fontWeight: 600 }}>Admin</th>
                       <th style={{ padding: "12px 8px", textAlign: "center", color: gold, fontWeight: 600 }}>Blog</th>
                       <th style={{ padding: "12px 8px", textAlign: "center", color: gold, fontWeight: 600 }}>Videos</th>
+                      <th style={{ padding: "12px 8px", textAlign: "center", color: gold, fontWeight: 600 }}>Builds</th>
                       <th style={{ padding: "12px 8px", textAlign: "center", color: gold, fontWeight: 600 }}>Eventos</th>
                       <th style={{ padding: "12px 8px", textAlign: "center", color: gold, fontWeight: 600 }}>Reglas</th>
                       <th style={{ padding: "12px 8px", textAlign: "center", color: gold, fontWeight: 600 }}>Miembros</th>
@@ -1715,6 +1816,15 @@ export default function AdminDashboard() {
                           type="checkbox"
                           checked={user.is_admin || user.can_publish_videos}
                           onChange={() => handleTogglePermission(user, "can_publish_videos", user.can_publish_videos)}
+                          disabled={user.is_admin}
+                          style={{ cursor: user.is_admin ? "not-allowed" : "pointer", transform: "scale(1.2)", opacity: user.is_admin ? 0.5 : 1 }}
+                        />
+                      </td>
+                      <td style={{ padding: "12px 8px", textAlign: "center" }}>
+                        <input
+                          type="checkbox"
+                          checked={user.is_admin || user.can_manage_build_orders}
+                          onChange={() => handleTogglePermission(user, "can_manage_build_orders", user.can_manage_build_orders)}
                           disabled={user.is_admin}
                           style={{ cursor: user.is_admin ? "not-allowed" : "pointer", transform: "scale(1.2)", opacity: user.is_admin ? 0.5 : 1 }}
                         />

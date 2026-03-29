@@ -117,3 +117,55 @@ Or use the script: `scripts/create-simple-test-member.js`
 - Store user language preference
 - Translate UI components
 - Multi-language blog posts
+
+## Admin Panel & Permissions Checklist
+
+**CRITICAL: When adding ANY new feature/content type, ALWAYS verify:**
+
+1. **Database Schema:**
+   - [ ] Table created with proper fields
+   - [ ] Timestamps (created_at, updated_at)
+   - [ ] Foreign keys if needed
+   - [ ] Indexes for performance
+
+2. **Permissions System:**
+   - [ ] Add `can_manage_X` column to `user_permissions` table
+   - [ ] Update `/api/admin/permissions/route.js` GET query
+   - [ ] Update `/api/admin/permissions/route.js` PUT mutation
+   - [ ] Update admin UI permissions section to show new permission
+
+3. **Admin Panel UI:**
+   - [ ] Add new section tab in `/admin/page.js`
+   - [ ] Create CRUD interface (Create, Read, Update, Delete)
+   - [ ] Check permission: `session?.user?.permissions?.is_admin || session?.user?.permissions?.can_manage_X`
+   - [ ] Add loading states and error handling
+
+4. **API Routes:**
+   - [ ] Create `/api/admin/X/route.js`
+   - [ ] Protect GET with authentication (allow public if needed)
+   - [ ] Protect POST/PUT/DELETE with permission check
+   - [ ] Return proper HTTP status codes (200, 400, 403, 500)
+
+5. **Frontend Display:**
+   - [ ] Create section in main page (`page-client.js`)
+   - [ ] Add to navigation tabs
+   - [ ] Persist active tab with URL hash
+   - [ ] Handle loading and empty states
+
+**Example Permission Flow:**
+```javascript
+// In API route
+const session = await getServerSession(authOptions);
+if (!session?.user?.permissions?.is_admin && !session?.user?.permissions?.can_manage_X) {
+  return Response.json({ error: "No autorizado" }, { status: 403 });
+}
+```
+
+**Current Features & Permissions:**
+- **Blog Posts**: `can_publish_blog`
+- **Videos**: `can_publish_videos`
+- **Events**: `can_publish_events`
+- **Rules**: `can_edit_rules`
+- **Members**: `can_manage_members`
+- **Permissions**: `can_manage_permissions`
+- **Build Orders**: `can_manage_build_orders` (to be implemented)

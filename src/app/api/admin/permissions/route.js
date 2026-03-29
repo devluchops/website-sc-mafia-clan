@@ -37,7 +37,8 @@ export async function GET(request) {
         COALESCE(up.can_publish_events, false) as can_publish_events,
         COALESCE(up.can_edit_rules, false) as can_edit_rules,
         COALESCE(up.can_manage_members, false) as can_manage_members,
-        COALESCE(up.can_manage_permissions, false) as can_manage_permissions
+        COALESCE(up.can_manage_permissions, false) as can_manage_permissions,
+        COALESCE(up.can_manage_build_orders, false) as can_manage_build_orders
       FROM discord_authorized_users dau
       LEFT JOIN user_permissions up ON (
         dau.discord_id = up.discord_id OR
@@ -75,6 +76,7 @@ export async function PUT(request) {
       can_edit_rules,
       can_manage_members,
       can_manage_permissions,
+      can_manage_build_orders,
     } = await request.json();
 
     if (!discord_id && !discord_username) {
@@ -121,6 +123,7 @@ export async function PUT(request) {
           can_edit_rules = ${can_edit_rules || false},
           can_manage_members = ${can_manage_members || false},
           can_manage_permissions = ${can_manage_permissions || false},
+          can_manage_build_orders = ${can_manage_build_orders || false},
           updated_at = NOW()
         WHERE discord_id = ${discord_id} OR discord_username = ${username}
       `;
@@ -137,7 +140,8 @@ export async function PUT(request) {
           can_publish_events,
           can_edit_rules,
           can_manage_members,
-          can_manage_permissions
+          can_manage_permissions,
+          can_manage_build_orders
         ) VALUES (
           ${discord_id},
           ${username},
@@ -148,7 +152,8 @@ export async function PUT(request) {
           ${can_publish_events || false},
           ${can_edit_rules || false},
           ${can_manage_members || false},
-          ${can_manage_permissions || false}
+          ${can_manage_permissions || false},
+          ${can_manage_build_orders || false}
         )
       `;
     }
