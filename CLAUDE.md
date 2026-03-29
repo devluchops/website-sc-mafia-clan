@@ -44,3 +44,16 @@ These defaults are optimized for AI coding agents (and humans) working on apps t
 - Project ID: `prj_Q1wY8w8gKgCGlvKOuaysDpArcjLP`
 - Project Name: `website-sc-mafia-clan`
 - Production Domain: `clanmafia.devluchops.space`
+
+## Email System
+
+**Resend Configuration:**
+- Integration installed via Vercel Marketplace
+- Domain: `devluchops.space` (verification required)
+- From address: `noreply@devluchops.space`
+- Free tier: 3,000 emails/month
+
+**Email Notifications:**
+1. **Member Invites**: Automatic when email + Discord username configured (only if user hasn't logged in)
+2. **Comment Replies**: Sent when someone replies to your comment
+3. **New Posts**: All members with email notified when new blog post published
