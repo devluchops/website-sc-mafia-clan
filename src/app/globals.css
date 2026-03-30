@@ -63,3 +63,38 @@ button, a, input, textarea {
 html {
   scroll-behavior: smooth;
 }
+
+/* Responsive Design Variables */
+:root {
+  --header-logo-size: 200px;
+  --header-title-size: 48px;
+  --header-title-spacing: 10px;
+  --modal-padding: 32px;
+  --nav-button-padding: 12px 20px;
+  --nav-button-font: 13px;
+  --nav-button-spacing: 2px;
+  --user-button-padding: 12px 20px;
+  --user-button-font: 11px;
+  --join-button-bottom: 32px;
+  --join-button-right: 32px;
+  --join-button-padding: 16px 28px;
+  --join-button-font: 15px;
+}
+
+@media (max-width: 768px) {
+  :root {
+    --header-logo-size: 120px;
+    --header-title-size: 32px;
+    --header-title-spacing: 5px;
+    --modal-padding: 16px;
+    --nav-button-padding: 8px 12px;
+    --nav-button-font: 11px;
+    --nav-button-spacing: 1px;
+    --user-button-padding: 8px 12px;
+    --user-button-font: 9px;
+    --join-button-bottom: 16px;
+    --join-button-right: 16px;
+    --join-button-padding: 12px 20px;
+    --join-button-font: 12px;
+  }
+}

@@ -9,27 +9,7 @@ import SubscribeForm from "@/components/SubscribeForm";
 // ============================================================
 //  HOOKS
 // ============================================================
-
-function useIsMobile() {
-  const [isMobile, setIsMobile] = useState(false);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Durante SSR, siempre retorna false
-  return mounted ? isMobile : false;
-}
+// Responsive design handled via CSS media queries in globals.css
 
 // ============================================================
 //  THEME CONSTANTS
@@ -1015,7 +995,7 @@ function BlogSection({ posts }) {
               background: cardBg,
               border: `2px solid ${gold}`,
               borderRadius: 12,
-              padding: isMobile ? 16 : 32,
+              padding: 24,
               maxWidth: 700,
               width: "100%",
               maxHeight: "90vh",
@@ -1726,7 +1706,7 @@ function RosterSection({ members }) {
                 background: cardBg,
                 border: `2px solid ${gold}`,
                 borderRadius: 12,
-                padding: isMobile ? 16 : 32,
+                padding: 24,
                 maxWidth: 500,
                 width: "100%",
                 maxHeight: "90vh",
@@ -1739,7 +1719,7 @@ function RosterSection({ members }) {
                 name={selectedMember.name}
                 race={selectedMember.mainRace || selectedMember.race}
                 avatar={selectedMember.avatar}
-                size={isMobile ? 80 : 100}
+                size={90}
               />
               <h3
                 style={{
@@ -2305,7 +2285,7 @@ function EventsSection({ events }) {
             alignItems: "center",
             justifyContent: "center",
             zIndex: 1000,
-            padding: isMobile ? 12 : 20,
+            padding: 16,
           }}
           onClick={closeEvent}
         >
@@ -2314,7 +2294,7 @@ function EventsSection({ events }) {
               background: cardBg,
               border: `2px solid ${gold}`,
               borderRadius: 12,
-              padding: isMobile ? 16 : 32,
+              padding: 24,
               maxWidth: 500,
               width: "100%",
               maxHeight: "90vh",
@@ -2592,7 +2572,6 @@ const TABS = [
 
 export default function PageClient({ initialData = null, initialHash = null }) {
   const { data: session } = useSession();
-  const isMobile = useIsMobile();
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState(() => {
     // Leer el hash de la URL al cargar
@@ -2752,8 +2731,8 @@ export default function PageClient({ initialData = null, initialHash = null }) {
 
         <div
           style={{
-            width: isMobile ? 120 : 200,
-            height: isMobile ? 120 : 200,
+            width: 160,
+            height: 160,
             margin: "0 auto 20px",
             borderRadius: "50%",
             overflow: "hidden",
@@ -2788,9 +2767,9 @@ export default function PageClient({ initialData = null, initialHash = null }) {
         <h1
           style={{
             fontFamily: "'Cinzel', serif",
-            fontSize: isMobile ? 32 : 48,
+            fontSize: 40,
             fontWeight: 700,
-            letterSpacing: isMobile ? 5 : 10,
+            letterSpacing: 7,
             color: gold,
             textTransform: "uppercase",
             margin: 0,
@@ -2815,11 +2794,11 @@ export default function PageClient({ initialData = null, initialHash = null }) {
       <nav
         style={{
           display: "flex",
-          flexDirection: isMobile ? "column" : "row",
+          flexDirection: "row",
           alignItems: "center",
-          justifyContent: "center",
-          gap: isMobile ? 12 : 8,
-          padding: isMobile ? "12px 8px" : "12px 16px",
+          justifyContent: "space-between",
+          gap: 8,
+          padding: "12px 16px",
           background: "#0d0d0a",
           borderBottom: `1px solid ${darkGold}`,
           flexWrap: "wrap",
@@ -2829,7 +2808,8 @@ export default function PageClient({ initialData = null, initialHash = null }) {
           minHeight: 60,
         }}
       >
-        <div style={{ display: "flex", gap: 4, flexWrap: "wrap", justifyContent: "center", alignItems: "center", width: isMobile ? "100%" : "auto" }}>
+        {/* Tabs */}
+        <div style={{ display: "flex", gap: 4, flexWrap: "wrap", justifyContent: "center", alignItems: "center", flex: "1 1 auto" }}>
           {TABS.map((t) => (
             <button
               key={t.id}
@@ -2842,11 +2822,11 @@ export default function PageClient({ initialData = null, initialHash = null }) {
                 border: "none",
                 color: activeTab === t.id ? gold : textMuted,
                 fontFamily: "'Cinzel', serif",
-                fontSize: isMobile ? 11 : 13,
+                fontSize: 12,
                 fontWeight: 600,
-                letterSpacing: isMobile ? 1 : 2,
+                letterSpacing: 1.5,
                 textTransform: "uppercase",
-                padding: isMobile ? "8px 12px" : "12px 20px",
+                padding: "10px 16px",
                 cursor: "pointer",
                 borderRadius: 6,
                 transition: "all 0.2s",
@@ -2859,15 +2839,10 @@ export default function PageClient({ initialData = null, initialHash = null }) {
 
         {/* User Menu */}
         <div style={{
-          position: isMobile ? "relative" : "absolute",
-          right: isMobile ? "auto" : 16,
-          top: isMobile ? "auto" : "50%",
-          transform: isMobile ? "none" : "translateY(-50%)",
           display: "flex",
-          gap: isMobile ? 4 : 8,
+          gap: 6,
           alignItems: "center",
-          width: isMobile ? "100%" : "auto",
-          justifyContent: isMobile ? "center" : "flex-start"
+          flexShrink: 0
         }}>
           {session ? (
             <>
@@ -2878,11 +2853,11 @@ export default function PageClient({ initialData = null, initialHash = null }) {
                   border: `1px solid ${gold}`,
                   color: gold,
                   fontFamily: "'Cinzel', serif",
-                  fontSize: isMobile ? 9 : 11,
+                  fontSize: 10,
                   fontWeight: 600,
-                  letterSpacing: isMobile ? 1 : 1.5,
+                  letterSpacing: 1.25,
                   textTransform: "uppercase",
-                  padding: isMobile ? "8px 12px" : "12px 20px",
+                  padding: "10px 16px",
                   cursor: "pointer",
                   borderRadius: 6,
                   textDecoration: "none",
@@ -2908,11 +2883,11 @@ export default function PageClient({ initialData = null, initialHash = null }) {
                     border: `1px solid ${gold}`,
                     color: gold,
                     fontFamily: "'Cinzel', serif",
-                    fontSize: isMobile ? 9 : 11,
+                    fontSize: 10,
                     fontWeight: 600,
-                    letterSpacing: isMobile ? 1 : 1.5,
+                    letterSpacing: 1.25,
                     textTransform: "uppercase",
-                    padding: isMobile ? "8px 12px" : "12px 20px",
+                    padding: "10px 16px",
                     cursor: "pointer",
                     borderRadius: 6,
                     textDecoration: "none",
@@ -3088,16 +3063,16 @@ export default function PageClient({ initialData = null, initialHash = null }) {
             onClick={() => setJoinModalOpen(true)}
             style={{
               position: "fixed",
-              bottom: isMobile ? 16 : 32,
-              right: isMobile ? 16 : 32,
-              padding: isMobile ? "12px 20px" : "16px 28px",
+              bottom: 24,
+              right: 24,
+              padding: "14px 24px",
               background: `linear-gradient(135deg, ${gold} 0%, ${darkGold} 100%)`,
               border: `2px solid ${gold}`,
               borderRadius: 50,
               color: bg,
-              fontSize: isMobile ? 12 : 15,
+              fontSize: 13.5,
               fontWeight: 700,
-              letterSpacing: isMobile ? 0.5 : 1,
+              letterSpacing: 0.75,
               cursor: "pointer",
               transition: "all 0.3s",
               fontFamily: "'Cinzel', serif",
@@ -3131,7 +3106,7 @@ export default function PageClient({ initialData = null, initialHash = null }) {
             alignItems: "center",
             justifyContent: "center",
             zIndex: 9999,
-            padding: isMobile ? 12 : 20,
+            padding: 16,
           }}
           onClick={() => setJoinModalOpen(false)}
         >
@@ -3145,7 +3120,7 @@ export default function PageClient({ initialData = null, initialHash = null }) {
               width: "100%",
               maxHeight: "90vh",
               overflow: "auto",
-              padding: isMobile ? 16 : 32,
+              padding: 24,
               position: "relative",
             }}
           >
