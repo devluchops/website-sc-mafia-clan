@@ -16,11 +16,23 @@ export default function SubscribeForm({ inline = false }) {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
+  const validateEmail = (email) => {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setMessage('');
     setError('');
+
+    // Validar email
+    if (!validateEmail(email)) {
+      setError('Por favor ingresa un email válido');
+      setLoading(false);
+      return;
+    }
 
     try {
       const res = await fetch('/api/subscribe', {
@@ -49,29 +61,34 @@ export default function SubscribeForm({ inline = false }) {
     // Versión inline para footer/sidebar
     return (
       <div style={{
-        background: cardBg,
-        border: `1px solid ${darkGold}`,
-        borderRadius: 8,
-        padding: 20,
+        background: `linear-gradient(135deg, ${cardBg} 0%, #1e1b18 100%)`,
+        border: `1.5px solid ${darkGold}`,
+        borderRadius: 10,
+        padding: 24,
+        boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
       }}>
-        <h3 style={{
-          color: gold,
-          margin: '0 0 8px 0',
-          fontSize: 18,
-          fontFamily: "'Cinzel', serif",
-        }}>
-          📰 Suscríbete al Blog
-        </h3>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+          <span style={{ fontSize: 24 }}>📬</span>
+          <h3 style={{
+            color: gold,
+            margin: 0,
+            fontSize: 19,
+            fontFamily: "'Cinzel', serif",
+            fontWeight: 600,
+          }}>
+            Mantente al Día
+          </h3>
+        </div>
         <p style={{
           color: textMuted,
           fontSize: 13,
-          margin: '0 0 15px 0',
-          lineHeight: 1.4,
+          margin: '0 0 18px 0',
+          lineHeight: 1.5,
         }}>
-          Recibe notificaciones de nuevos posts directamente en tu email
+          Recibe notificaciones de nuevos posts sobre StarCraft, torneos y estrategias directo en tu email
         </p>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <input
             type="email"
             placeholder="tu@email.com"
@@ -81,14 +98,17 @@ export default function SubscribeForm({ inline = false }) {
             disabled={loading}
             style={{
               width: '100%',
-              padding: '10px 12px',
+              padding: '11px 14px',
               background: bg,
-              border: `1px solid ${darkGold}`,
-              borderRadius: 4,
+              border: `1.5px solid ${darkGold}`,
+              borderRadius: 6,
               color: textLight,
               fontSize: 14,
               outline: 'none',
+              transition: 'border-color 0.2s',
             }}
+            onFocus={(e) => e.target.style.borderColor = gold}
+            onBlur={(e) => e.target.style.borderColor = darkGold}
           />
 
           <input
@@ -99,14 +119,17 @@ export default function SubscribeForm({ inline = false }) {
             disabled={loading}
             style={{
               width: '100%',
-              padding: '10px 12px',
+              padding: '11px 14px',
               background: bg,
-              border: `1px solid ${darkGold}`,
-              borderRadius: 4,
+              border: `1.5px solid ${darkGold}`,
+              borderRadius: 6,
               color: textLight,
               fontSize: 14,
               outline: 'none',
+              transition: 'border-color 0.2s',
             }}
+            onFocus={(e) => e.target.style.borderColor = gold}
+            onBlur={(e) => e.target.style.borderColor = darkGold}
           />
 
           <button
@@ -114,19 +137,29 @@ export default function SubscribeForm({ inline = false }) {
             disabled={loading}
             style={{
               width: '100%',
-              padding: '12px',
-              background: gold,
+              padding: '13px',
+              background: loading ? textMuted : gold,
               border: 'none',
-              borderRadius: 6,
+              borderRadius: 7,
               color: bg,
-              fontSize: 14,
-              fontWeight: 600,
+              fontSize: 15,
+              fontWeight: 700,
               cursor: loading ? 'not-allowed' : 'pointer',
-              opacity: loading ? 0.7 : 1,
               transition: 'all 0.2s',
+              boxShadow: loading ? 'none' : '0 2px 8px rgba(201,168,76,0.3)',
+            }}
+            onMouseEnter={(e) => {
+              if (!loading) {
+                e.target.style.transform = 'translateY(-1px)';
+                e.target.style.boxShadow = '0 4px 12px rgba(201,168,76,0.4)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.transform = 'translateY(0)';
+              e.target.style.boxShadow = '0 2px 8px rgba(201,168,76,0.3)';
             }}
           >
-            {loading ? 'Suscribiendo...' : 'Suscribirse'}
+            {loading ? '⏳ Suscribiendo...' : '✉️ Suscribirse Gratis'}
           </button>
 
           {message && (
