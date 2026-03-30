@@ -958,14 +958,13 @@ function BlogSection({ posts }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       <SectionTitle>Publicaciones recientes</SectionTitle>
+
+      {/* Subscribe Form */}
+      <SubscribeForm inline={true} />
+
       {posts.map((p, i) => (
         <BlogPost key={i} post={p} session={session} onViewFull={() => openPost(p)} />
       ))}
-
-      {/* Subscribe Form */}
-      <div style={{ marginTop: 16 }}>
-        <SubscribeForm inline={true} />
-      </div>
 
       {/* Post Detail Modal */}
       {selectedPost && (
