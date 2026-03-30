@@ -45,6 +45,52 @@ These defaults are optimized for AI coding agents (and humans) working on apps t
 - Project Name: `website-sc-mafia-clan`
 - Production Domain: `clanmafia.devluchops.space`
 
+## Image Storage (Vercel Blob)
+
+**System:** All blog post images uploaded via admin panel are stored in **Vercel Blob Storage**.
+
+**Why Vercel Blob?**
+- ✅ Persistent storage (survives deployments)
+- ✅ CDN global incluido
+- ✅ No requiere Git commits
+- ✅ URLs públicas automáticas
+- ✅ Integración nativa con Next.js
+
+**Implementation:**
+- Package: `@vercel/blob`
+- Endpoint: `/api/admin/upload-post-image`
+- Storage path: `posts/post-{timestamp}-{filename}`
+- Access: Public
+- Token: `BLOB_READ_WRITE_TOKEN` (auto-configured by Vercel)
+
+**Image Flow:**
+1. User uploads image via admin panel
+2. POST request to `/api/admin/upload-post-image`
+3. Image saved to Vercel Blob Storage
+4. Returns public URL (e.g., `https://blob.vercel.com/...`)
+5. URL saved to database in `posts.image` column
+6. Image served via CDN automatically
+
+**Local Development:**
+- Vercel Blob works in local dev (requires `BLOB_READ_WRITE_TOKEN`)
+- Get token: `vercel env pull` or configure manually
+- Images stored in Vercel cloud (not local filesystem)
+
+**Manual Image Upload (Scripts/CLI):**
+When uploading images via scripts (like tournament posts):
+1. Copy image to `/public/posts/` directory
+2. Commit to Git
+3. Reference as `/posts/filename.jpeg` (relative path)
+4. These images are served from Git (not Blob)
+
+**Two Image Storage Methods:**
+- **Admin Panel Uploads** → Vercel Blob (persistent, no Git)
+- **Script/Manual Uploads** → Git repository (in `/public/posts/`)
+
+Both methods work, but Blob is recommended for user-uploaded content.
+
+**IMPORTANT:** Never use filesystem writes (`fs.writeFile`) for user uploads in production. Vercel's filesystem is read-only and ephemeral.
+
 ## Challonge Tournament Integration
 
 **Configuration:**
