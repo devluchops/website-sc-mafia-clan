@@ -1514,7 +1514,7 @@ export default function AdminDashboard() {
           overflowX: "auto",
         }}
       >
-        <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "center", gap: 4, padding: "0 24px" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, padding: "0 24px", flexWrap: "wrap" }}>
           {session?.user?.permissions?.is_admin && (
             <button
               onClick={() => setActiveSection("info")}
