@@ -107,6 +107,7 @@ html {
   justify-content: center;
   gap: 8px;
   flex-wrap: wrap;
+  position: relative;
 }
 
 .main-nav .nav-tabs {
@@ -123,18 +124,21 @@ html {
   align-items: center;
 }
 
-/* Desktop: user menu goes to the right */
+/* Desktop: tabs centered, user menu absolute right */
 @media (min-width: 769px) {
   .main-nav {
-    justify-content: space-between;
+    justify-content: center;
   }
 
   .main-nav .nav-user-menu {
-    margin-left: auto;
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
   }
 }
 
-/* Mobile: everything centered */
+/* Mobile: everything centered, relative positioning */
 @media (max-width: 768px) {
   .main-nav {
     justify-content: center;
@@ -142,6 +146,7 @@ html {
 
   .main-nav .nav-tabs,
   .main-nav .nav-user-menu {
+    position: relative;
     justify-content: center;
     width: 100%;
   }
