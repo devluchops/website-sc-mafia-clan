@@ -45,6 +45,54 @@ These defaults are optimized for AI coding agents (and humans) working on apps t
 - Project Name: `website-sc-mafia-clan`
 - Production Domain: `clanmafia.devluchops.space`
 
+## Challonge Tournament Integration
+
+**Configuration:**
+- API integration for managing StarCraft II tournaments
+- Credentials stored in Vercel environment variables
+- Public tournament display on main site + dedicated tournament pages
+
+**Environment Variables (Required):**
+```bash
+CHALLONGE_API_KEY=<your-api-key>          # Private server-side
+CHALLONGE_USERNAME=<your-username>        # Private server-side
+NEXT_PUBLIC_CHALLONGE_USERNAME=<username> # Public client-side (for iframe embed URLs)
+```
+
+**IMPORTANT - Adding Environment Variables:**
+When adding env vars via `vercel env add`, ensure NO trailing newlines or whitespace:
+- Paste the value and DO NOT press Enter after
+- Or add `.trim()` in code when reading: `process.env.VAR?.trim()`
+
+**API Endpoints:**
+1. **Public Tournaments API**: `/api/tournaments`
+   - GET with `?id=tournament_url` - Get specific tournament with participants/matches
+   - GET without params - List active tournaments (pending, underway, awaiting_review)
+   - No authentication required
+
+2. **Admin Tournaments API**: `/api/admin/tournaments`
+   - GET - List all tournaments or get specific with participants/matches
+   - POST - Create tournament, start tournament, add/remove participants, update match results
+   - DELETE - Remove tournament
+   - Requires `is_admin` or `can_publish_events` permission
+
+**Tournament Display:**
+- Main page shows active tournaments in dedicated section
+- Click tournament card → dedicated page at `/tournaments/[url]`
+- Tournament page shows: description, participants, live bracket iframe from Challonge
+
+**Implementation Files:**
+- `src/lib/challonge.js` - Challonge API client (trim env vars!)
+- `src/app/api/tournaments/route.js` - Public API
+- `src/app/api/admin/tournaments/route.js` - Admin API
+- `src/app/page-client.js` - Main page tournament display
+- `src/app/tournaments/[url]/page.js` - Dedicated tournament page
+
+**Common Issues:**
+- **401 Unauthorized**: Check for trailing newlines in API key (add `.trim()`)
+- **500 Error on Vercel**: Verify environment variables are set in Production
+- **"No hay torneos activos"**: Check API response is array, not error object
+
 ## Email System
 
 **Resend Configuration:**
@@ -169,3 +217,19 @@ if (!session?.user?.permissions?.is_admin && !session?.user?.permissions?.can_ma
 - **Members**: `can_manage_members`
 - **Permissions**: `can_manage_permissions`
 - **Build Orders**: `can_manage_build_orders` (to be implemented)
+
+## Documentation Guidelines
+
+**IMPORTANT - Single Source of Truth:**
+- **ONLY maintain CLAUDE.md** as the project documentation file
+- **DO NOT create** new markdown files (e.g., SETUP.md, GUIDE.md, NOTES.md, etc.)
+- **DO NOT split** documentation into multiple files
+- All project instructions, setup guides, troubleshooting, and reference material should be consolidated in CLAUDE.md
+- Keep README.md minimal (project description, quick start, link to CLAUDE.md if needed)
+- If documentation grows large, use clear headers and sections within CLAUDE.md
+
+**When to Update CLAUDE.md:**
+- Adding new features or integrations
+- Solving recurring bugs or issues
+- Documenting environment setup or deployment procedures
+- Adding API documentation or architectural decisions
