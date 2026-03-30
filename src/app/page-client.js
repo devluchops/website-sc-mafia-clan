@@ -2593,6 +2593,7 @@ const TABS = [
 export default function PageClient({ initialData = null, initialHash = null }) {
   const { data: session } = useSession();
   const isMobile = useIsMobile();
+  const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState(() => {
     // Leer el hash de la URL al cargar
     if (typeof window !== 'undefined') {
@@ -2601,6 +2602,11 @@ export default function PageClient({ initialData = null, initialHash = null }) {
     }
     return "blog";
   });
+
+  // Esperar a que el componente se monte en el cliente
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   const [logoErr, setLogoErr] = useState(false);
   const [data, setData] = useState(initialData);
   const [buildOrders, setBuildOrders] = useState([]);
@@ -2699,7 +2705,8 @@ export default function PageClient({ initialData = null, initialHash = null }) {
     }
   }, []);
 
-  if (loading || !data) {
+  // Esperar a que el componente se monte para evitar hydration mismatch
+  if (!mounted || loading || !data) {
     return (
       <div
         style={{
