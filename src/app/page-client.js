@@ -946,12 +946,12 @@ function BlogSection({ posts }) {
 
   const openPost = (post) => {
     setSelectedPost(post);
-    window.location.hash = `#post-${post.id}`;
+    window.history.pushState(null, '', `/post/${post.id}`);
   };
 
   const closePost = () => {
     setSelectedPost(null);
-    window.location.hash = '#blog';
+    window.history.pushState(null, '', '/#blog');
   };
 
   return (
@@ -1212,13 +1212,13 @@ function RosterSection({ members }) {
   // Función para abrir miembro y actualizar URL
   const openMember = (member) => {
     setSelectedMember(member);
-    window.location.hash = `#member-${member.id}`;
+    window.history.pushState(null, '', `/member/${member.id}`);
   };
 
   // Función para cerrar miembro y limpiar URL
   const closeMember = () => {
     setSelectedMember(null);
-    window.location.hash = '#roster';
+    window.history.pushState(null, '', '/#roster');
   };
 
   // Filtrar por búsqueda
@@ -2148,12 +2148,12 @@ function EventsSection({ events }) {
 
   const openEvent = (event) => {
     setSelectedEvent(event);
-    window.location.hash = `#event-${event.id}`;
+    window.history.pushState(null, '', `/event/${event.id}`);
   };
 
   const closeEvent = () => {
     setSelectedEvent(null);
-    window.location.hash = '#events';
+    window.history.pushState(null, '', '/#events');
   };
 
   const addToGoogleCalendar = (event) => {
@@ -2560,7 +2560,7 @@ const TABS = [
   { id: "build-orders", label: "Build Orders" },
 ];
 
-export default function HomePage() {
+export default function PageClient({ initialData = null, initialHash = null }) {
   const { data: session } = useSession();
   const [activeTab, setActiveTab] = useState(() => {
     // Leer el hash de la URL al cargar
@@ -2571,10 +2571,10 @@ export default function HomePage() {
     return "blog";
   });
   const [logoErr, setLogoErr] = useState(false);
-  const [data, setData] = useState(null);
+  const [data, setData] = useState(initialData);
   const [buildOrders, setBuildOrders] = useState([]);
   const [tournaments, setTournaments] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initialData);
   const [joinModalOpen, setJoinModalOpen] = useState(false);
   const [joinForm, setJoinForm] = useState({
     name: "",
@@ -2596,6 +2596,11 @@ export default function HomePage() {
   }, [activeTab]);
 
   useEffect(() => {
+    // Si tenemos initialData (SSR), no hacer fetch
+    if (initialData) {
+      return;
+    }
+
     // Cargar datos desde la API
     fetch("/api/clan")
       .then((res) => res.json())
@@ -2635,6 +2640,32 @@ export default function HomePage() {
         console.error(err);
         setTournaments([]);
       });
+  }, [initialData]);
+
+  // Manejar initialHash (cuando venimos de una ruta dinámica)
+  useEffect(() => {
+    if (initialHash) {
+      window.location.hash = initialHash;
+    }
+  }, [initialHash]);
+
+  // Auto-upgrade hash URLs a rutas reales (solo en home)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (window.location.pathname !== '/') return;
+
+    const hash = window.location.hash;
+
+    if (hash.startsWith('#post-')) {
+      const id = hash.replace('#post-', '');
+      window.history.replaceState(null, '', `/post/${id}`);
+    } else if (hash.startsWith('#member-')) {
+      const id = hash.replace('#member-', '');
+      window.history.replaceState(null, '', `/member/${id}`);
+    } else if (hash.startsWith('#event-')) {
+      const id = hash.replace('#event-', '');
+      window.history.replaceState(null, '', `/event/${id}`);
+    }
   }, []);
 
   if (loading || !data) {
