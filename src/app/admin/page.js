@@ -346,7 +346,7 @@ export default function AdminDashboard() {
     // Cargar posts (crear API si no existe)
     fetch("/api/admin/posts")
       .then((res) => res.json())
-      .then((data) => setPosts(data))
+      .then((data) => setPosts(Array.isArray(data) ? data : []))
       .catch((err) => console.error(err));
 
     // Cargar videos
