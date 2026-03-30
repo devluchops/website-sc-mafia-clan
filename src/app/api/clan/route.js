@@ -21,7 +21,15 @@ export async function GET() {
 
     console.log("Total members from DB:", members.length);
     console.log("Member names:", members.map(m => m.name));
-    const posts = await sql`SELECT * FROM posts ORDER BY created_at DESC`;
+    const posts = await sql`
+      SELECT
+        p.*,
+        m.name as created_by_member_name,
+        m.avatar as created_by_member_avatar
+      FROM posts p
+      LEFT JOIN members m ON p.created_by_member_id = m.id
+      ORDER BY p.created_at DESC
+    `;
     const videos = await sql`SELECT * FROM videos ORDER BY created_at DESC`;
     const events = await sql`SELECT * FROM events ORDER BY created_at DESC`;
     const rules = await sql`SELECT * FROM clan_rules ORDER BY order_index ASC`;
@@ -60,12 +68,19 @@ export async function GET() {
         excerpt: p.excerpt,
         content: p.content,
         image: p.image,
+        media_type: p.media_type,
+        video_url: p.video_url,
+        created_by_member_name: p.created_by_member_name,
+        created_by_member_avatar: p.created_by_member_avatar,
       })),
       videos: videos.map(v => ({
+        id: v.id,
         title: v.title,
         duration: v.duration,
         date: v.date,
         youtubeId: v.youtube_id,
+        youtube_id: v.youtube_id, // For backward compatibility
+        video_url: v.video_url,
       })),
       events: events.map(e => ({
         id: e.id,
