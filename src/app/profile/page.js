@@ -24,6 +24,7 @@ export default function ProfilePage() {
   const [formData, setFormData] = useState({
     about_me: "",
     avatar: "",
+    phone: "",
     social_facebook: "",
     social_discord: "",
     social_tiktok: "",
@@ -50,6 +51,7 @@ export default function ProfilePage() {
         setFormData({
           about_me: data.member.about_me || "",
           avatar: data.member.avatar || "",
+          phone: data.member.phone || "",
           social_facebook: data.member.social_facebook || "",
           social_discord: data.member.social_discord || "",
           social_tiktok: data.member.social_tiktok || "",
@@ -272,6 +274,12 @@ export default function ProfilePage() {
               <p style={{ fontSize: 12, color: textMuted, marginBottom: 4, letterSpacing: 1 }}>MMR</p>
               <p style={{ fontSize: 16, color: textLight, fontWeight: 600, margin: 0 }}>{member.mmr || 0}</p>
             </div>
+            {member.phone && (
+              <div>
+                <p style={{ fontSize: 12, color: textMuted, marginBottom: 4, letterSpacing: 1 }}>📱 TELÉFONO/WHATSAPP</p>
+                <p style={{ fontSize: 16, color: textLight, fontWeight: 600, margin: 0 }}>{member.phone}</p>
+              </div>
+            )}
           </div>
           <div style={{ marginTop: 20, paddingTop: 20, borderTop: `1px solid ${darkGold}` }}>
             <p style={{ fontSize: 12, color: textMuted, marginBottom: 12, letterSpacing: 1 }}>NIVELES POR RAZA</p>
@@ -393,6 +401,35 @@ export default function ProfilePage() {
                 />
               )}
             </div>
+          </div>
+
+          <div style={{ marginBottom: 20 }}>
+            <label style={{
+              display: "block",
+              fontSize: 12,
+              fontWeight: 600,
+              color: textMuted,
+              marginBottom: 8,
+              letterSpacing: 1,
+              textTransform: "uppercase",
+            }}>
+              📱 Teléfono/WhatsApp
+            </label>
+            <input
+              type="tel"
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              placeholder="+51 999 999 999"
+              style={{
+                width: "100%",
+                padding: 12,
+                background: bg,
+                border: `1px solid ${darkGold}`,
+                borderRadius: 6,
+                color: textLight,
+                fontSize: 14,
+              }}
+            />
           </div>
 
           <h4 style={{

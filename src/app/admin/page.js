@@ -2247,8 +2247,8 @@ export default function AdminDashboard() {
                             </div>
                           </div>
 
-                          {/* Fila 1: Nombre y Email */}
-                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
+                          {/* Fila 1: Nombre, Email y Teléfono */}
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 12 }}>
                             <div>
                               <label style={{ display: "block", color: textMuted, fontSize: 11, marginBottom: 4 }}>Nombre</label>
                               <input
@@ -2272,6 +2272,24 @@ export default function AdminDashboard() {
                                 type="email"
                                 value={editFormData.email || ""}
                                 onChange={(e) => updateEditField("email", e.target.value)}
+                                style={{
+                                  width: "100%",
+                                  padding: "8px 12px",
+                                  background: bg,
+                                  border: `1px solid ${darkGold}`,
+                                  borderRadius: 4,
+                                  color: textLight,
+                                  fontSize: 13,
+                                }}
+                              />
+                            </div>
+                            <div>
+                              <label style={{ display: "block", color: textMuted, fontSize: 11, marginBottom: 4 }}>Teléfono/WhatsApp</label>
+                              <input
+                                type="tel"
+                                value={editFormData.phone || ""}
+                                onChange={(e) => updateEditField("phone", e.target.value)}
+                                placeholder="+51 999 999 999"
                                 style={{
                                   width: "100%",
                                   padding: "8px 12px",
@@ -2666,6 +2684,17 @@ export default function AdminDashboard() {
                                   <p style={{ color: textMuted, fontSize: 10, marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>✉️ Email</p>
                                   <p style={{ color: textLight, fontSize: 12, fontWeight: 500, wordBreak: "break-all" }}>{member.email || "Sin email"}</p>
                                 </div>
+                                {member.phone && (
+                                  <div style={{
+                                    padding: "10px 12px",
+                                    background: cardBg,
+                                    borderRadius: 6,
+                                    border: `1px solid ${darkGold}`
+                                  }}>
+                                    <p style={{ color: textMuted, fontSize: 10, marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>📱 Teléfono/WhatsApp</p>
+                                    <p style={{ color: textLight, fontSize: 12, fontWeight: 500 }}>{member.phone}</p>
+                                  </div>
+                                )}
                                 {member.birth_date && (
                                   <div style={{
                                     padding: "10px 12px",

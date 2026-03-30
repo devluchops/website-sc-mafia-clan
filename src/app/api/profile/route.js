@@ -84,6 +84,7 @@ export async function PUT(request) {
     const {
       about_me,
       avatar,
+      phone,
       social_facebook,
       social_discord,
       social_tiktok,
@@ -99,6 +100,7 @@ export async function PUT(request) {
       SET
         about_me = ${about_me || null},
         avatar = ${avatar || null},
+        phone = ${phone || null},
         social_facebook = ${social_facebook || null},
         social_discord = ${social_discord || null},
         social_tiktok = ${social_tiktok || null},
