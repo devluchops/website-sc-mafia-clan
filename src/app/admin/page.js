@@ -1897,7 +1897,7 @@ export default function AdminDashboard() {
                       }
                     }}
                   >
-                    📊 Exportar Excel
+                    ↓ Exportar a Excel
                   </Button>
                   <Button onClick={() => setMemberModal({ isOpen: true, member: { name: "", race: "Terran", rank: "Miembro", avatar: "", mmr: 0 } })}>
                     + Agregar Miembro
@@ -2024,6 +2024,21 @@ export default function AdminDashboard() {
                               border: "1px solid #f44336",
                             }}>
                               ✗ Sin Discord
+                            </span>
+                          )}
+
+                          {/* Estado de Teléfono */}
+                          {member.phone && (
+                            <span style={{
+                              fontSize: 10,
+                              padding: "3px 8px",
+                              borderRadius: 4,
+                              background: "rgba(76, 140, 201, 0.15)",
+                              color: "#4C8CCF",
+                              fontWeight: 600,
+                              border: "1px solid #4C8CCF",
+                            }}>
+                              📱 {member.phone}
                             </span>
                           )}
 
@@ -3919,6 +3934,14 @@ export default function AdminDashboard() {
           value={memberModal.member?.email || ""}
           onChange={(val) => setMemberModal({ ...memberModal, member: { ...memberModal.member, email: val } })}
           placeholder="correo@ejemplo.com"
+        />
+
+        <Input
+          label="Teléfono/WhatsApp"
+          type="tel"
+          value={memberModal.member?.phone || ""}
+          onChange={(val) => setMemberModal({ ...memberModal, member: { ...memberModal.member, phone: val } })}
+          placeholder="+51 999 999 999"
         />
 
         <h4 style={{ color: gold, fontSize: 14, marginTop: 20, marginBottom: 10 }}>Redes Sociales</h4>

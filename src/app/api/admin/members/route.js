@@ -30,7 +30,7 @@ export async function POST(request) {
 
   try {
     const {
-      id, name, race, rank, avatar, mmr, email,
+      id, name, race, rank, avatar, mmr, email, phone,
       main_race, races_played, level_rank,
       protoss_level, terran_level, zerg_level,
       social_facebook, social_discord, social_tiktok,
@@ -46,7 +46,7 @@ export async function POST(request) {
       await sql`
         UPDATE members
         SET name = ${name}, race = ${main_race || race || 'Terran'}, rank = ${rank},
-            avatar = ${avatar}, mmr = ${mmr}, email = ${email || null},
+            avatar = ${avatar}, mmr = ${mmr}, email = ${email || null}, phone = ${phone || null},
             main_race = ${main_race || race || 'Terran'},
             races_played = ${races_played || race || 'Terran'},
             level_rank = ${level_rank || 'B'},
@@ -69,7 +69,7 @@ export async function POST(request) {
       // Crear nuevo
       const result = await sql`
         INSERT INTO members (
-          name, race, rank, avatar, mmr, email,
+          name, race, rank, avatar, mmr, email, phone,
           main_race, races_played, level_rank,
           protoss_level, terran_level, zerg_level,
           social_facebook, social_discord, social_tiktok,
@@ -77,7 +77,7 @@ export async function POST(request) {
           birth_date, join_date
         )
         VALUES (
-          ${name}, ${main_race || race || 'Terran'}, ${rank}, ${avatar}, ${mmr}, ${email || null},
+          ${name}, ${main_race || race || 'Terran'}, ${rank}, ${avatar}, ${mmr}, ${email || null}, ${phone || null},
           ${main_race || race || 'Terran'}, ${races_played || race || 'Terran'}, ${level_rank || 'B'},
           ${protoss_level || '-'}, ${terran_level || '-'}, ${zerg_level || '-'},
           ${social_facebook || ''}, ${social_discord || ''}, ${social_tiktok || ''},
