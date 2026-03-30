@@ -303,6 +303,82 @@ export async function updateMatch(tournamentId, matchId, matchData) {
 }
 
 /**
+ * Get participants from a tournament (useful for getting group stage qualifiers)
+ * @param {string} tournamentId - Tournament ID or URL
+ * @returns {Promise<Array>} List of participants with their standings
+ */
+export async function getParticipants(tournamentId) {
+  const params = new URLSearchParams({
+    api_key: CHALLONGE_API_KEY?.trim()
+  });
+
+  const url = `${CHALLONGE_API_BASE}/tournaments/${tournamentId}/participants.json?${params}`;
+
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Challonge API error: ${response.status}`);
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching participants:', error);
+    throw error;
+  }
+}
+
+/**
+ * Bulk add participants to a tournament (useful for playoff stage)
+ * @param {string} tournamentId - Tournament ID or URL
+ * @param {Array<Object>} participants - Array of participant objects
+ * @returns {Promise<Array>} Created participants
+ */
+export async function bulkAddParticipants(tournamentId, participants) {
+  const results = [];
+
+  for (const participant of participants) {
+    try {
+      const result = await addParticipant(tournamentId, participant);
+      results.push(result);
+    } catch (error) {
+      console.error(`Error adding participant ${participant.name}:`, error);
+      results.push({ error: error.message, participant });
+    }
+  }
+
+  return results;
+}
+
+/**
+ * Finalize a tournament (locks in final standings)
+ * @param {string} tournamentId - Tournament ID or URL
+ * @returns {Promise<Object>} Finalized tournament
+ */
+export async function finalizeTournament(tournamentId) {
+  const params = new URLSearchParams({
+    api_key: CHALLONGE_API_KEY?.trim()
+  });
+
+  const url = `${CHALLONGE_API_BASE}/tournaments/${tournamentId}/finalize.json?${params}`;
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST'
+    });
+
+    if (!response.ok) {
+      throw new Error(`Challonge API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error finalizing tournament:', error);
+    throw error;
+  }
+}
+
+/**
  * Get embed iframe code for a tournament
  * @param {string} tournamentUrl - Tournament URL identifier
  * @returns {string} Iframe HTML code

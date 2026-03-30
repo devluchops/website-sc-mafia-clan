@@ -10,7 +10,10 @@ import {
   addParticipant,
   deleteParticipant,
   getMatches,
-  updateMatch
+  updateMatch,
+  getParticipants,
+  bulkAddParticipants,
+  finalizeTournament
 } from "@/lib/challonge";
 
 // GET: Obtener todos los torneos
@@ -20,10 +23,16 @@ export async function GET(request) {
     const tournamentId = searchParams.get('id');
     const getMatchesOnly = searchParams.get('matches');
 
+    const getParticipantsOnly = searchParams.get('participants');
+
     if (tournamentId && getMatchesOnly === 'true') {
       // Obtener solo los matches de un torneo
       const matches = await getMatches(tournamentId);
       return NextResponse.json(matches);
+    } else if (tournamentId && getParticipantsOnly === 'true') {
+      // Obtener solo los participantes de un torneo (útil para fase de grupos)
+      const participants = await getParticipants(tournamentId);
+      return NextResponse.json(participants);
     } else if (tournamentId) {
       // Obtener un torneo específico con participantes y partidos
       const tournament = await getTournament(tournamentId);
@@ -60,7 +69,7 @@ export async function POST(request) {
 
   try {
     const body = await request.json();
-    const { action, tournamentData, tournamentId, participant, participantId, matchId, matchData } = body;
+    const { action, tournamentData, tournamentId, participant, participantId, matchId, matchData, participants } = body;
 
     if (action === 'create') {
       // Crear nuevo torneo
@@ -100,6 +109,22 @@ export async function POST(request) {
         success: true,
         match: result,
         message: 'Resultado actualizado correctamente'
+      });
+    } else if (action === 'bulk_add_participants') {
+      // Agregar múltiples participantes (útil para copiar clasificados de grupos a playoffs)
+      const results = await bulkAddParticipants(tournamentId, participants);
+      return NextResponse.json({
+        success: true,
+        results,
+        message: `${participants.length} participantes agregados`
+      });
+    } else if (action === 'finalize') {
+      // Finalizar torneo (bloquea resultados finales)
+      const tournament = await finalizeTournament(tournamentId);
+      return NextResponse.json({
+        success: true,
+        tournament,
+        message: 'Torneo finalizado correctamente'
       });
     } else {
       return NextResponse.json(
