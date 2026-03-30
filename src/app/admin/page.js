@@ -237,6 +237,12 @@ export default function AdminDashboard() {
   const [tournamentMatches, setTournamentMatches] = useState([]);
   const [matchModal, setMatchModal] = useState({ isOpen: false, match: null, tournamentId: null });
   const [discordUserModal, setDiscordUserModal] = useState({ isOpen: false, user: null });
+
+  // Member expansion and editing states
+  const [expandedMember, setExpandedMember] = useState(null);
+  const [editingMember, setEditingMember] = useState(null);
+  const [editFormData, setEditFormData] = useState({});
+
   const [logoFile, setLogoFile] = useState(null);
   const [postImageFile, setPostImageFile] = useState(null);
   const [memberFilter, setMemberFilter] = useState("todos");
@@ -439,6 +445,43 @@ export default function AdminDashboard() {
       showMessage("❌ Error: " + error.message);
     }
     setLoading(false);
+  };
+
+  // Handle inline member editing
+  const handleStartEdit = (member) => {
+    setEditingMember(member.id);
+    setEditFormData({ ...member });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingMember(null);
+    setEditFormData({});
+  };
+
+  const handleSaveInlineEdit = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/members", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editFormData),
+      });
+      if (res.ok) {
+        showMessage("✅ Miembro actualizado correctamente");
+        setEditingMember(null);
+        setEditFormData({});
+        loadData();
+      } else {
+        showMessage("❌ Error al actualizar miembro");
+      }
+    } catch (error) {
+      showMessage("❌ Error: " + error.message);
+    }
+    setLoading(false);
+  };
+
+  const updateEditFormField = (field, value) => {
+    setEditFormData(prev => ({ ...prev, [field]: value }));
   };
 
   const handleDeleteMember = async (id) => {
@@ -1657,9 +1700,16 @@ export default function AdminDashboard() {
                         <Button
                           variant="secondary"
                           style={{ padding: "6px 12px", fontSize: 10 }}
-                          onClick={() => setMemberModal({ isOpen: true, member })}
+                          onClick={() => {
+                            if (expandedMember === member.id) {
+                              setExpandedMember(null);
+                              setEditingMember(null);
+                            } else {
+                              setExpandedMember(member.id);
+                            }
+                          }}
                         >
-                          Editar
+                          {expandedMember === member.id ? "Ocultar ▲" : "Ver detalle ▼"}
                         </Button>
                         <Button
                           variant="danger"
@@ -1670,6 +1720,551 @@ export default function AdminDashboard() {
                         </Button>
                       </div>
                     </div>
+
+                    {/* Expanded Member Details */}
+                    {expandedMember === member.id && (
+                      <div style={{
+                        background: cardBg,
+                        padding: 20,
+                        borderRadius: 8,
+                        border: `1px solid ${gold}`,
+                        marginTop: 12,
+                      }}>
+                        {editingMember === member.id ? (
+                          // EDIT MODE
+                          <div>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                              <h3 style={{ color: gold, fontSize: 16, fontWeight: 600 }}>Editar Miembro</h3>
+                              <div style={{ display: "flex", gap: 8 }}>
+                                <Button onClick={handleSaveInlineEdit} loading={loading} style={{ padding: "6px 14px", fontSize: 12 }}>
+                                  💾 Guardar
+                                </Button>
+                                <Button variant="secondary" onClick={handleCancelEdit} style={{ padding: "6px 14px", fontSize: 12 }}>
+                                  Cancelar
+                                </Button>
+                              </div>
+                            </div>
+
+                            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 16 }}>
+                              {/* Nombre */}
+                              <div>
+                                <label style={{ display: "block", color: textMuted, fontSize: 12, marginBottom: 6 }}>Nombre</label>
+                                <input
+                                  type="text"
+                                  value={editFormData.name || ""}
+                                  onChange={(e) => updateEditFormField("name", e.target.value)}
+                                  style={{
+                                    width: "100%",
+                                    padding: "8px 12px",
+                                    background: bg,
+                                    border: `1px solid ${darkGold}`,
+                                    borderRadius: 6,
+                                    color: textLight,
+                                    fontSize: 13,
+                                  }}
+                                />
+                              </div>
+
+                              {/* Email */}
+                              <div>
+                                <label style={{ display: "block", color: textMuted, fontSize: 12, marginBottom: 6 }}>Email</label>
+                                <input
+                                  type="email"
+                                  value={editFormData.email || ""}
+                                  onChange={(e) => updateEditFormField("email", e.target.value)}
+                                  style={{
+                                    width: "100%",
+                                    padding: "8px 12px",
+                                    background: bg,
+                                    border: `1px solid ${darkGold}`,
+                                    borderRadius: 6,
+                                    color: textLight,
+                                    fontSize: 13,
+                                  }}
+                                />
+                              </div>
+
+                              {/* Rango */}
+                              <div>
+                                <label style={{ display: "block", color: textMuted, fontSize: 12, marginBottom: 6 }}>Rango</label>
+                                <select
+                                  value={editFormData.rank || "Miembro"}
+                                  onChange={(e) => updateEditFormField("rank", e.target.value)}
+                                  style={{
+                                    width: "100%",
+                                    padding: "8px 12px",
+                                    background: bg,
+                                    border: `1px solid ${darkGold}`,
+                                    borderRadius: 6,
+                                    color: textLight,
+                                    fontSize: 13,
+                                    cursor: "pointer",
+                                  }}
+                                >
+                                  <option value="Lider">Lider</option>
+                                  <option value="Oficial">Oficial</option>
+                                  <option value="Miembro">Miembro</option>
+                                  <option value="Recruit">Recruit</option>
+                                </select>
+                              </div>
+
+                              {/* MMR */}
+                              <div>
+                                <label style={{ display: "block", color: textMuted, fontSize: 12, marginBottom: 6 }}>MMR</label>
+                                <input
+                                  type="number"
+                                  value={editFormData.mmr || 0}
+                                  onChange={(e) => updateEditFormField("mmr", parseInt(e.target.value) || 0)}
+                                  style={{
+                                    width: "100%",
+                                    padding: "8px 12px",
+                                    background: bg,
+                                    border: `1px solid ${darkGold}`,
+                                    borderRadius: 6,
+                                    color: textLight,
+                                    fontSize: 13,
+                                  }}
+                                />
+                              </div>
+
+                              {/* Nivel General */}
+                              <div>
+                                <label style={{ display: "block", color: textMuted, fontSize: 12, marginBottom: 6 }}>Nivel General</label>
+                                <select
+                                  value={editFormData.level_rank || "B"}
+                                  onChange={(e) => updateEditFormField("level_rank", e.target.value)}
+                                  style={{
+                                    width: "100%",
+                                    padding: "8px 12px",
+                                    background: bg,
+                                    border: `1px solid ${darkGold}`,
+                                    borderRadius: 6,
+                                    color: textLight,
+                                    fontSize: 13,
+                                    cursor: "pointer",
+                                  }}
+                                >
+                                  <option value="S">S</option>
+                                  <option value="A+">A+</option>
+                                  <option value="A">A</option>
+                                  <option value="B+">B+</option>
+                                  <option value="B">B</option>
+                                  <option value="C+">C+</option>
+                                  <option value="C">C</option>
+                                  <option value="D+">D+</option>
+                                  <option value="D">D</option>
+                                </select>
+                              </div>
+
+                              {/* Avatar URL */}
+                              <div>
+                                <label style={{ display: "block", color: textMuted, fontSize: 12, marginBottom: 6 }}>Avatar URL</label>
+                                <input
+                                  type="text"
+                                  value={editFormData.avatar || ""}
+                                  onChange={(e) => updateEditFormField("avatar", e.target.value)}
+                                  style={{
+                                    width: "100%",
+                                    padding: "8px 12px",
+                                    background: bg,
+                                    border: `1px solid ${darkGold}`,
+                                    borderRadius: 6,
+                                    color: textLight,
+                                    fontSize: 13,
+                                  }}
+                                />
+                              </div>
+                            </div>
+
+                            {/* Niveles por Raza */}
+                            <h4 style={{ color: gold, fontSize: 14, marginTop: 20, marginBottom: 12 }}>Niveles por Raza</h4>
+                            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+                              <div>
+                                <label style={{ display: "block", color: textMuted, fontSize: 12, marginBottom: 6 }}>Protoss</label>
+                                <select
+                                  value={editFormData.protoss_level || "-"}
+                                  onChange={(e) => updateEditFormField("protoss_level", e.target.value)}
+                                  style={{
+                                    width: "100%",
+                                    padding: "8px 12px",
+                                    background: bg,
+                                    border: `1px solid ${darkGold}`,
+                                    borderRadius: 6,
+                                    color: textLight,
+                                    fontSize: 13,
+                                    cursor: "pointer",
+                                  }}
+                                >
+                                  <option value="-">-</option>
+                                  <option value="S">S</option>
+                                  <option value="A+">A+</option>
+                                  <option value="A">A</option>
+                                  <option value="B+">B+</option>
+                                  <option value="B">B</option>
+                                  <option value="C+">C+</option>
+                                  <option value="C">C</option>
+                                  <option value="D+">D+</option>
+                                  <option value="D">D</option>
+                                </select>
+                              </div>
+
+                              <div>
+                                <label style={{ display: "block", color: textMuted, fontSize: 12, marginBottom: 6 }}>Terran</label>
+                                <select
+                                  value={editFormData.terran_level || "-"}
+                                  onChange={(e) => updateEditFormField("terran_level", e.target.value)}
+                                  style={{
+                                    width: "100%",
+                                    padding: "8px 12px",
+                                    background: bg,
+                                    border: `1px solid ${darkGold}`,
+                                    borderRadius: 6,
+                                    color: textLight,
+                                    fontSize: 13,
+                                    cursor: "pointer",
+                                  }}
+                                >
+                                  <option value="-">-</option>
+                                  <option value="S">S</option>
+                                  <option value="A+">A+</option>
+                                  <option value="A">A</option>
+                                  <option value="B+">B+</option>
+                                  <option value="B">B</option>
+                                  <option value="C+">C+</option>
+                                  <option value="C">C</option>
+                                  <option value="D+">D+</option>
+                                  <option value="D">D</option>
+                                </select>
+                              </div>
+
+                              <div>
+                                <label style={{ display: "block", color: textMuted, fontSize: 12, marginBottom: 6 }}>Zerg</label>
+                                <select
+                                  value={editFormData.zerg_level || "-"}
+                                  onChange={(e) => updateEditFormField("zerg_level", e.target.value)}
+                                  style={{
+                                    width: "100%",
+                                    padding: "8px 12px",
+                                    background: bg,
+                                    border: `1px solid ${darkGold}`,
+                                    borderRadius: 6,
+                                    color: textLight,
+                                    fontSize: 13,
+                                    cursor: "pointer",
+                                  }}
+                                >
+                                  <option value="-">-</option>
+                                  <option value="S">S</option>
+                                  <option value="A+">A+</option>
+                                  <option value="A">A</option>
+                                  <option value="B+">B+</option>
+                                  <option value="B">B</option>
+                                  <option value="C+">C+</option>
+                                  <option value="C">C</option>
+                                  <option value="D+">D+</option>
+                                  <option value="D">D</option>
+                                </select>
+                              </div>
+                            </div>
+
+                            {/* Redes Sociales */}
+                            <h4 style={{ color: gold, fontSize: 14, marginTop: 20, marginBottom: 12 }}>Redes Sociales</h4>
+                            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 16 }}>
+                              <div>
+                                <label style={{ display: "block", color: textMuted, fontSize: 12, marginBottom: 6 }}>Discord</label>
+                                <input
+                                  type="text"
+                                  value={editFormData.social_discord || ""}
+                                  onChange={(e) => updateEditFormField("social_discord", e.target.value)}
+                                  placeholder="username#1234"
+                                  style={{
+                                    width: "100%",
+                                    padding: "8px 12px",
+                                    background: bg,
+                                    border: `1px solid ${darkGold}`,
+                                    borderRadius: 6,
+                                    color: textLight,
+                                    fontSize: 13,
+                                  }}
+                                />
+                              </div>
+
+                              <div>
+                                <label style={{ display: "block", color: textMuted, fontSize: 12, marginBottom: 6 }}>Kick</label>
+                                <input
+                                  type="text"
+                                  value={editFormData.social_kick || ""}
+                                  onChange={(e) => updateEditFormField("social_kick", e.target.value)}
+                                  placeholder="https://kick.com/..."
+                                  style={{
+                                    width: "100%",
+                                    padding: "8px 12px",
+                                    background: bg,
+                                    border: `1px solid ${darkGold}`,
+                                    borderRadius: 6,
+                                    color: textLight,
+                                    fontSize: 13,
+                                  }}
+                                />
+                              </div>
+
+                              <div>
+                                <label style={{ display: "block", color: textMuted, fontSize: 12, marginBottom: 6 }}>Twitch</label>
+                                <input
+                                  type="text"
+                                  value={editFormData.social_twitch || ""}
+                                  onChange={(e) => updateEditFormField("social_twitch", e.target.value)}
+                                  placeholder="@username"
+                                  style={{
+                                    width: "100%",
+                                    padding: "8px 12px",
+                                    background: bg,
+                                    border: `1px solid ${darkGold}`,
+                                    borderRadius: 6,
+                                    color: textLight,
+                                    fontSize: 13,
+                                  }}
+                                />
+                              </div>
+
+                              <div>
+                                <label style={{ display: "block", color: textMuted, fontSize: 12, marginBottom: 6 }}>YouTube</label>
+                                <input
+                                  type="text"
+                                  value={editFormData.social_youtube || ""}
+                                  onChange={(e) => updateEditFormField("social_youtube", e.target.value)}
+                                  placeholder="https://youtube.com/@canal"
+                                  style={{
+                                    width: "100%",
+                                    padding: "8px 12px",
+                                    background: bg,
+                                    border: `1px solid ${darkGold}`,
+                                    borderRadius: 6,
+                                    color: textLight,
+                                    fontSize: 13,
+                                  }}
+                                />
+                              </div>
+
+                              <div>
+                                <label style={{ display: "block", color: textMuted, fontSize: 12, marginBottom: 6 }}>Facebook</label>
+                                <input
+                                  type="text"
+                                  value={editFormData.social_facebook || ""}
+                                  onChange={(e) => updateEditFormField("social_facebook", e.target.value)}
+                                  placeholder="https://facebook.com/..."
+                                  style={{
+                                    width: "100%",
+                                    padding: "8px 12px",
+                                    background: bg,
+                                    border: `1px solid ${darkGold}`,
+                                    borderRadius: 6,
+                                    color: textLight,
+                                    fontSize: 13,
+                                  }}
+                                />
+                              </div>
+
+                              <div>
+                                <label style={{ display: "block", color: textMuted, fontSize: 12, marginBottom: 6 }}>Instagram</label>
+                                <input
+                                  type="text"
+                                  value={editFormData.social_instagram || ""}
+                                  onChange={(e) => updateEditFormField("social_instagram", e.target.value)}
+                                  placeholder="@username"
+                                  style={{
+                                    width: "100%",
+                                    padding: "8px 12px",
+                                    background: bg,
+                                    border: `1px solid ${darkGold}`,
+                                    borderRadius: 6,
+                                    color: textLight,
+                                    fontSize: 13,
+                                  }}
+                                />
+                              </div>
+
+                              <div>
+                                <label style={{ display: "block", color: textMuted, fontSize: 12, marginBottom: 6 }}>Twitter/X</label>
+                                <input
+                                  type="text"
+                                  value={editFormData.social_twitter || ""}
+                                  onChange={(e) => updateEditFormField("social_twitter", e.target.value)}
+                                  placeholder="@username"
+                                  style={{
+                                    width: "100%",
+                                    padding: "8px 12px",
+                                    background: bg,
+                                    border: `1px solid ${darkGold}`,
+                                    borderRadius: 6,
+                                    color: textLight,
+                                    fontSize: 13,
+                                  }}
+                                />
+                              </div>
+
+                              <div>
+                                <label style={{ display: "block", color: textMuted, fontSize: 12, marginBottom: 6 }}>TikTok</label>
+                                <input
+                                  type="text"
+                                  value={editFormData.social_tiktok || ""}
+                                  onChange={(e) => updateEditFormField("social_tiktok", e.target.value)}
+                                  placeholder="@username"
+                                  style={{
+                                    width: "100%",
+                                    padding: "8px 12px",
+                                    background: bg,
+                                    border: `1px solid ${darkGold}`,
+                                    borderRadius: 6,
+                                    color: textLight,
+                                    fontSize: 13,
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          // VIEW MODE
+                          <div>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                              <h3 style={{ color: gold, fontSize: 16, fontWeight: 600 }}>Detalle del Miembro</h3>
+                              <Button onClick={() => handleStartEdit(member)} style={{ padding: "6px 14px", fontSize: 12 }}>
+                                ✏️ Editar
+                              </Button>
+                            </div>
+
+                            {/* Info Grid */}
+                            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 20 }}>
+                              <div>
+                                <p style={{ color: textMuted, fontSize: 11, marginBottom: 4 }}>Nombre</p>
+                                <p style={{ color: textLight, fontSize: 14, fontWeight: 600 }}>{member.name}</p>
+                              </div>
+
+                              <div>
+                                <p style={{ color: textMuted, fontSize: 11, marginBottom: 4 }}>Email</p>
+                                <p style={{ color: textLight, fontSize: 14 }}>{member.email || "Sin email"}</p>
+                              </div>
+
+                              <div>
+                                <p style={{ color: textMuted, fontSize: 11, marginBottom: 4 }}>Rango</p>
+                                <p style={{ color: gold, fontSize: 14, fontWeight: 600 }}>{member.rank}</p>
+                              </div>
+
+                              <div>
+                                <p style={{ color: textMuted, fontSize: 11, marginBottom: 4 }}>MMR</p>
+                                <p style={{ color: textLight, fontSize: 14, fontWeight: 600 }}>{member.mmr}</p>
+                              </div>
+
+                              <div>
+                                <p style={{ color: textMuted, fontSize: 11, marginBottom: 4 }}>Nivel General</p>
+                                <p style={{ color: gold, fontSize: 14, fontWeight: 600 }}>{member.level_rank || "B"}</p>
+                              </div>
+
+                              <div>
+                                <p style={{ color: textMuted, fontSize: 11, marginBottom: 4 }}>Avatar</p>
+                                {member.avatar ? (
+                                  <img src={member.avatar} alt={member.name} style={{ width: 40, height: 40, borderRadius: "50%", objectFit: "cover" }} />
+                                ) : (
+                                  <p style={{ color: textMuted, fontSize: 13 }}>Sin avatar</p>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Niveles por Raza */}
+                            <h4 style={{ color: gold, fontSize: 14, marginTop: 20, marginBottom: 12 }}>Niveles por Raza</h4>
+                            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+                              <div>
+                                <p style={{ color: textMuted, fontSize: 11, marginBottom: 4 }}>Protoss</p>
+                                <p style={{ color: textLight, fontSize: 14, fontWeight: 600 }}>{member.protoss_level || "-"}</p>
+                              </div>
+                              <div>
+                                <p style={{ color: textMuted, fontSize: 11, marginBottom: 4 }}>Terran</p>
+                                <p style={{ color: textLight, fontSize: 14, fontWeight: 600 }}>{member.terran_level || "-"}</p>
+                              </div>
+                              <div>
+                                <p style={{ color: textMuted, fontSize: 11, marginBottom: 4 }}>Zerg</p>
+                                <p style={{ color: textLight, fontSize: 14, fontWeight: 600 }}>{member.zerg_level || "-"}</p>
+                              </div>
+                            </div>
+
+                            {/* Redes Sociales */}
+                            <h4 style={{ color: gold, fontSize: 14, marginTop: 20, marginBottom: 12 }}>Redes Sociales</h4>
+                            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 }}>
+                              {member.social_discord && (
+                                <div style={{ padding: "8px 12px", background: bg, borderRadius: 6, border: `1px solid ${darkGold}` }}>
+                                  <p style={{ color: textMuted, fontSize: 10, marginBottom: 3 }}>Discord</p>
+                                  <p style={{ color: textLight, fontSize: 13 }}>{member.social_discord}</p>
+                                </div>
+                              )}
+                              {member.social_kick && (
+                                <div style={{ padding: "8px 12px", background: bg, borderRadius: 6, border: `1px solid ${darkGold}` }}>
+                                  <p style={{ color: textMuted, fontSize: 10, marginBottom: 3 }}>Kick</p>
+                                  <p style={{ color: textLight, fontSize: 13, wordBreak: "break-all" }}>{member.social_kick}</p>
+                                </div>
+                              )}
+                              {member.social_twitch && (
+                                <div style={{ padding: "8px 12px", background: bg, borderRadius: 6, border: `1px solid ${darkGold}` }}>
+                                  <p style={{ color: textMuted, fontSize: 10, marginBottom: 3 }}>Twitch</p>
+                                  <p style={{ color: textLight, fontSize: 13 }}>{member.social_twitch}</p>
+                                </div>
+                              )}
+                              {member.social_youtube && (
+                                <div style={{ padding: "8px 12px", background: bg, borderRadius: 6, border: `1px solid ${darkGold}` }}>
+                                  <p style={{ color: textMuted, fontSize: 10, marginBottom: 3 }}>YouTube</p>
+                                  <p style={{ color: textLight, fontSize: 13, wordBreak: "break-all" }}>{member.social_youtube}</p>
+                                </div>
+                              )}
+                              {member.social_facebook && (
+                                <div style={{ padding: "8px 12px", background: bg, borderRadius: 6, border: `1px solid ${darkGold}` }}>
+                                  <p style={{ color: textMuted, fontSize: 10, marginBottom: 3 }}>Facebook</p>
+                                  <p style={{ color: textLight, fontSize: 13, wordBreak: "break-all" }}>{member.social_facebook}</p>
+                                </div>
+                              )}
+                              {member.social_instagram && (
+                                <div style={{ padding: "8px 12px", background: bg, borderRadius: 6, border: `1px solid ${darkGold}` }}>
+                                  <p style={{ color: textMuted, fontSize: 10, marginBottom: 3 }}>Instagram</p>
+                                  <p style={{ color: textLight, fontSize: 13 }}>{member.social_instagram}</p>
+                                </div>
+                              )}
+                              {member.social_twitter && (
+                                <div style={{ padding: "8px 12px", background: bg, borderRadius: 6, border: `1px solid ${darkGold}` }}>
+                                  <p style={{ color: textMuted, fontSize: 10, marginBottom: 3 }}>Twitter/X</p>
+                                  <p style={{ color: textLight, fontSize: 13 }}>{member.social_twitter}</p>
+                                </div>
+                              )}
+                              {member.social_tiktok && (
+                                <div style={{ padding: "8px 12px", background: bg, borderRadius: 6, border: `1px solid ${darkGold}` }}>
+                                  <p style={{ color: textMuted, fontSize: 10, marginBottom: 3 }}>TikTok</p>
+                                  <p style={{ color: textLight, fontSize: 13 }}>{member.social_tiktok}</p>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Metadata */}
+                            <div style={{ marginTop: 20, paddingTop: 16, borderTop: `1px solid ${darkGold}` }}>
+                              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 }}>
+                                <div>
+                                  <p style={{ color: textMuted, fontSize: 11 }}>Último ingreso</p>
+                                  <p style={{ color: textLight, fontSize: 13, fontWeight: 600 }}>{lastLogin}</p>
+                                </div>
+                                <div>
+                                  <p style={{ color: textMuted, fontSize: 11 }}>Miembro desde</p>
+                                  <p style={{ color: textLight, fontSize: 13, fontWeight: 600 }}>
+                                    {member.created_at ? new Date(member.created_at).toLocaleDateString('es-ES') : "N/A"}
+                                  </p>
+                                </div>
+                                <div>
+                                  <p style={{ color: textMuted, fontSize: 11 }}>Email verificado</p>
+                                  <p style={{ color: isVerified ? "#4CAF50" : "#f44336", fontSize: 13, fontWeight: 600 }}>
+                                    {isVerified ? "✓ Sí" : "✗ No"}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   );
                 })}
               </div>
