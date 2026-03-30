@@ -98,3 +98,51 @@ html {
     --join-button-font: 12px;
   }
 }
+
+/* Navigation Responsive Layout */
+.main-nav {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.main-nav .nav-tabs {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+}
+
+.main-nav .nav-user-menu {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+/* Desktop: user menu goes to the right */
+@media (min-width: 769px) {
+  .main-nav {
+    justify-content: space-between;
+  }
+
+  .main-nav .nav-user-menu {
+    margin-left: auto;
+  }
+}
+
+/* Mobile: everything centered */
+@media (max-width: 768px) {
+  .main-nav {
+    justify-content: center;
+  }
+
+  .main-nav .nav-tabs,
+  .main-nav .nav-user-menu {
+    justify-content: center;
+    width: 100%;
+  }
+}

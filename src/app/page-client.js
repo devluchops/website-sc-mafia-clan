@@ -2792,16 +2792,11 @@ export default function PageClient({ initialData = null, initialHash = null }) {
 
       {/* NAV */}
       <nav
+        className="main-nav"
         style={{
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 8,
           padding: "12px 16px",
           background: "#0d0d0a",
           borderBottom: `1px solid ${darkGold}`,
-          flexWrap: "wrap",
           position: "sticky",
           top: 0,
           zIndex: 10,
@@ -2809,7 +2804,7 @@ export default function PageClient({ initialData = null, initialHash = null }) {
         }}
       >
         {/* Tabs */}
-        <div style={{ display: "flex", gap: 4, flexWrap: "wrap", justifyContent: "center", alignItems: "center", flex: "1 1 auto" }}>
+        <div className="nav-tabs">
           {TABS.map((t) => (
             <button
               key={t.id}
@@ -2838,12 +2833,7 @@ export default function PageClient({ initialData = null, initialHash = null }) {
         </div>
 
         {/* User Menu */}
-        <div style={{
-          display: "flex",
-          gap: 6,
-          alignItems: "center",
-          flexShrink: 0
-        }}>
+        <div className="nav-user-menu">
           {session ? (
             <>
               <Link
