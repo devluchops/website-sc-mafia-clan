@@ -4,11 +4,19 @@ import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { sendNewPostNotification } from "@/lib/email";
 
-// GET: Obtener todos los posts
+// GET: Obtener todos los posts con información del creador
 export async function GET() {
   try {
     const sql = getDb();
-    const posts = await sql`SELECT * FROM posts ORDER BY created_at DESC`;
+    const posts = await sql`
+      SELECT
+        p.*,
+        m.name as created_by_member_name,
+        m.avatar as created_by_member_avatar
+      FROM posts p
+      LEFT JOIN members m ON p.created_by_member_id = m.id
+      ORDER BY p.created_at DESC
+    `;
     return NextResponse.json(posts);
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -32,6 +40,15 @@ export async function POST(request) {
     const { id, tag, title, author, date, read_time, excerpt, content, image, media_type, video_url } = await request.json();
     const sql = getDb();
 
+    // Get member_id from session
+    let createdByMemberId = null;
+    if (session.user?.discordId) {
+      const member = await sql`SELECT id FROM members WHERE discord_id = ${session.user.discordId}`;
+      if (member.length > 0) {
+        createdByMemberId = member[0].id;
+      }
+    }
+
     let newPostId = null;
     let isNewPost = false;
 
@@ -51,8 +68,8 @@ export async function POST(request) {
       // Crear nuevo
       isNewPost = true;
       const result = await sql`
-        INSERT INTO posts (tag, title, author, date, read_time, excerpt, content, image, media_type, video_url)
-        VALUES (${tag}, ${title}, ${author}, ${date}, ${read_time}, ${excerpt}, ${content || ""}, ${image || null}, ${media_type || 'image'}, ${video_url || null})
+        INSERT INTO posts (tag, title, author, date, read_time, excerpt, content, image, media_type, video_url, created_by_member_id)
+        VALUES (${tag}, ${title}, ${author}, ${date}, ${read_time}, ${excerpt}, ${content || ""}, ${image || null}, ${media_type || 'image'}, ${video_url || null}, ${createdByMemberId})
         RETURNING id
       `;
       newPostId = result[0].id;

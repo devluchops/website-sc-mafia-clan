@@ -482,9 +482,24 @@ function BlogPost({ post, session, onViewFull }) {
         {post.excerpt}
       </p>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-        <p style={{ fontSize: 13, color: textMuted, margin: 0 }}>
-          Por {post.author} &bull; {post.date} &bull; {post.readTime} lectura
-        </p>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {post.created_by_member_avatar && (
+            <img
+              src={post.created_by_member_avatar}
+              alt={post.created_by_member_name}
+              style={{
+                width: 24,
+                height: 24,
+                borderRadius: "50%",
+                objectFit: "cover",
+                border: `1px solid ${gold}`,
+              }}
+            />
+          )}
+          <p style={{ fontSize: 13, color: textMuted, margin: 0 }}>
+            Por {post.created_by_member_name || post.author} &bull; {post.date} &bull; {post.readTime} lectura
+          </p>
+        </div>
         <button
           onClick={() => setShowComments(!showComments)}
           style={{
@@ -1141,9 +1156,24 @@ function BlogSection({ posts }) {
               {selectedPost.title}
             </h3>
 
-            <p style={{ fontSize: 13, color: textMuted, marginBottom: 24 }}>
-              Por {selectedPost.author} &bull; {selectedPost.date} &bull; {selectedPost.readTime} lectura
-            </p>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 24 }}>
+              {selectedPost.created_by_member_avatar && (
+                <img
+                  src={selectedPost.created_by_member_avatar}
+                  alt={selectedPost.created_by_member_name}
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: "50%",
+                    objectFit: "cover",
+                    border: `2px solid ${gold}`,
+                  }}
+                />
+              )}
+              <p style={{ fontSize: 13, color: textMuted, margin: 0 }}>
+                Por {selectedPost.created_by_member_name || selectedPost.author} &bull; {selectedPost.date} &bull; {selectedPost.readTime} lectura
+              </p>
+            </div>
 
             <p
               style={{
