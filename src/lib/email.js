@@ -638,3 +638,192 @@ export async function sendVerificationEmail({ email, name, token }) {
     throw error;
   }
 }
+
+/**
+ * Envía notificación al administrador cuando alguien solicita unirse al clan
+ */
+export async function sendJoinRequestNotification({
+  name,
+  tag,
+  email,
+  phone,
+  race,
+  discord,
+  reason
+}) {
+  if (!resend) {
+    console.warn('⚠️  Resend no está configurado. No se enviará notificación de solicitud.');
+    return null;
+  }
+
+  const adminEmail = 'lvalencia1286@gmail.com';
+
+  try {
+    const data = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: adminEmail,
+      subject: `🎮 Nueva solicitud de unión al clan: ${name}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <style>
+              body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background-color: #0a0a0a;
+                color: #e8dcc0;
+                margin: 0;
+                padding: 20px;
+              }
+              .container {
+                max-width: 600px;
+                margin: 0 auto;
+                background-color: #1e1b18;
+                border: 1px solid #3d3525;
+                border-radius: 10px;
+                overflow: hidden;
+              }
+              .header {
+                background-color: #252220;
+                padding: 30px;
+                text-align: center;
+                border-bottom: 2px solid #c9a84c;
+              }
+              .header h1 {
+                color: #c9a84c;
+                font-size: 28px;
+                margin: 0;
+                letter-spacing: 3px;
+              }
+              .content {
+                padding: 40px 30px;
+              }
+              .content h2 {
+                color: #c9a84c;
+                font-size: 22px;
+                margin-top: 0;
+              }
+              .content p {
+                line-height: 1.6;
+                color: #e8dcc0;
+                margin: 16px 0;
+              }
+              .info-grid {
+                background-color: #252220;
+                border: 1px solid #3d3525;
+                border-radius: 6px;
+                padding: 20px;
+                margin: 20px 0;
+              }
+              .info-row {
+                display: flex;
+                padding: 10px 0;
+                border-bottom: 1px solid #3d3525;
+              }
+              .info-row:last-child {
+                border-bottom: none;
+              }
+              .info-label {
+                color: #8b7b5e;
+                font-weight: 600;
+                min-width: 120px;
+                font-size: 14px;
+              }
+              .info-value {
+                color: #e8dcc0;
+                flex: 1;
+                font-size: 14px;
+              }
+              .reason-box {
+                background-color: #252220;
+                border-left: 4px solid #c9a84c;
+                padding: 16px;
+                margin: 20px 0;
+                border-radius: 4px;
+              }
+              .reason-box p {
+                margin: 0;
+                color: #e8dcc0;
+                line-height: 1.6;
+                font-style: italic;
+              }
+              .footer {
+                padding: 20px 30px;
+                text-align: center;
+                font-size: 12px;
+                color: #8b7b5e;
+                border-top: 1px solid #3d3525;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">
+                <h1>🎮 Nueva Solicitud</h1>
+              </div>
+              <div class="content">
+                <h2>Solicitud de unión al clan</h2>
+                <p>
+                  Un nuevo jugador ha completado el formulario de solicitud para unirse al Clan MAFIA.
+                </p>
+
+                <div class="info-grid">
+                  <div class="info-row">
+                    <div class="info-label">Nombre:</div>
+                    <div class="info-value"><strong>${name}</strong></div>
+                  </div>
+                  <div class="info-row">
+                    <div class="info-label">Nickname Player:</div>
+                    <div class="info-value"><strong>${tag}</strong></div>
+                  </div>
+                  <div class="info-row">
+                    <div class="info-label">Email:</div>
+                    <div class="info-value"><a href="mailto:${email}" style="color: #c9a84c; text-decoration: none;">${email}</a></div>
+                  </div>
+                  ${phone ? `
+                  <div class="info-row">
+                    <div class="info-label">WhatsApp:</div>
+                    <div class="info-value"><a href="https://wa.me/${phone.replace(/\D/g, '')}" style="color: #c9a84c; text-decoration: none;">${phone}</a></div>
+                  </div>
+                  ` : ''}
+                  <div class="info-row">
+                    <div class="info-label">Raza principal:</div>
+                    <div class="info-value"><strong>${race}</strong></div>
+                  </div>
+                  ${discord ? `
+                  <div class="info-row">
+                    <div class="info-label">Discord:</div>
+                    <div class="info-value">${discord}</div>
+                  </div>
+                  ` : ''}
+                </div>
+
+                <p style="color: #c9a84c; font-weight: 600; margin-top: 30px; margin-bottom: 10px;">
+                  ¿Por qué quiere unirse al clan?
+                </p>
+                <div class="reason-box">
+                  <p>${reason}</p>
+                </div>
+
+                <p style="margin-top: 30px; color: #8b7b5e; font-size: 14px;">
+                  Puedes contactar al solicitante por email o WhatsApp para coordinar su ingreso al clan.
+                </p>
+              </div>
+              <div class="footer">
+                <p>Esta notificación fue generada automáticamente por el sitio web del Clan MAFIA.</p>
+                <p>© ${new Date().getFullYear()} Clan MAFIA - StarCraft Community</p>
+              </div>
+            </div>
+          </body>
+        </html>
+      `,
+    });
+
+    console.log('✅ Notificación de solicitud enviada al administrador');
+    return data;
+  } catch (error) {
+    console.error('❌ Error enviando notificación de solicitud:', error);
+    throw error;
+  }
+}

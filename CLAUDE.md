@@ -285,3 +285,289 @@ if (!session?.user?.permissions?.is_admin && !session?.user?.permissions?.can_ma
 - Solving recurring bugs or issues
 - Documenting environment setup or deployment procedures
 - Adding API documentation or architectural decisions
+
+---
+
+## Design System & UI Components
+
+### Theme Colors (CRITICAL - Always use these exact values)
+
+```javascript
+const gold = "#c9a84c";           // Primary gold color
+const darkGold = "#3d3525";       // Dark gold for borders
+const cardBg = "#252220";         // Card background
+const bg = "#1e1b18";             // Main background
+const textMuted = "#8b7b5e";      // Muted text
+const textLight = "#e8dcc0";      // Light text
+const textBody = "#d4c5a0";       // Body text
+
+// Race Colors
+const RACE_COLORS = {
+  Terran: { bg: "rgba(100,160,200,0.12)", border: "rgba(100,160,200,0.35)", text: "#7ab8d4" },
+  Zerg: { bg: "rgba(160,100,180,0.12)", border: "rgba(160,100,180,0.35)", text: "#c09ad8" },
+  Protoss: { bg: "rgba(201,168,76,0.12)", border: "rgba(201,168,76,0.35)", text: "#c9a84c" },
+};
+```
+
+### Custom Select/Dropdown Style (Use for ALL selects)
+
+```javascript
+const getSelectStyle = (customStyle = {}) => ({
+  width: "100%",
+  padding: "10px 36px 10px 14px",
+  background: `linear-gradient(180deg, ${bg} 0%, #16130f 100%)`,
+  border: `1.5px solid ${darkGold}`,
+  borderRadius: 6,
+  color: textLight,
+  fontSize: 14,
+  fontFamily: "inherit",
+  cursor: "pointer",
+  appearance: "none",
+  backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23c9a84c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
+  backgroundRepeat: "no-repeat",
+  backgroundPosition: "right 12px center",
+  transition: "all 0.2s ease",
+  outline: "none",
+  ...customStyle,
+});
+```
+
+**IMPORTANT:** Always use this style for select elements in forms (admin panel, join form, etc.)
+
+### Input Field Style (Standard for forms)
+
+```javascript
+// For text inputs, email, tel, etc.
+{
+  width: "100%",
+  padding: "8px 12px",
+  background: bg,                    // #1e1b18
+  border: `1px solid ${darkGold}`,   // #3d3525
+  borderRadius: 4,
+  color: textLight,                  // #e8dcc0
+  fontSize: 13,
+  outline: "none",
+}
+
+// Labels
+{
+  display: "block",
+  color: textMuted,                  // #8b7b5e
+  fontSize: 11,
+  marginBottom: 4,
+}
+```
+
+### Avatar Component
+
+**Default Avatars by Race (CRITICAL):**
+- **Zerg**: Hydralisk - `https://static.wikia.nocookie.net/aliens/images/4/4d/Hydralisk.jpg`
+- **Protoss**: Zealot - `https://static.wikia.nocookie.net/starcraft/images/5/52/Zealot_SC1_Art1.jpg`
+- **Terran**: Marine - `https://static.wikia.nocookie.net/starcraft/images/f/fd/Marine_SC-FL1_Art1.jpg`
+
+**Fallback order:**
+1. Custom avatar (if member has one)
+2. Race default avatar (Hydralisk/Zealot/Marine)
+3. Initial letter with race color (last resort if images fail)
+
+**Image Proxy:**
+- Always use `https://images.weserv.nl/?url=` for external images
+- Prevents CORS issues
+- Format: `https://images.weserv.nl/?url=${externalUrl}&w=${width}&h=${height}&fit=cover`
+
+### Members Grid Layout (Roster Section)
+
+**Grid Configuration:**
+```javascript
+{
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+  gap: 16,
+}
+```
+
+**Responsive Breakpoints:**
+- Desktop (>900px): 4 columns
+- Tablet (600-900px): 3 columns
+- Large mobile (400-600px): 2 columns
+- Small mobile (<400px): 1 column
+
+**Member Card Structure:**
+- Vertical layout (flexDirection: "column")
+- Avatar: 80px, centered at top
+- Level badge: Absolute positioned top-right corner
+- Centered content: Name, Rank, Race badges, MMR
+- Join date: `⭐ Miembro desde [mes año]` (if available)
+- Social icons: Centered at bottom
+- Hover effect: `translateY(-4px)` with shadow
+
+**Search Filter:**
+- Filters by: name, rank, level, race
+- Real-time (onChange)
+- Case-insensitive
+- Placed above sort buttons
+
+### Modal Patterns
+
+**Join Clan Modal (Floating Button):**
+- Floating button: Fixed position, bottom: 32px, right: 32px
+- Button text: "⭐ Únete al Clan"
+- Modal overlay: `rgba(0, 0, 0, 0.85)` background
+- Form fields:
+  - Nombre completo *
+  - Nickname Player * (NOT "Tag/Apodo")
+  - Email *
+  - WhatsApp (optional)
+  - Raza principal * (select with custom style)
+  - Discord (optional)
+  - ¿Por qué quieres unirte al clan? * (textarea)
+
+**Member Detail Modal:**
+- Triggered by clicking member card
+- Shows: Avatar (100px), Name, Rank, Level, MMR
+- Sections:
+  - SOBRE MÍ (aboutMe field or placeholder)
+  - NIVELES POR RAZA (Protoss/Terran/Zerg grid)
+  - REDES SOCIALES (only if `hasSocial()` returns true)
+- **CRITICAL:** Hide "REDES SOCIALES" section if member has no social networks
+
+### Database Fields (Members Table)
+
+**Essential Fields:**
+- `name` - Player name
+- `email` - For notifications
+- `social_discord` - Discord username
+- `rank` - Lider, Oficial, Miembro, Recruit
+- `level_rank` - Overall level (S, A+, A, B+, B, C+, C, D+, D)
+- `protoss_level`, `terran_level`, `zerg_level` - Race-specific levels
+- `main_race` - Primary race (Protoss/Terran/Zerg)
+- `races_played` - Races the player uses
+- `mmr` - Match Making Rating
+- `avatar` - URL to avatar image
+- `birth_date` - DATE field (YYYY-MM-DD)
+- `join_date` - DATE field (YYYY-MM-DD) - Display as "Miembro desde mes año"
+- `aboutMe` - TEXT field for profile description
+- `last_login_at` - Timestamp of last login
+- `invite_sent_at` - Timestamp when invite email was sent
+- `email_verified` - BOOLEAN
+- `created_at`, `updated_at` - Timestamps
+
+**Social Media Fields:**
+- `social_facebook`, `social_instagram`, `social_twitter`
+- `social_discord`, `social_kick`, `social_twitch`
+- `social_tiktok`, `social_youtube`
+
+### Date Handling (CRITICAL)
+
+**DatePicker Component (react-datepicker):**
+```javascript
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+
+// Safe date parsing function
+const safeParseDate = (dateString) => {
+  if (!dateString) return null;
+  try {
+    const dateOnly = dateString.split('T')[0];
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateOnly)) return null;
+    const date = new Date(dateOnly + 'T00:00:00');
+    return isNaN(date.getTime()) ? null : date;
+  } catch (error) {
+    return null;
+  }
+};
+
+// Usage
+<DatePicker
+  selected={safeParseDate(formData.birth_date)}
+  onChange={(date) => {
+    if (date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const formattedDate = `${year}-${month}-${day}`;
+      updateField("birth_date", formattedDate);
+    } else {
+      updateField("birth_date", null);
+    }
+  }}
+  dateFormat="dd/MM/yyyy"
+  showYearDropdown
+  scrollableYearDropdown
+  isClearable
+  className="custom-datepicker"
+  calendarClassName="custom-calendar"
+/>
+```
+
+**Date Display Format:**
+- Storage: `YYYY-MM-DD` (PostgreSQL DATE)
+- Display: "mes año" (ej: "ene 2024")
+```javascript
+new Date(member.joinDate).toLocaleDateString('es-PE', {
+  month: 'short',
+  year: 'numeric'
+})
+```
+
+### Email System (Join Requests)
+
+**Resend Configuration:**
+- API Key: `RESEND_API_KEY` in .env.local
+- From Email: `RESEND_FROM_EMAIL` (e.g., "Clan MAFIA <noreply@devluchops.space>")
+- To: `lvalencia1286@gmail.com` (hardcoded in `sendJoinRequestNotification`)
+
+**Join Request Email:**
+- Triggered when form submitted at `/api/join-request`
+- Contains: Name, Nickname Player, Email, WhatsApp, Race, Discord, Reason
+- HTML template with gold theme matching site design
+- Function: `sendJoinRequestNotification()` in `/src/lib/email.js`
+
+### Common Patterns & Conventions
+
+**Always Use:**
+- Inline styles (no CSS modules or styled-components)
+- Cinzel font for headings: `fontFamily: "'Cinzel', serif"`
+- Variables for colors (gold, darkGold, bg, cardBg, etc.)
+- Image proxy for external images
+- `hasSocial()` function to check if member has social networks
+- Safe date parsing for DatePicker components
+
+**Never:**
+- Hardcode colors - always use theme variables
+- Use native select styling - always apply custom select style
+- Show empty sections (e.g., "REDES SOCIALES" without social links)
+- Use `new Date()` directly without validation for user input dates
+
+### Server Management
+
+**Restarting Dev Server:**
+```bash
+pkill -f "next dev"
+npm run dev
+```
+
+**Environment Changes:**
+- Always restart server after .env.local changes
+- Variables are only read at server startup
+- Check logs for configuration issues
+
+### Troubleshooting
+
+**"RangeError: Invalid time value":**
+- Use `safeParseDate()` function before passing to DatePicker
+- Never use `new Date(string)` directly on user input
+
+**Select dropdown not showing custom style:**
+- Verify using `getSelectStyle()` or inline gradient background
+- Check for `appearance: "none"` to remove native styling
+- Ensure golden arrow SVG is included in backgroundImage
+
+**Images not loading:**
+- Use image proxy: `https://images.weserv.nl/?url=`
+- Check CORS policy if loading directly
+- Verify URL format (remove http:// prefix for proxy)
+
+**Modal showing empty sections:**
+- Always use conditional rendering with `hasSocial()` or similar
+- Check if data exists before rendering section headers

@@ -29,6 +29,7 @@ export async function GET() {
     return NextResponse.json({
       clan: clanInfo || { name: "MAFIA", tagline: "El mejor clan del StarCraft en mapa Fastest", logo: "/logo.png" },
       members: members.map(m => ({
+        id: m.id,
         name: m.name,
         race: m.race,
         rank: m.rank,
@@ -67,6 +68,7 @@ export async function GET() {
         youtubeId: v.youtube_id,
       })),
       events: events.map(e => ({
+        id: e.id,
         month: e.month,
         day: e.day,
         title: e.title,

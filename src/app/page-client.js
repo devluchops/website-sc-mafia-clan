@@ -80,12 +80,22 @@ function Avatar({ name, race, avatar, size = 48 }) {
   const rc = RACE_COLORS[race] || RACE_COLORS.Terran;
   const [err, setErr] = useState(false);
 
-  if (avatar && !err) {
+  // Imágenes por defecto según la raza
+  const defaultAvatars = {
+    Zerg: 'https://static.wikia.nocookie.net/aliens/images/4/4d/Hydralisk.jpg',
+    Protoss: 'https://static.wikia.nocookie.net/starcraft/images/5/52/Zealot_SC1_Art1.jpg',
+    Terran: 'https://static.wikia.nocookie.net/starcraft/images/f/fd/Marine_SC-FL1_Art1.jpg',
+  };
+
+  // Si no hay avatar personalizado, usar el avatar por defecto de la raza
+  const finalAvatar = avatar || defaultAvatars[race] || defaultAvatars.Terran;
+
+  if (!err) {
     // Usar proxy para imágenes externas
-    let imageSrc = avatar;
-    if (avatar.startsWith('http://') || avatar.startsWith('https://')) {
+    let imageSrc = finalAvatar;
+    if (finalAvatar.startsWith('http://') || finalAvatar.startsWith('https://')) {
       // Si es URL externa, usar proxy de imágenes
-      const externalUrl = avatar.replace(/^https?:\/\//, '');
+      const externalUrl = finalAvatar.replace(/^https?:\/\//, '');
       imageSrc = `https://images.weserv.nl/?url=${externalUrl}&w=${size * 2}&h=${size * 2}&fit=cover`;
     }
 
@@ -98,6 +108,7 @@ function Avatar({ name, race, avatar, size = 48 }) {
           overflow: "hidden",
           border: `2px solid ${rc.border}`,
           flexShrink: 0,
+          background: rc.bg,
         }}
       >
         <img
@@ -111,7 +122,7 @@ function Avatar({ name, race, avatar, size = 48 }) {
     );
   }
 
-  // Extraer la inicial del nombre (después de MAFIA]`)
+  // Fallback final: inicial del nombre si falla todo
   const initial = name.includes(']') ? name.split(']')[1].trim()[0] : name[0];
 
   return (
@@ -913,11 +924,41 @@ function BlogSection({ posts }) {
   const { data: session } = useSession();
   const [selectedPost, setSelectedPost] = useState(null);
 
+  // Manejar hash de URL para deep linking
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      if (hash.startsWith('#post-')) {
+        const postId = parseInt(hash.replace('#post-', ''));
+        const post = posts.find(p => p.id === postId);
+        if (post) {
+          setSelectedPost(post);
+        }
+      } else if (hash === '#blog') {
+        setSelectedPost(null);
+      }
+    };
+
+    handleHashChange();
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, [posts]);
+
+  const openPost = (post) => {
+    setSelectedPost(post);
+    window.location.hash = `#post-${post.id}`;
+  };
+
+  const closePost = () => {
+    setSelectedPost(null);
+    window.location.hash = '#blog';
+  };
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       <SectionTitle>Publicaciones recientes</SectionTitle>
       {posts.map((p, i) => (
-        <BlogPost key={i} post={p} session={session} onViewFull={() => setSelectedPost(p)} />
+        <BlogPost key={i} post={p} session={session} onViewFull={() => openPost(p)} />
       ))}
 
       {/* Post Detail Modal */}
@@ -937,7 +978,7 @@ function BlogSection({ posts }) {
             padding: 20,
             overflow: "auto",
           }}
-          onClick={() => setSelectedPost(null)}
+          onClick={closePost}
         >
           <div
             style={{
@@ -1011,7 +1052,7 @@ function BlogSection({ posts }) {
             </p>
 
             <button
-              onClick={() => setSelectedPost(null)}
+              onClick={closePost}
               style={{
                 width: "100%",
                 padding: "12px",
@@ -1141,10 +1182,58 @@ function VideosSection({ videos }) {
 function RosterSection({ members }) {
   const [sortBy, setSortBy] = useState("level");
   const [selectedMember, setSelectedMember] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const LEVEL_ORDER = { 'S': 0, 'A+': 1, 'A': 2, 'B+': 3, 'B': 4, 'C+': 5, 'C': 6, 'D+': 7, 'D': 8 };
 
-  const sorted = [...members].sort((a, b) => {
+  // Manejar hash de URL para deep linking
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      if (hash.startsWith('#member-')) {
+        const memberId = parseInt(hash.replace('#member-', ''));
+        const member = members.find(m => m.id === memberId);
+        if (member) {
+          setSelectedMember(member);
+        }
+      } else if (hash === '#roster') {
+        setSelectedMember(null);
+      }
+    };
+
+    // Cargar miembro si hay hash al montar
+    handleHashChange();
+
+    // Escuchar cambios de hash
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, [members]);
+
+  // Función para abrir miembro y actualizar URL
+  const openMember = (member) => {
+    setSelectedMember(member);
+    window.location.hash = `#member-${member.id}`;
+  };
+
+  // Función para cerrar miembro y limpiar URL
+  const closeMember = () => {
+    setSelectedMember(null);
+    window.location.hash = '#roster';
+  };
+
+  // Filtrar por búsqueda
+  const filtered = members.filter(m => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      m.name?.toLowerCase().includes(query) ||
+      m.rank?.toLowerCase().includes(query) ||
+      m.level?.toLowerCase().includes(query) ||
+      (m.mainRace || m.race)?.toLowerCase().includes(query)
+    );
+  });
+
+  const sorted = [...filtered].sort((a, b) => {
     if (sortBy === "level") {
       const levelA = LEVEL_ORDER[a.level] ?? 99;
       const levelB = LEVEL_ORDER[b.level] ?? 99;
@@ -1180,6 +1269,30 @@ function RosterSection({ members }) {
   return (
     <div>
       <SectionTitle>Miembros del clan</SectionTitle>
+
+      {/* Buscador */}
+      <div style={{ marginBottom: 16 }}>
+        <input
+          type="text"
+          placeholder="🔍 Buscar miembro por nombre, rango, nivel o raza..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          style={{
+            width: "100%",
+            padding: "12px 16px",
+            background: cardBg,
+            border: `1px solid ${darkGold}`,
+            borderRadius: 8,
+            color: textLight,
+            fontSize: 14,
+            outline: "none",
+            transition: "border-color 0.2s",
+          }}
+          onFocus={(e) => e.target.style.borderColor = gold}
+          onBlur={(e) => e.target.style.borderColor = darkGold}
+        />
+      </div>
+
       <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
         {["level", "rank", "mmr", "name"].map((s) => (
           <button
@@ -1206,75 +1319,139 @@ function RosterSection({ members }) {
         ))}
       </div>
 
-      {/* Lista vertical de miembros */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      {/* Grid de miembros */}
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+        gap: 16,
+      }}>
         {sorted.map((m, i) => {
           const rc = RACE_COLORS[m.mainRace || m.race] || RACE_COLORS.Terran;
           return (
             <Card
               key={i}
-              onClick={() => setSelectedMember(m)}
+              onClick={() => openMember(m)}
               style={{
-                padding: 16,
+                padding: 20,
                 display: "flex",
+                flexDirection: "column",
                 alignItems: "center",
-                gap: 16,
-                flexWrap: "wrap",
+                textAlign: "center",
+                position: "relative",
+                transition: "transform 0.2s, box-shadow 0.2s",
+                cursor: "pointer",
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.transform = "translateY(-4px)";
+                e.currentTarget.style.boxShadow = `0 8px 24px rgba(201,168,76,0.15)`;
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = "none";
               }}
             >
-              {/* Avatar */}
-              <Avatar
-                name={m.name}
-                race={m.mainRace || m.race}
-                avatar={m.avatar}
-                size={60}
-              />
+              {/* Nivel badge - posición absoluta arriba a la derecha */}
+              <div
+                style={{
+                  position: "absolute",
+                  top: 12,
+                  right: 12,
+                  fontSize: 15,
+                  color: getLevelColor(m.level),
+                  fontWeight: 700,
+                  background: "rgba(0,0,0,0.5)",
+                  padding: "6px 12px",
+                  borderRadius: 6,
+                  border: `1px solid ${getLevelColor(m.level)}`,
+                }}
+              >
+                {m.level || 'B'}
+              </div>
 
-              {/* Info principal */}
-              <div style={{ flex: 1, minWidth: 200 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6, flexWrap: "wrap" }}>
-                  <p
-                    style={{
-                      fontFamily: "'Cinzel', serif",
-                      fontSize: 20,
-                      fontWeight: 600,
-                      color: textLight,
-                      margin: 0,
-                    }}
-                  >
-                    {m.name}
-                  </p>
-                  <span
-                    style={{
-                      fontSize: 16,
-                      color: getLevelColor(m.level),
-                      fontWeight: 700,
-                      background: "rgba(0,0,0,0.3)",
-                      padding: "4px 12px",
-                      borderRadius: 4,
-                    }}
-                  >
-                    {m.level || 'B'}
+              {/* Avatar */}
+              <div style={{ marginBottom: 16 }}>
+                <Avatar
+                  name={m.name}
+                  race={m.mainRace || m.race}
+                  avatar={m.avatar}
+                  size={80}
+                />
+              </div>
+
+              {/* Nombre */}
+              <p
+                style={{
+                  fontFamily: "'Cinzel', serif",
+                  fontSize: 18,
+                  fontWeight: 600,
+                  color: textLight,
+                  margin: "0 0 8px 0",
+                }}
+              >
+                {m.name}
+              </p>
+
+              {/* Rango */}
+              <div
+                style={{
+                  color: gold,
+                  fontWeight: 600,
+                  fontSize: 13,
+                  letterSpacing: 1,
+                  textTransform: "uppercase",
+                  marginBottom: 12,
+                }}
+              >
+                {m.rank}
+              </div>
+
+              {/* Badges de razas */}
+              <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
+                <RaceBadge race="Protoss" level={m.protossLevel} small />
+                <RaceBadge race="Terran" level={m.terranLevel} small />
+                <RaceBadge race="Zerg" level={m.zergLevel} small />
+              </div>
+
+              {/* Fecha de ingreso */}
+              {m.joinDate && (
+                <div
+                  style={{
+                    fontSize: 12,
+                    color: textMuted,
+                    marginBottom: 12,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                  }}
+                >
+                  <span>⭐</span>
+                  <span>
+                    Miembro desde {new Date(m.joinDate).toLocaleDateString('es-PE', {
+                      month: 'short',
+                      year: 'numeric'
+                    })}
                   </span>
                 </div>
-                <div style={{ display: "flex", gap: 12, alignItems: "center", fontSize: 14, color: textMuted, flexWrap: "wrap" }}>
-                  <span style={{ color: gold, fontWeight: 600 }}>{m.rank}</span>
-                  <span>•</span>
-                  <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                    <RaceBadge race="Protoss" level={m.protossLevel} small />
-                    <RaceBadge race="Terran" level={m.terranLevel} small />
-                    <RaceBadge race="Zerg" level={m.zergLevel} small />
-                  </div>
-                  <span>•</span>
-                  <span style={{ background: "rgba(201,168,76,0.08)", padding: "3px 10px", borderRadius: 3 }}>
-                    {m.mmr} MMR
-                  </span>
-                </div>
+              )}
+
+              {/* MMR */}
+              <div
+                style={{
+                  background: "rgba(201,168,76,0.08)",
+                  padding: "6px 14px",
+                  borderRadius: 4,
+                  fontSize: 14,
+                  color: textLight,
+                  fontWeight: 600,
+                  marginBottom: 16,
+                }}
+              >
+                {m.mmr} MMR
               </div>
 
               {/* Redes sociales */}
               {hasSocial(m) && (
-                <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                <div style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "center", flexWrap: "wrap" }}>
                   {m.social.facebook && (
                     <a
                       href={m.social.facebook}
@@ -1309,7 +1486,7 @@ function RosterSection({ members }) {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        setSelectedMember(m);
+                        openMember(m);
                       }}
                       style={{
                         display: "flex",
@@ -1512,7 +1689,7 @@ function RosterSection({ members }) {
               zIndex: 1000,
               padding: 20,
             }}
-            onClick={() => setSelectedMember(null)}
+            onClick={() => closeMember()}
           >
             <div
               style={{
@@ -1640,7 +1817,7 @@ function RosterSection({ members }) {
             </div>
 
             {/* Social Links */}
-            {selectedMember.social && (
+            {hasSocial(selectedMember) && (
               <div style={{ marginTop: 24, paddingTop: 24, borderTop: `1px solid ${darkGold}` }}>
                 <p style={{ fontSize: 12, color: textMuted, marginBottom: 12, fontWeight: 600 }}>
                   REDES SOCIALES
@@ -1806,7 +1983,7 @@ function RosterSection({ members }) {
             )}
 
             <button
-              onClick={() => setSelectedMember(null)}
+              onClick={() => closeMember()}
               style={{
                 width: "100%",
                 marginTop: 24,
@@ -1949,6 +2126,36 @@ function TournamentsSection({ tournaments }) {
 function EventsSection({ events }) {
   const [selectedEvent, setSelectedEvent] = useState(null);
 
+  // Manejar hash de URL para deep linking
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      if (hash.startsWith('#event-')) {
+        const eventId = parseInt(hash.replace('#event-', ''));
+        const event = events.find(e => e.id === eventId);
+        if (event) {
+          setSelectedEvent(event);
+        }
+      } else if (hash === '#events') {
+        setSelectedEvent(null);
+      }
+    };
+
+    handleHashChange();
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, [events]);
+
+  const openEvent = (event) => {
+    setSelectedEvent(event);
+    window.location.hash = `#event-${event.id}`;
+  };
+
+  const closeEvent = () => {
+    setSelectedEvent(null);
+    window.location.hash = '#events';
+  };
+
   const addToGoogleCalendar = (event) => {
     try {
       // Convertir month/day a fecha válida
@@ -1999,7 +2206,7 @@ function EventsSection({ events }) {
         {events.map((e, i) => (
           <Card
             key={i}
-            onClick={() => setSelectedEvent(e)}
+            onClick={() => openEvent(e)}
             style={{
               display: "flex",
               gap: 16,
@@ -2070,7 +2277,7 @@ function EventsSection({ events }) {
             zIndex: 1000,
             padding: 20,
           }}
-          onClick={() => setSelectedEvent(null)}
+          onClick={closeEvent}
         >
           <div
             style={{
@@ -2206,7 +2413,7 @@ function EventsSection({ events }) {
               </button>
 
               <button
-                onClick={() => setSelectedEvent(null)}
+                onClick={closeEvent}
                 style={{
                   width: "100%",
                   padding: "12px",
@@ -2368,6 +2575,18 @@ export default function HomePage() {
   const [buildOrders, setBuildOrders] = useState([]);
   const [tournaments, setTournaments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [joinModalOpen, setJoinModalOpen] = useState(false);
+  const [joinForm, setJoinForm] = useState({
+    name: "",
+    tag: "",
+    email: "",
+    phone: "",
+    race: "Protoss",
+    reason: "",
+    discord: "",
+  });
+  const [joinFormSubmitting, setJoinFormSubmitting] = useState(false);
+  const [joinFormMessage, setJoinFormMessage] = useState("");
 
   // Actualizar hash cuando cambia activeTab
   useEffect(() => {
@@ -2732,93 +2951,6 @@ export default function HomePage() {
             <span>Facebook</span>
           </a>
 
-          <a
-            href="https://wa.me/51999037970"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              padding: "10px 16px",
-              background: "rgba(201,168,76,0.08)",
-              border: `1px solid ${darkGold}`,
-              borderRadius: 6,
-              color: textMuted,
-              textDecoration: "none",
-              fontSize: 14,
-              fontWeight: 600,
-              letterSpacing: 1,
-              transition: "all 0.2s",
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.borderColor = gold;
-              e.currentTarget.style.color = gold;
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.borderColor = darkGold;
-              e.currentTarget.style.color = textMuted;
-            }}
-          >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
-            </svg>
-            <span>WhatsApp</span>
-          </a>
-        </div>
-
-        {/* Contact Info */}
-        <div
-          style={{
-            fontSize: 13,
-            color: "#6b5c3e",
-            letterSpacing: 1,
-            marginBottom: 16,
-            display: "flex",
-            flexDirection: "column",
-            gap: 8,
-            alignItems: "center",
-          }}
-        >
-          <p style={{ margin: 0, fontWeight: 600, color: gold, fontSize: 14 }}>
-            CONTACTO DEL ADMINISTRADOR
-          </p>
-          <div style={{ display: "flex", gap: 16, flexWrap: "wrap", justifyContent: "center" }}>
-            <a
-              href="mailto:lvalencia1286@gmail.com"
-              style={{
-                color: "#6b5c3e",
-                textDecoration: "none",
-                transition: "color 0.2s",
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-              }}
-              onMouseOver={(e) => e.currentTarget.style.color = gold}
-              onMouseOut={(e) => e.currentTarget.style.color = "#6b5c3e"}
-            >
-              <SocialIcons.Gmail size={18} />
-              lvalencia1286@gmail.com
-            </a>
-            <a
-              href="https://wa.me/51966346424"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                color: "#6b5c3e",
-                textDecoration: "none",
-                transition: "color 0.2s",
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-              }}
-              onMouseOver={(e) => e.currentTarget.style.color = gold}
-              onMouseOut={(e) => e.currentTarget.style.color = "#6b5c3e"}
-            >
-              <SocialIcons.WhatsApp size={18} />
-              +51 966 346 424
-            </a>
-          </div>
         </div>
 
         {/* Copyright */}
@@ -2867,6 +2999,448 @@ export default function HomePage() {
           )}
         </p>
       </footer>
+
+      {/* Floating Join Button */}
+      <button
+        onClick={() => setJoinModalOpen(true)}
+        style={{
+          position: "fixed",
+          bottom: 32,
+          right: 32,
+          padding: "16px 28px",
+          background: `linear-gradient(135deg, ${gold} 0%, ${darkGold} 100%)`,
+          border: `2px solid ${gold}`,
+          borderRadius: 50,
+          color: bg,
+          fontSize: 15,
+          fontWeight: 700,
+          letterSpacing: 1,
+          cursor: "pointer",
+          transition: "all 0.3s",
+          fontFamily: "'Cinzel', serif",
+          textTransform: "uppercase",
+          boxShadow: "0 4px 20px rgba(201,168,76,0.4)",
+          zIndex: 999,
+        }}
+        onMouseOver={(e) => {
+          e.currentTarget.style.transform = "translateY(-4px) scale(1.05)";
+          e.currentTarget.style.boxShadow = "0 8px 30px rgba(201,168,76,0.6)";
+        }}
+        onMouseOut={(e) => {
+          e.currentTarget.style.transform = "translateY(0) scale(1)";
+          e.currentTarget.style.boxShadow = "0 4px 20px rgba(201,168,76,0.4)";
+        }}
+      >
+        ⭐ Únete al Clan
+      </button>
+
+      {/* Join Modal */}
+      {joinModalOpen && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(0, 0, 0, 0.85)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 9999,
+            padding: 20,
+          }}
+          onClick={() => setJoinModalOpen(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: cardBg,
+              border: `2px solid ${gold}`,
+              borderRadius: 12,
+              maxWidth: 600,
+              width: "100%",
+              maxHeight: "90vh",
+              overflow: "auto",
+              padding: 32,
+              position: "relative",
+            }}
+          >
+            {/* Close Button */}
+            <button
+              onClick={() => setJoinModalOpen(false)}
+              style={{
+                position: "absolute",
+                top: 16,
+                right: 16,
+                background: "transparent",
+                border: "none",
+                color: textMuted,
+                fontSize: 28,
+                cursor: "pointer",
+                padding: 4,
+                lineHeight: 1,
+                transition: "color 0.2s",
+              }}
+              onMouseOver={(e) => e.currentTarget.style.color = gold}
+              onMouseOut={(e) => e.currentTarget.style.color = textMuted}
+            >
+              ×
+            </button>
+
+            {/* Modal Title */}
+            <h2
+              style={{
+                fontFamily: "'Cinzel', serif",
+                fontSize: 28,
+                fontWeight: 700,
+                color: gold,
+                marginBottom: 8,
+                letterSpacing: 1.5,
+                textTransform: "uppercase",
+                textAlign: "center",
+              }}
+            >
+              Únete a Clan Mafia
+            </h2>
+
+            <p
+              style={{
+                fontSize: 14,
+                color: textBody,
+                marginBottom: 32,
+                textAlign: "center",
+                lineHeight: 1.6,
+              }}
+            >
+              Completa el formulario y nos pondremos en contacto contigo
+            </p>
+
+            {/* Join Form */}
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                setJoinFormSubmitting(true);
+                setJoinFormMessage("");
+
+                try {
+                  const response = await fetch("/api/join-request", {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(joinForm),
+                  });
+
+                  const data = await response.json();
+
+                  if (response.ok) {
+                    setJoinFormMessage("✅ " + data.message);
+                    setTimeout(() => {
+                      setJoinModalOpen(false);
+                      setJoinFormMessage("");
+                      setJoinForm({
+                        name: "",
+                        tag: "",
+                        email: "",
+                        phone: "",
+                        race: "Protoss",
+                        reason: "",
+                        discord: "",
+                      });
+                    }, 3000);
+                  } else {
+                    setJoinFormMessage("❌ " + (data.error || "Error al enviar la solicitud"));
+                  }
+                } catch (error) {
+                  console.error("Error:", error);
+                  setJoinFormMessage("❌ Error de conexión. Por favor intenta de nuevo.");
+                } finally {
+                  setJoinFormSubmitting(false);
+                }
+              }}
+            >
+              <div style={{ display: "grid", gap: 18 }}>
+                {/* Nombre completo */}
+                <div>
+                  <label
+                    style={{
+                      display: "block",
+                      color: textMuted,
+                      fontSize: 11,
+                      marginBottom: 4,
+                    }}
+                  >
+                    Nombre completo *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={joinForm.name}
+                    onChange={(e) => setJoinForm({ ...joinForm, name: e.target.value })}
+                    style={{
+                      width: "100%",
+                      padding: "8px 12px",
+                      background: bg,
+                      border: `1px solid ${darkGold}`,
+                      borderRadius: 4,
+                      color: textLight,
+                      fontSize: 13,
+                      outline: "none",
+                    }}
+                  />
+                </div>
+
+                {/* Nickname Player */}
+                <div>
+                  <label
+                    style={{
+                      display: "block",
+                      color: textMuted,
+                      fontSize: 11,
+                      marginBottom: 4,
+                    }}
+                  >
+                    Nickname Player *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={joinForm.tag}
+                    onChange={(e) => setJoinForm({ ...joinForm, tag: e.target.value })}
+                    style={{
+                      width: "100%",
+                      padding: "8px 12px",
+                      background: bg,
+                      border: `1px solid ${darkGold}`,
+                      borderRadius: 4,
+                      color: textLight,
+                      fontSize: 13,
+                      outline: "none",
+                    }}
+                  />
+                </div>
+
+                {/* Email y Teléfono en grid */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18 }}>
+                  {/* Email */}
+                  <div>
+                    <label
+                      style={{
+                        display: "block",
+                        color: textMuted,
+                        fontSize: 11,
+                        marginBottom: 4,
+                      }}
+                    >
+                      Email *
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      value={joinForm.email}
+                      onChange={(e) => setJoinForm({ ...joinForm, email: e.target.value })}
+                      style={{
+                        width: "100%",
+                        padding: "8px 12px",
+                        background: bg,
+                        border: `1px solid ${darkGold}`,
+                        borderRadius: 4,
+                        color: textLight,
+                        fontSize: 13,
+                        outline: "none",
+                      }}
+                    />
+                  </div>
+
+                  {/* Teléfono/WhatsApp */}
+                  <div>
+                    <label
+                      style={{
+                        display: "block",
+                        color: textMuted,
+                        fontSize: 11,
+                        marginBottom: 4,
+                      }}
+                    >
+                      WhatsApp
+                    </label>
+                    <input
+                      type="tel"
+                      value={joinForm.phone}
+                      onChange={(e) => setJoinForm({ ...joinForm, phone: e.target.value })}
+                      placeholder="+51 999 999 999"
+                      style={{
+                        width: "100%",
+                        padding: "8px 12px",
+                        background: bg,
+                        border: `1px solid ${darkGold}`,
+                        borderRadius: 4,
+                        color: textLight,
+                        fontSize: 13,
+                        outline: "none",
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* Raza y Discord en grid */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18 }}>
+                  {/* Raza principal */}
+                  <div>
+                    <label
+                      style={{
+                        display: "block",
+                        color: textMuted,
+                        fontSize: 11,
+                        marginBottom: 4,
+                      }}
+                    >
+                      Raza principal *
+                    </label>
+                    <select
+                      required
+                      value={joinForm.race}
+                      onChange={(e) => setJoinForm({ ...joinForm, race: e.target.value })}
+                      style={{
+                        width: "100%",
+                        padding: "10px 36px 10px 14px",
+                        background: "linear-gradient(180deg, #1e1b18 0%, #16130f 100%)",
+                        border: "1.5px solid #3d3525",
+                        borderRadius: "6px",
+                        color: "#e8dcc0",
+                        fontSize: "13px",
+                        fontFamily: "inherit",
+                        cursor: "pointer",
+                        appearance: "none",
+                        backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23c9a84c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
+                        backgroundRepeat: "no-repeat",
+                        backgroundPosition: "right 12px center",
+                        transition: "all 0.2s ease",
+                        outline: "none",
+                      }}
+                    >
+                      <option value="Protoss" style={{ background: bg, color: textLight }}>Protoss</option>
+                      <option value="Terran" style={{ background: bg, color: textLight }}>Terran</option>
+                      <option value="Zerg" style={{ background: bg, color: textLight }}>Zerg</option>
+                    </select>
+                  </div>
+
+                  {/* Discord */}
+                  <div>
+                    <label
+                      style={{
+                        display: "block",
+                        color: textMuted,
+                        fontSize: 11,
+                        marginBottom: 4,
+                      }}
+                    >
+                      Discord
+                    </label>
+                    <input
+                      type="text"
+                      value={joinForm.discord}
+                      onChange={(e) => setJoinForm({ ...joinForm, discord: e.target.value })}
+                      placeholder="usuario#1234"
+                      style={{
+                        width: "100%",
+                        padding: "8px 12px",
+                        background: bg,
+                        border: `1px solid ${darkGold}`,
+                        borderRadius: 4,
+                        color: textLight,
+                        fontSize: 13,
+                        outline: "none",
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* ¿Por qué quieres unirte? */}
+                <div>
+                  <label
+                    style={{
+                      display: "block",
+                      color: textMuted,
+                      fontSize: 11,
+                      marginBottom: 4,
+                    }}
+                  >
+                    ¿Por qué quieres unirte al clan? *
+                  </label>
+                  <textarea
+                    required
+                    value={joinForm.reason}
+                    onChange={(e) => setJoinForm({ ...joinForm, reason: e.target.value })}
+                    rows={4}
+                    placeholder="Cuéntanos sobre ti y por qué quieres ser parte de Clan Mafia..."
+                    style={{
+                      width: "100%",
+                      padding: "8px 12px",
+                      background: bg,
+                      border: `1px solid ${darkGold}`,
+                      borderRadius: 4,
+                      color: textLight,
+                      fontSize: 13,
+                      outline: "none",
+                      resize: "vertical",
+                      fontFamily: "inherit",
+                    }}
+                  />
+                </div>
+
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  disabled={joinFormSubmitting}
+                  style={{
+                    padding: "14px 28px",
+                    background: `linear-gradient(135deg, ${gold} 0%, ${darkGold} 100%)`,
+                    border: `2px solid ${gold}`,
+                    borderRadius: 8,
+                    color: bg,
+                    fontSize: 14,
+                    fontWeight: 700,
+                    letterSpacing: 1.5,
+                    cursor: joinFormSubmitting ? "not-allowed" : "pointer",
+                    transition: "all 0.3s",
+                    fontFamily: "'Cinzel', serif",
+                    textTransform: "uppercase",
+                    opacity: joinFormSubmitting ? 0.6 : 1,
+                  }}
+                  onMouseOver={(e) => {
+                    if (!joinFormSubmitting) {
+                      e.currentTarget.style.transform = "translateY(-2px)";
+                      e.currentTarget.style.boxShadow = "0 4px 15px rgba(201,168,76,0.4)";
+                    }
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.transform = "translateY(0)";
+                    e.currentTarget.style.boxShadow = "none";
+                  }}
+                >
+                  {joinFormSubmitting ? "Enviando..." : "Enviar solicitud"}
+                </button>
+
+                {/* Message */}
+                {joinFormMessage && (
+                  <p
+                    style={{
+                      textAlign: "center",
+                      color: joinFormMessage.includes("✅") ? gold : "#c9a08a",
+                      fontSize: 13,
+                      margin: 0,
+                    }}
+                  >
+                    {joinFormMessage}
+                  </p>
+                )}
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </>
   );
 }

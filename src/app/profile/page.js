@@ -219,6 +219,42 @@ export default function ProfilePage() {
           }}>
             INFORMACIÓN DEL MIEMBRO
           </h2>
+
+          {/* Avatar */}
+          {member.avatar && (
+            <div style={{
+              display: "flex",
+              justifyContent: "center",
+              marginBottom: 24,
+              paddingBottom: 24,
+              borderBottom: `1px solid ${darkGold}`,
+            }}>
+              <img
+                src={(() => {
+                  // Usar proxy para imágenes externas
+                  let imageSrc = member.avatar;
+                  if (member.avatar.startsWith('http://') || member.avatar.startsWith('https://')) {
+                    const externalUrl = member.avatar.replace(/^https?:\/\//, '');
+                    imageSrc = `https://images.weserv.nl/?url=${externalUrl}&w=200&h=200&fit=cover`;
+                  }
+                  return imageSrc;
+                })()}
+                alt={member.name}
+                style={{
+                  width: 120,
+                  height: 120,
+                  borderRadius: "50%",
+                  objectFit: "cover",
+                  border: `4px solid ${gold}`,
+                  boxShadow: `0 4px 12px rgba(201, 168, 76, 0.3)`,
+                }}
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                }}
+              />
+            </div>
+          )}
+
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16 }}>
             <div>
               <p style={{ fontSize: 12, color: textMuted, marginBottom: 4, letterSpacing: 1 }}>NOMBRE</p>
@@ -317,21 +353,46 @@ export default function ProfilePage() {
             }}>
               Avatar URL
             </label>
-            <input
-              type="url"
-              value={formData.avatar}
-              onChange={(e) => setFormData({ ...formData, avatar: e.target.value })}
-              placeholder="https://ejemplo.com/imagen.jpg"
-              style={{
-                width: "100%",
-                padding: 12,
-                background: bg,
-                border: `1px solid ${darkGold}`,
-                borderRadius: 6,
-                color: textLight,
-                fontSize: 14,
-              }}
-            />
+            <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+              <input
+                type="url"
+                value={formData.avatar}
+                onChange={(e) => setFormData({ ...formData, avatar: e.target.value })}
+                placeholder="https://ejemplo.com/imagen.jpg"
+                style={{
+                  flex: 1,
+                  padding: 12,
+                  background: bg,
+                  border: `1px solid ${darkGold}`,
+                  borderRadius: 6,
+                  color: textLight,
+                  fontSize: 14,
+                }}
+              />
+              {formData.avatar && (
+                <img
+                  src={(() => {
+                    // Usar proxy para imágenes externas
+                    let imageSrc = formData.avatar;
+                    if (formData.avatar.startsWith('http://') || formData.avatar.startsWith('https://')) {
+                      const externalUrl = formData.avatar.replace(/^https?:\/\//, '');
+                      imageSrc = `https://images.weserv.nl/?url=${externalUrl}&w=100&h=100&fit=cover`;
+                    }
+                    return imageSrc;
+                  })()}
+                  alt="Preview"
+                  style={{
+                    width: 50,
+                    height: 50,
+                    borderRadius: "50%",
+                    objectFit: "cover",
+                    border: `2px solid ${gold}`,
+                    flexShrink: 0,
+                  }}
+                  onError={(e) => { e.target.style.display = 'none'; }}
+                />
+              )}
+            </div>
           </div>
 
           <h4 style={{
