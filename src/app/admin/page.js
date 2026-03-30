@@ -4079,52 +4079,83 @@ export default function AdminDashboard() {
           placeholder="Contenido completo del post"
         />
 
+        {/* Tipo de Media */}
+        <Select
+          label="Tipo de Media"
+          value={postModal.post?.media_type || "image"}
+          onChange={(val) => setPostModal({ ...postModal, post: { ...postModal.post, media_type: val } })}
+          options={["image", "video"]}
+        />
+
         {/* Imagen del post */}
-        <div style={{ marginTop: 16 }}>
-          <label style={{ display: "block", marginBottom: 8, fontSize: 14, fontWeight: 600, color: textLight }}>
-            Imagen del Post (opcional)
-          </label>
-          {postModal.post?.image && !postImageFile && (
-            <div style={{ marginBottom: 12 }}>
-              <img
-                src={postModal.post.image}
-                alt="Preview"
-                style={{
-                  maxWidth: "100%",
-                  height: 150,
-                  objectFit: "cover",
-                  borderRadius: 8,
-                  border: `1px solid ${darkGold}`
-                }}
-              />
-              <p style={{ fontSize: 12, color: textMuted, marginTop: 4 }}>
-                Imagen actual (puedes subir una nueva para reemplazarla)
+        {(!postModal.post?.media_type || postModal.post?.media_type === "image") && (
+          <div style={{ marginTop: 16 }}>
+            <label style={{ display: "block", marginBottom: 8, fontSize: 14, fontWeight: 600, color: textLight }}>
+              Imagen del Post (opcional)
+            </label>
+            {postModal.post?.image && !postImageFile && (
+              <div style={{ marginBottom: 12 }}>
+                <img
+                  src={postModal.post.image}
+                  alt="Preview"
+                  style={{
+                    maxWidth: "100%",
+                    height: 150,
+                    objectFit: "cover",
+                    borderRadius: 8,
+                    border: `1px solid ${darkGold}`
+                  }}
+                />
+                <p style={{ fontSize: 12, color: textMuted, marginTop: 4 }}>
+                  Imagen actual (puedes subir una nueva para reemplazarla)
+                </p>
+              </div>
+            )}
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) setPostImageFile(file);
+              }}
+              style={{
+                width: "100%",
+                padding: 10,
+                background: cardBg,
+                border: `1px solid ${darkGold}`,
+                borderRadius: 6,
+                color: textLight,
+                fontSize: 14,
+              }}
+            />
+            {postImageFile && (
+              <p style={{ fontSize: 12, color: gold, marginTop: 8 }}>
+                ✓ Nueva imagen seleccionada: {postImageFile.name}
               </p>
-            </div>
-          )}
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) setPostImageFile(file);
-            }}
-            style={{
-              width: "100%",
-              padding: 10,
-              background: cardBg,
-              border: `1px solid ${darkGold}`,
-              borderRadius: 6,
-              color: textLight,
-              fontSize: 14,
-            }}
-          />
-          {postImageFile && (
-            <p style={{ fontSize: 12, color: gold, marginTop: 8 }}>
-              ✓ Nueva imagen seleccionada: {postImageFile.name}
+            )}
+          </div>
+        )}
+
+        {/* Video URL */}
+        {postModal.post?.media_type === "video" && (
+          <div style={{ marginTop: 16 }}>
+            <Input
+              label="URL del Video"
+              value={postModal.post?.video_url || ""}
+              onChange={(val) => setPostModal({ ...postModal, post: { ...postModal.post, video_url: val } })}
+              placeholder="https://youtube.com/watch?v=... o https://tiktok.com/@..."
+            />
+            <p style={{ fontSize: 11, color: textMuted, marginTop: 4 }}>
+              Soporta: YouTube, TikTok, o URL directa de video (.mp4, .webm, .ogg)
             </p>
-          )}
-        </div>
+            {postModal.post?.video_url && (
+              <div style={{ marginTop: 12, padding: 12, background: "rgba(201,168,76,0.1)", borderRadius: 6, border: `1px solid ${darkGold}` }}>
+                <p style={{ fontSize: 11, color: gold, marginBottom: 4 }}>✓ URL de video configurada</p>
+                <p style={{ fontSize: 10, color: textMuted, wordBreak: "break-all" }}>{postModal.post.video_url}</p>
+              </div>
+            )}
+          </div>
+        )}
 
         <div style={{ display: "flex", gap: 12, marginTop: 20 }}>
           <Button onClick={handleSavePost} loading={loading} style={{ flex: 1 }}>

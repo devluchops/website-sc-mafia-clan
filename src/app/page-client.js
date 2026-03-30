@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { SocialIcons } from "@/components/SocialIcons";
 import SubscribeForm from "@/components/SubscribeForm";
+import { getVideoEmbedUrl } from "@/lib/video-utils";
 
 // ============================================================
 //  HOOKS
@@ -39,6 +40,110 @@ const RANK_ORDER = { Lider: 0, Oficial: 1, Miembro: 2, Recruit: 3 };
 // ============================================================
 //  SMALL COMPONENTS
 // ============================================================
+
+function VideoPlayer({ videoUrl, onClick }) {
+  if (!videoUrl) return null;
+
+  const videoInfo = getVideoEmbedUrl(videoUrl);
+
+  if (!videoInfo) return null;
+
+  // YouTube embed
+  if (videoInfo.type === 'youtube') {
+    return (
+      <div
+        style={{
+          width: "100%",
+          paddingTop: "56.25%", // 16:9 aspect ratio
+          position: "relative",
+          borderRadius: 8,
+          overflow: "hidden",
+          marginBottom: 12,
+          background: "#1a1810",
+          cursor: onClick ? "pointer" : "default",
+        }}
+        onClick={onClick}
+      >
+        <iframe
+          src={videoInfo.embedUrl}
+          title="YouTube video"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            border: "none",
+          }}
+        />
+      </div>
+    );
+  }
+
+  // TikTok embed
+  if (videoInfo.type === 'tiktok') {
+    return (
+      <div
+        style={{
+          width: "100%",
+          borderRadius: 8,
+          overflow: "hidden",
+          marginBottom: 12,
+          background: "#1a1810",
+          cursor: onClick ? "pointer" : "default",
+          display: "flex",
+          justifyContent: "center",
+        }}
+        onClick={onClick}
+      >
+        <blockquote
+          className="tiktok-embed"
+          cite={videoInfo.originalUrl}
+          data-video-id={videoInfo.originalUrl.match(/video\/(\d+)/)?.[1]}
+          style={{ maxWidth: "605px", minWidth: "325px" }}
+        >
+          <section>
+            <a target="_blank" rel="noopener noreferrer" href={videoInfo.originalUrl}>Ver en TikTok</a>
+          </section>
+        </blockquote>
+        <script async src="https://www.tiktok.com/embed.js"></script>
+      </div>
+    );
+  }
+
+  // Direct video
+  if (videoInfo.type === 'video') {
+    return (
+      <div
+        style={{
+          width: "100%",
+          borderRadius: 8,
+          overflow: "hidden",
+          marginBottom: 12,
+          background: "#1a1810",
+          cursor: onClick ? "pointer" : "default",
+        }}
+        onClick={onClick}
+      >
+        <video
+          controls
+          style={{
+            width: "100%",
+            height: "auto",
+            display: "block",
+          }}
+        >
+          <source src={videoInfo.embedUrl} type="video/mp4" />
+          Tu navegador no soporta la reproducción de video.
+        </video>
+      </div>
+    );
+  }
+
+  return null;
+}
 
 function RaceBadge({ race, level, small = false }) {
   const colors = {
@@ -325,7 +430,10 @@ function BlogPost({ post, session, onViewFull }) {
 
   return (
     <Card style={{ padding: 20 }}>
-      {post.image && (
+      {/* Mostrar video o imagen según media_type */}
+      {post.media_type === "video" && post.video_url ? (
+        <VideoPlayer videoUrl={post.video_url} onClick={onViewFull} />
+      ) : post.image ? (
         <div
           style={{
             width: "100%",
@@ -347,7 +455,7 @@ function BlogPost({ post, session, onViewFull }) {
             }}
           />
         </div>
-      )}
+      ) : null}
       <Tag label={post.tag} />
       <h3
         style={{
@@ -1003,7 +1111,10 @@ function BlogSection({ posts }) {
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            {selectedPost.image && (
+            {/* Mostrar video o imagen según media_type */}
+            {selectedPost.media_type === "video" && selectedPost.video_url ? (
+              <VideoPlayer videoUrl={selectedPost.video_url} />
+            ) : selectedPost.image ? (
               <div
                 style={{
                   width: "100%",
@@ -1028,7 +1139,7 @@ function BlogSection({ posts }) {
                   }}
                 />
               </div>
-            )}
+            ) : null}
 
             <Tag label={selectedPost.tag} />
 

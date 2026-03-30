@@ -29,7 +29,7 @@ export async function POST(request) {
   }
 
   try {
-    const { id, tag, title, author, date, read_time, excerpt, content, image } = await request.json();
+    const { id, tag, title, author, date, read_time, excerpt, content, image, media_type, video_url } = await request.json();
     const sql = getDb();
 
     let newPostId = null;
@@ -41,15 +41,18 @@ export async function POST(request) {
         UPDATE posts
         SET tag = ${tag}, title = ${title}, author = ${author},
             date = ${date}, read_time = ${read_time}, excerpt = ${excerpt},
-            content = ${content}, image = ${image || null}, updated_at = NOW()
+            content = ${content}, image = ${image || null},
+            media_type = ${media_type || 'image'},
+            video_url = ${video_url || null},
+            updated_at = NOW()
         WHERE id = ${id}
       `;
     } else {
       // Crear nuevo
       isNewPost = true;
       const result = await sql`
-        INSERT INTO posts (tag, title, author, date, read_time, excerpt, content, image)
-        VALUES (${tag}, ${title}, ${author}, ${date}, ${read_time}, ${excerpt}, ${content || ""}, ${image || null})
+        INSERT INTO posts (tag, title, author, date, read_time, excerpt, content, image, media_type, video_url)
+        VALUES (${tag}, ${title}, ${author}, ${date}, ${read_time}, ${excerpt}, ${content || ""}, ${image || null}, ${media_type || 'image'}, ${video_url || null})
         RETURNING id
       `;
       newPostId = result[0].id;
