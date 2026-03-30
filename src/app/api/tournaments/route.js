@@ -33,8 +33,10 @@ export async function GET(request) {
     }
   } catch (error) {
     console.error('Error fetching public tournaments:', error);
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
     return NextResponse.json(
-      { error: 'Error al obtener torneos' },
+      { error: 'Error al obtener torneos', details: error.message },
       { status: 500 }
     );
   }

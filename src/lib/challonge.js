@@ -17,14 +17,20 @@ export async function getTournaments(options = {}) {
   const url = `${CHALLONGE_API_BASE}/tournaments.json?${params}`;
 
   try {
+    console.log('Fetching tournaments from:', url);
+    console.log('API Key present:', !!CHALLONGE_API_KEY);
     const response = await fetch(url);
+    console.log('Response status:', response.status);
     if (!response.ok) {
-      throw new Error(`Challonge API error: ${response.status}`);
+      const errorText = await response.text();
+      console.error('Challonge API error response:', errorText);
+      throw new Error(`Challonge API error: ${response.status} - ${errorText}`);
     }
     const data = await response.json();
+    console.log('Tournaments fetched:', data.length);
     return data;
   } catch (error) {
-    console.error('Error fetching tournaments:', error);
+    console.error('Error fetching tournaments:', error.message);
     throw error;
   }
 }
