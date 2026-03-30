@@ -88,6 +88,58 @@ When adding env vars via `vercel env add`, ensure NO trailing newlines or whites
 - `src/app/page-client.js` - Main page tournament display
 - `src/app/tournaments/[url]/page.js` - Dedicated tournament page
 
+**Tournament Types:**
+- `single elimination` - Eliminación directa
+- `double elimination` - Doble eliminación (bracket de perdedores)
+- `round robin` - Todos contra todos (fase de grupos)
+- `swiss` - Sistema suizo
+
+**Group Stage + Playoffs Workflow:**
+
+Para torneos con fase de grupos seguida de playoffs (ej: Copa del Mundo):
+
+1. **Crear torneo de grupos**:
+   ```javascript
+   {
+     name: "CopaMAFIA2025 - Grupos",
+     tournament_type: "round robin",
+     url: "copamafia2025-grupos"
+   }
+   ```
+
+2. **Finalizar fase de grupos**:
+   ```javascript
+   POST /api/admin/tournaments
+   { action: "finalize", tournamentId: "grupos-id" }
+   ```
+
+3. **Obtener clasificados**:
+   ```javascript
+   GET /api/admin/tournaments?id=grupos-id&participants=true
+   // Ordenar por final_rank o wins y tomar top N
+   ```
+
+4. **Crear torneo de playoffs**:
+   ```javascript
+   {
+     name: "CopaMAFIA2025 - Playoffs",
+     tournament_type: "single elimination",
+     url: "copamafia2025-playoffs"
+   }
+   ```
+
+5. **Agregar clasificados**:
+   ```javascript
+   POST /api/admin/tournaments
+   {
+     action: "bulk_add_participants",
+     tournamentId: "playoffs-id",
+     participants: [{name: "Player1", seed: 1}, ...]
+   }
+   ```
+
+Ver ejemplo completo en: `scripts/tournament-group-to-playoff-example.js`
+
 **Common Issues:**
 - **401 Unauthorized**: Check for trailing newlines in API key (add `.trim()`)
 - **500 Error on Vercel**: Verify environment variables are set in Production
