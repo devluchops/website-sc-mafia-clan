@@ -764,14 +764,7 @@ function BuildOrdersSection({ builds }) {
     (build) => selectedRace === "all" || build.race === selectedRace
   );
 
-  const getYouTubeEmbedUrl = (url) => {
-    if (!url) return null;
-    const videoId = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&\s]+)/);
-    return videoId ? `https://www.youtube.com/embed/${videoId[1]}` : null;
-  };
-
   if (selectedBuild) {
-    const embedUrl = getYouTubeEmbedUrl(selectedBuild.video_url);
     const raceColor = RACE_COLORS[selectedBuild.race];
 
     return (
@@ -826,17 +819,9 @@ function BuildOrdersSection({ builds }) {
             </div>
           </div>
 
-          {embedUrl && (
-            <div style={{ width: "100%", paddingBottom: "56.25%", position: "relative", marginBottom: 24, borderRadius: 10, overflow: "hidden" }}>
-              <iframe
-                width="100%"
-                height="100%"
-                src={embedUrl}
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", borderRadius: 10 }}
-              />
+          {selectedBuild.video_url && (
+            <div style={{ marginBottom: 24 }}>
+              <VideoPlayer videoUrl={selectedBuild.video_url} />
             </div>
           )}
 
@@ -1210,12 +1195,12 @@ function VideosSection({ videos }) {
         }}
       >
         {videos.map((v, i) => {
-          const thumb = v.youtubeId
-            ? `https://img.youtube.com/vi/${v.youtubeId}/hqdefault.jpg`
-            : null;
-          const link = v.youtubeId
-            ? `https://www.youtube.com/watch?v=${v.youtubeId}`
-            : null;
+          // Get video info for thumbnail and link
+          const videoUrl = v.video_url || (v.youtube_id ? `https://youtube.com/watch?v=${v.youtube_id}` : null);
+          const videoInfo = videoUrl ? getVideoEmbedUrl(videoUrl) : null;
+
+          const thumb = videoInfo?.thumbnail || (videoInfo?.type === 'video' ? null : null);
+          const link = videoUrl;
 
           return (
             <Card

@@ -4195,11 +4195,14 @@ export default function AdminDashboard() {
           placeholder="24 Dic, 2024"
         />
         <Input
-          label="YouTube ID"
-          value={videoModal.video?.youtube_id || ""}
-          onChange={(val) => setVideoModal({ ...videoModal, video: { ...videoModal.video, youtube_id: val } })}
-          placeholder="dQw4w9WgXcQ"
+          label="URL del Video"
+          value={videoModal.video?.video_url || videoModal.video?.youtube_id ? `https://youtube.com/watch?v=${videoModal.video.youtube_id}` : ""}
+          onChange={(val) => setVideoModal({ ...videoModal, video: { ...videoModal.video, video_url: val } })}
+          placeholder="https://youtube.com/watch?v=... o https://tiktok.com/@..."
         />
+        <p style={{ fontSize: 11, color: textMuted, marginTop: 4 }}>
+          Soporta: YouTube, TikTok, o URL directa de video (.mp4, .webm, .ogg)
+        </p>
         <div style={{ display: "flex", gap: 12, marginTop: 20 }}>
           <Button onClick={handleSaveVideo} loading={loading} style={{ flex: 1 }}>
             Guardar

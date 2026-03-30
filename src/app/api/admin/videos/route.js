@@ -28,22 +28,25 @@ export async function POST(request) {
   }
 
   try {
-    const { id, title, duration, date, youtube_id } = await request.json();
+    const { id, title, duration, date, youtube_id, video_url } = await request.json();
     const sql = getDb();
+
+    // Use video_url if provided, otherwise fallback to youtube_id format for backward compatibility
+    const finalVideoUrl = video_url || (youtube_id ? `https://youtube.com/watch?v=${youtube_id}` : null);
 
     if (id) {
       // Actualizar
       await sql`
         UPDATE videos
         SET title = ${title}, duration = ${duration}, date = ${date},
-            youtube_id = ${youtube_id}, updated_at = NOW()
+            video_url = ${finalVideoUrl}, updated_at = NOW()
         WHERE id = ${id}
       `;
     } else {
       // Crear nuevo
       await sql`
-        INSERT INTO videos (title, duration, date, youtube_id)
-        VALUES (${title}, ${duration}, ${date}, ${youtube_id || ""})
+        INSERT INTO videos (title, duration, date, video_url)
+        VALUES (${title}, ${duration}, ${date}, ${finalVideoUrl})
       `;
     }
 
