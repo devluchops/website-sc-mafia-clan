@@ -1,6 +1,7 @@
 // Challonge API client
-const CHALLONGE_API_KEY = process.env.CHALLONGE_API_KEY;
-const CHALLONGE_USERNAME = process.env.CHALLONGE_USERNAME;
+// Trim environment variables to remove any trailing whitespace/newlines
+const CHALLONGE_API_KEY = process.env.CHALLONGE_API_KEY?.trim();
+const CHALLONGE_USERNAME = process.env.CHALLONGE_USERNAME?.trim();
 const CHALLONGE_API_BASE = 'https://api.challonge.com/v1';
 
 /**
