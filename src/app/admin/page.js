@@ -1874,9 +1874,35 @@ export default function AdminDashboard() {
                     <option value="D">Nivel D</option>
                   </select>
                 </div>
-                <Button onClick={() => setMemberModal({ isOpen: true, member: { name: "", race: "Terran", rank: "Miembro", avatar: "", mmr: 0 } })}>
-                  + Agregar Miembro
-                </Button>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <Button
+                    variant="secondary"
+                    onClick={async () => {
+                      try {
+                        const response = await fetch('/api/admin/export-members');
+                        if (!response.ok) throw new Error('Error al exportar');
+
+                        const blob = await response.blob();
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `miembros-clan-mafia-${new Date().toISOString().split('T')[0]}.xlsx`;
+                        document.body.appendChild(a);
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                        document.body.removeChild(a);
+                      } catch (error) {
+                        console.error('Error:', error);
+                        alert('Error al exportar miembros');
+                      }
+                    }}
+                  >
+                    📊 Exportar Excel
+                  </Button>
+                  <Button onClick={() => setMemberModal({ isOpen: true, member: { name: "", race: "Terran", rank: "Miembro", avatar: "", mmr: 0 } })}>
+                    + Agregar Miembro
+                  </Button>
+                </div>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {paginatedMembers.map((member) => {
