@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { SocialIcons } from "@/components/SocialIcons";
+import SubscribeForm from "@/components/SubscribeForm";
 
 // ============================================================
 //  THEME CONSTANTS
@@ -960,6 +961,11 @@ function BlogSection({ posts }) {
       {posts.map((p, i) => (
         <BlogPost key={i} post={p} session={session} onViewFull={() => openPost(p)} />
       ))}
+
+      {/* Subscribe Form */}
+      <div style={{ marginTop: 16 }}>
+        <SubscribeForm inline={true} />
+      </div>
 
       {/* Post Detail Modal */}
       {selectedPost && (
