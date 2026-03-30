@@ -12,8 +12,11 @@ import SubscribeForm from "@/components/SubscribeForm";
 
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
     };
@@ -24,7 +27,8 @@ function useIsMobile() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  return isMobile;
+  // Durante SSR, siempre retorna false
+  return mounted ? isMobile : false;
 }
 
 // ============================================================
