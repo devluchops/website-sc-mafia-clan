@@ -2804,10 +2804,11 @@ export default function PageClient({ initialData = null, initialHash = null }) {
       <nav
         style={{
           display: "flex",
+          flexDirection: isMobile ? "column" : "row",
           alignItems: "center",
           justifyContent: "center",
-          gap: 8,
-          padding: "12px 16px",
+          gap: isMobile ? 12 : 8,
+          padding: isMobile ? "12px 8px" : "12px 16px",
           background: "#0d0d0a",
           borderBottom: `1px solid ${darkGold}`,
           flexWrap: "wrap",
@@ -2817,7 +2818,7 @@ export default function PageClient({ initialData = null, initialHash = null }) {
           minHeight: 60,
         }}
       >
-        <div style={{ display: "flex", gap: 4, flexWrap: "wrap", justifyContent: "center", alignItems: "center" }}>
+        <div style={{ display: "flex", gap: 4, flexWrap: "wrap", justifyContent: "center", alignItems: "center", width: isMobile ? "100%" : "auto" }}>
           {TABS.map((t) => (
             <button
               key={t.id}
@@ -2845,8 +2846,18 @@ export default function PageClient({ initialData = null, initialHash = null }) {
           ))}
         </div>
 
-        {/* User Menu - Positioned Absolutely */}
-        <div style={{ position: "absolute", right: isMobile ? 8 : 16, top: "50%", transform: "translateY(-50%)", display: "flex", gap: isMobile ? 4 : 8, alignItems: "center" }}>
+        {/* User Menu */}
+        <div style={{
+          position: isMobile ? "relative" : "absolute",
+          right: isMobile ? "auto" : 16,
+          top: isMobile ? "auto" : "50%",
+          transform: isMobile ? "none" : "translateY(-50%)",
+          display: "flex",
+          gap: isMobile ? 4 : 8,
+          alignItems: "center",
+          width: isMobile ? "100%" : "auto",
+          justifyContent: isMobile ? "center" : "flex-start"
+        }}>
           {session ? (
             <>
               <Link
