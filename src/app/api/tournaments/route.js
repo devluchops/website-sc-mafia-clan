@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { getTournaments, getTournament } from "@/lib/challonge";
 
+// Deshabilitar caché para siempre tener datos frescos de Challonge
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // GET: Obtener torneos públicos
 export async function GET(request) {
   try {

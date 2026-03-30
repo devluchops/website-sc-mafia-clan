@@ -2395,8 +2395,13 @@ export default function HomePage() {
       .then((builds) => setBuildOrders(builds))
       .catch((err) => console.error(err));
 
-    // Cargar torneos activos
-    fetch("/api/tournaments")
+    // Cargar torneos activos (sin caché para reflejar cambios inmediatos)
+    fetch("/api/tournaments", {
+      cache: 'no-store',
+      headers: {
+        'Cache-Control': 'no-cache'
+      }
+    })
       .then((res) => res.json())
       .then((tourns) => {
         // Verificar que sea un array antes de asignar
