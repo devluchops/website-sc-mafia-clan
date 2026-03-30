@@ -240,6 +240,8 @@ export default function AdminDashboard() {
   const [permissions, setPermissions] = useState([]);
   const [buildOrders, setBuildOrders] = useState([]);
   const [tournaments, setTournaments] = useState([]);
+  const [subscribers, setSubscribers] = useState([]);
+  const [subscriberStats, setSubscriberStats] = useState(null);
 
   // Modal states
   const [memberModal, setMemberModal] = useState({ isOpen: false, member: null });
@@ -381,6 +383,15 @@ export default function AdminDashboard() {
     fetch("/api/admin/tournaments")
       .then((res) => res.json())
       .then((data) => setTournaments(data || []))
+      .catch((err) => console.error(err));
+
+    // Cargar suscriptores
+    fetch("/api/admin/subscribers")
+      .then((res) => res.json())
+      .then((data) => {
+        setSubscribers(data.subscribers || []);
+        setSubscriberStats(data.stats || null);
+      })
       .catch((err) => console.error(err));
   };
 
@@ -602,7 +613,31 @@ export default function AdminDashboard() {
       });
 
       if (res.ok) {
-        showMessage("✅ Post guardado correctamente");
+        const savedPost = await res.json();
+
+        // Enviar notificaciones a suscriptores (solo para posts nuevos)
+        if (!postModal.post?.id) {
+          try {
+            const notifyRes = await fetch("/api/admin/notify-subscribers", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ postId: savedPost.id }),
+            });
+
+            if (notifyRes.ok) {
+              const notifyData = await notifyRes.json();
+              showMessage(`✅ Post guardado y ${notifyData.message}`);
+            } else {
+              showMessage("✅ Post guardado (error al enviar notificaciones)");
+            }
+          } catch (error) {
+            showMessage("✅ Post guardado (error al enviar notificaciones)");
+            console.error("Error enviando notificaciones:", error);
+          }
+        } else {
+          showMessage("✅ Post actualizado correctamente");
+        }
+
         setPostModal({ isOpen: false, post: null });
         setPostImageFile(null);
         loadData();
@@ -771,6 +806,32 @@ export default function AdminDashboard() {
         loadData();
       } else {
         showMessage("❌ Error al eliminar");
+      }
+    } catch (error) {
+      showMessage("❌ Error: " + error.message);
+    }
+    setLoading(false);
+  };
+
+  const handleToggleSubscriber = async (subscriber) => {
+    const action = subscriber.is_active ? "desactivar" : "activar";
+    if (!confirm(`¿Estás seguro de ${action} este suscriptor?`)) return;
+
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/subscribers", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: subscriber.id,
+          is_active: !subscriber.is_active
+        }),
+      });
+      if (res.ok) {
+        showMessage(`✅ Suscriptor ${subscriber.is_active ? "desactivado" : "activado"}`);
+        loadData();
+      } else {
+        showMessage("❌ Error al actualizar");
       }
     } catch (error) {
       showMessage("❌ Error: " + error.message);
@@ -1650,6 +1711,28 @@ export default function AdminDashboard() {
               }}
             >
               Permisos
+            </button>
+          )}
+          {(session?.user?.permissions?.is_admin || session?.user?.permissions?.can_publish_blog) && (
+            <button
+              onClick={() => setActiveSection("subscribers")}
+              style={{
+                background: activeSection === "subscribers" ? "rgba(201,168,76,0.08)" : "transparent",
+                border: "none",
+                color: activeSection === "subscribers" ? gold : textMuted,
+                fontFamily: "'Cinzel', serif",
+                fontSize: 12,
+                fontWeight: 600,
+                letterSpacing: 1.5,
+                textTransform: "uppercase",
+                padding: "16px 20px",
+                cursor: "pointer",
+                borderBottom: activeSection === "subscribers" ? `2px solid ${gold}` : "2px solid transparent",
+                transition: "all 0.2s",
+                whiteSpace: "nowrap",
+              }}
+            >
+              Suscriptores
             </button>
           )}
         </div>
@@ -3544,6 +3627,108 @@ export default function AdminDashboard() {
         })()}
 
         {/* Reglas del Clan */}
+        {/* Suscriptores */}
+        {activeSection === "subscribers" && (session?.user?.permissions?.is_admin || session?.user?.permissions?.can_publish_blog) && (
+          <AdminCard title="Suscriptores del Blog" style={{ marginBottom: 24 }}>
+            {/* Stats Cards */}
+            {subscriberStats && (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 16, marginBottom: 24 }}>
+                <div style={{ background: bg, padding: 16, borderRadius: 8, border: `1px solid ${darkGold}`, textAlign: "center" }}>
+                  <div style={{ fontSize: 28, fontWeight: 700, color: gold, fontFamily: "'Cinzel', serif" }}>
+                    {subscriberStats.total}
+                  </div>
+                  <div style={{ fontSize: 12, color: textMuted, marginTop: 4 }}>Total</div>
+                </div>
+                <div style={{ background: bg, padding: 16, borderRadius: 8, border: `1px solid rgba(76, 201, 130, 0.3)`, textAlign: "center" }}>
+                  <div style={{ fontSize: 28, fontWeight: 700, color: "#4CC982", fontFamily: "'Cinzel', serif" }}>
+                    {subscriberStats.active}
+                  </div>
+                  <div style={{ fontSize: 12, color: textMuted, marginTop: 4 }}>Activos</div>
+                </div>
+                <div style={{ background: bg, padding: 16, borderRadius: 8, border: `1px solid rgba(139, 123, 94, 0.3)`, textAlign: "center" }}>
+                  <div style={{ fontSize: 28, fontWeight: 700, color: textMuted, fontFamily: "'Cinzel', serif" }}>
+                    {subscriberStats.inactive}
+                  </div>
+                  <div style={{ fontSize: 12, color: textMuted, marginTop: 4 }}>Inactivos</div>
+                </div>
+              </div>
+            )}
+
+            <p style={{ color: textMuted, fontSize: 14, marginBottom: 16 }}>
+              Gestiona los suscriptores que reciben notificaciones por email cuando se publica un nuevo post.
+            </p>
+
+            {/* Lista de suscriptores */}
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                <thead>
+                  <tr style={{ borderBottom: `2px solid ${darkGold}` }}>
+                    <th style={{ padding: "12px 8px", textAlign: "left", color: gold, fontWeight: 600 }}>Email</th>
+                    <th style={{ padding: "12px 8px", textAlign: "left", color: gold, fontWeight: 600 }}>Nombre</th>
+                    <th style={{ padding: "12px 8px", textAlign: "center", color: gold, fontWeight: 600 }}>Estado</th>
+                    <th style={{ padding: "12px 8px", textAlign: "left", color: gold, fontWeight: 600 }}>Fecha de Suscripción</th>
+                    <th style={{ padding: "12px 8px", textAlign: "center", color: gold, fontWeight: 600 }}>Acción</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {subscribers.length === 0 ? (
+                    <tr>
+                      <td colSpan="5" style={{ padding: "24px", textAlign: "center", color: textMuted }}>
+                        No hay suscriptores todavía
+                      </td>
+                    </tr>
+                  ) : (
+                    subscribers.map((sub) => (
+                      <tr key={sub.id} style={{ borderBottom: `1px solid ${darkGold}` }}>
+                        <td style={{ padding: "12px 8px", color: textLight }}>
+                          <div style={{ fontWeight: 600 }}>{sub.email}</div>
+                        </td>
+                        <td style={{ padding: "12px 8px", color: textLight }}>
+                          {sub.name || <span style={{ color: textMuted, fontStyle: "italic" }}>-</span>}
+                        </td>
+                        <td style={{ padding: "12px 8px", textAlign: "center" }}>
+                          {sub.is_active ? (
+                            <span style={{ color: "#4CC982", fontSize: 11, background: "rgba(76, 201, 130, 0.1)", padding: "4px 8px", borderRadius: 4 }}>
+                              ✓ Activo
+                            </span>
+                          ) : (
+                            <span style={{ color: textMuted, fontSize: 11, background: "rgba(139, 123, 94, 0.1)", padding: "4px 8px", borderRadius: 4 }}>
+                              ✕ Inactivo
+                            </span>
+                          )}
+                        </td>
+                        <td style={{ padding: "12px 8px", color: textLight, fontSize: 12 }}>
+                          {new Date(sub.subscribed_at).toLocaleDateString("es-ES", {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          })}
+                        </td>
+                        <td style={{ padding: "12px 8px", textAlign: "center" }}>
+                          <Button
+                            variant={sub.is_active ? "secondary" : "primary"}
+                            style={{ padding: "4px 8px", fontSize: 10 }}
+                            onClick={() => handleToggleSubscriber(sub)}
+                          >
+                            {sub.is_active ? "Desactivar" : "Activar"}
+                          </Button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <div style={{ marginTop: 16, padding: "12px", background: "rgba(201,168,76,0.05)", borderRadius: 6 }}>
+              <p style={{ fontSize: 12, color: textMuted, margin: 0 }}>
+                <strong>💡 Nota:</strong> Los suscriptores reciben un email automáticamente cuando se publica un nuevo post en el blog.
+                Pueden cancelar su suscripción en cualquier momento desde el link en cada email.
+              </p>
+            </div>
+          </AdminCard>
+        )}
+
         {activeSection === "rules" && (session?.user?.permissions?.is_admin || session?.user?.permissions?.can_edit_rules) && (() => {
           const ITEMS_PER_PAGE = 10;
           const totalPages = Math.ceil(rules.length / ITEMS_PER_PAGE);

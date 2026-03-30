@@ -7,6 +7,27 @@ import { SocialIcons } from "@/components/SocialIcons";
 import SubscribeForm from "@/components/SubscribeForm";
 
 // ============================================================
+//  HOOKS
+// ============================================================
+
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  return isMobile;
+}
+
+// ============================================================
 //  THEME CONSTANTS
 // ============================================================
 const gold = "#c9a84c";
@@ -959,8 +980,8 @@ function BlogSection({ posts }) {
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       <SectionTitle>Publicaciones recientes</SectionTitle>
 
-      {/* Subscribe Form */}
-      <SubscribeForm inline={true} />
+      {/* Subscribe Form - Solo para usuarios no autenticados */}
+      {!session && <SubscribeForm inline={true} />}
 
       {posts.map((p, i) => (
         <BlogPost key={i} post={p} session={session} onViewFull={() => openPost(p)} />
@@ -990,7 +1011,7 @@ function BlogSection({ posts }) {
               background: cardBg,
               border: `2px solid ${gold}`,
               borderRadius: 12,
-              padding: 32,
+              padding: isMobile ? 16 : 32,
               maxWidth: 700,
               width: "100%",
               maxHeight: "90vh",
@@ -1701,7 +1722,7 @@ function RosterSection({ members }) {
                 background: cardBg,
                 border: `2px solid ${gold}`,
                 borderRadius: 12,
-                padding: 32,
+                padding: isMobile ? 16 : 32,
                 maxWidth: 500,
                 width: "100%",
                 maxHeight: "90vh",
@@ -1714,7 +1735,7 @@ function RosterSection({ members }) {
                 name={selectedMember.name}
                 race={selectedMember.mainRace || selectedMember.race}
                 avatar={selectedMember.avatar}
-                size={100}
+                size={isMobile ? 80 : 100}
               />
               <h3
                 style={{
@@ -2280,7 +2301,7 @@ function EventsSection({ events }) {
             alignItems: "center",
             justifyContent: "center",
             zIndex: 1000,
-            padding: 20,
+            padding: isMobile ? 12 : 20,
           }}
           onClick={closeEvent}
         >
@@ -2289,7 +2310,7 @@ function EventsSection({ events }) {
               background: cardBg,
               border: `2px solid ${gold}`,
               borderRadius: 12,
-              padding: 32,
+              padding: isMobile ? 16 : 32,
               maxWidth: 500,
               width: "100%",
               maxHeight: "90vh",
@@ -2567,6 +2588,7 @@ const TABS = [
 
 export default function PageClient({ initialData = null, initialHash = null }) {
   const { data: session } = useSession();
+  const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState(() => {
     // Leer el hash de la URL al cargar
     if (typeof window !== 'undefined') {
@@ -2719,8 +2741,8 @@ export default function PageClient({ initialData = null, initialHash = null }) {
 
         <div
           style={{
-            width: 200,
-            height: 200,
+            width: isMobile ? 120 : 200,
+            height: isMobile ? 120 : 200,
             margin: "0 auto 20px",
             borderRadius: "50%",
             overflow: "hidden",
@@ -2755,9 +2777,9 @@ export default function PageClient({ initialData = null, initialHash = null }) {
         <h1
           style={{
             fontFamily: "'Cinzel', serif",
-            fontSize: 48,
+            fontSize: isMobile ? 32 : 48,
             fontWeight: 700,
-            letterSpacing: 10,
+            letterSpacing: isMobile ? 5 : 10,
             color: gold,
             textTransform: "uppercase",
             margin: 0,
@@ -2808,11 +2830,11 @@ export default function PageClient({ initialData = null, initialHash = null }) {
                 border: "none",
                 color: activeTab === t.id ? gold : textMuted,
                 fontFamily: "'Cinzel', serif",
-                fontSize: 13,
+                fontSize: isMobile ? 11 : 13,
                 fontWeight: 600,
-                letterSpacing: 2,
+                letterSpacing: isMobile ? 1 : 2,
                 textTransform: "uppercase",
-                padding: "12px 20px",
+                padding: isMobile ? "8px 12px" : "12px 20px",
                 cursor: "pointer",
                 borderRadius: 6,
                 transition: "all 0.2s",
@@ -2824,7 +2846,7 @@ export default function PageClient({ initialData = null, initialHash = null }) {
         </div>
 
         {/* User Menu - Positioned Absolutely */}
-        <div style={{ position: "absolute", right: 16, top: "50%", transform: "translateY(-50%)", display: "flex", gap: 8, alignItems: "center" }}>
+        <div style={{ position: "absolute", right: isMobile ? 8 : 16, top: "50%", transform: "translateY(-50%)", display: "flex", gap: isMobile ? 4 : 8, alignItems: "center" }}>
           {session ? (
             <>
               <Link
@@ -2834,11 +2856,11 @@ export default function PageClient({ initialData = null, initialHash = null }) {
                   border: `1px solid ${gold}`,
                   color: gold,
                   fontFamily: "'Cinzel', serif",
-                  fontSize: 11,
+                  fontSize: isMobile ? 9 : 11,
                   fontWeight: 600,
-                  letterSpacing: 1.5,
+                  letterSpacing: isMobile ? 1 : 1.5,
                   textTransform: "uppercase",
-                  padding: "12px 20px",
+                  padding: isMobile ? "8px 12px" : "12px 20px",
                   cursor: "pointer",
                   borderRadius: 6,
                   textDecoration: "none",
@@ -2864,11 +2886,11 @@ export default function PageClient({ initialData = null, initialHash = null }) {
                     border: `1px solid ${gold}`,
                     color: gold,
                     fontFamily: "'Cinzel', serif",
-                    fontSize: 11,
+                    fontSize: isMobile ? 9 : 11,
                     fontWeight: 600,
-                    letterSpacing: 1.5,
+                    letterSpacing: isMobile ? 1 : 1.5,
                     textTransform: "uppercase",
-                    padding: "12px 20px",
+                    padding: isMobile ? "8px 12px" : "12px 20px",
                     cursor: "pointer",
                     borderRadius: 6,
                     textDecoration: "none",
@@ -3037,41 +3059,44 @@ export default function PageClient({ initialData = null, initialHash = null }) {
       </footer>
 
       {/* Floating Join Button */}
-      <button
-        onClick={() => setJoinModalOpen(true)}
-        style={{
-          position: "fixed",
-          bottom: 32,
-          right: 32,
-          padding: "16px 28px",
-          background: `linear-gradient(135deg, ${gold} 0%, ${darkGold} 100%)`,
-          border: `2px solid ${gold}`,
-          borderRadius: 50,
-          color: bg,
-          fontSize: 15,
-          fontWeight: 700,
-          letterSpacing: 1,
-          cursor: "pointer",
-          transition: "all 0.3s",
-          fontFamily: "'Cinzel', serif",
-          textTransform: "uppercase",
-          boxShadow: "0 4px 20px rgba(201,168,76,0.4)",
-          zIndex: 999,
-        }}
-        onMouseOver={(e) => {
-          e.currentTarget.style.transform = "translateY(-4px) scale(1.05)";
-          e.currentTarget.style.boxShadow = "0 8px 30px rgba(201,168,76,0.6)";
-        }}
-        onMouseOut={(e) => {
-          e.currentTarget.style.transform = "translateY(0) scale(1)";
-          e.currentTarget.style.boxShadow = "0 4px 20px rgba(201,168,76,0.4)";
-        }}
-      >
-        ⭐ Únete al Clan
-      </button>
+      {/* Botón Únete al Clan - Solo para usuarios no autenticados */}
+      {!session && (
+        <>
+          <button
+            onClick={() => setJoinModalOpen(true)}
+            style={{
+              position: "fixed",
+              bottom: isMobile ? 16 : 32,
+              right: isMobile ? 16 : 32,
+              padding: isMobile ? "12px 20px" : "16px 28px",
+              background: `linear-gradient(135deg, ${gold} 0%, ${darkGold} 100%)`,
+              border: `2px solid ${gold}`,
+              borderRadius: 50,
+              color: bg,
+              fontSize: isMobile ? 12 : 15,
+              fontWeight: 700,
+              letterSpacing: isMobile ? 0.5 : 1,
+              cursor: "pointer",
+              transition: "all 0.3s",
+              fontFamily: "'Cinzel', serif",
+              textTransform: "uppercase",
+              boxShadow: "0 4px 20px rgba(201,168,76,0.4)",
+              zIndex: 999,
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.transform = "translateY(-4px) scale(1.05)";
+              e.currentTarget.style.boxShadow = "0 8px 30px rgba(201,168,76,0.6)";
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.transform = "translateY(0) scale(1)";
+              e.currentTarget.style.boxShadow = "0 4px 20px rgba(201,168,76,0.4)";
+            }}
+          >
+            ⭐ Únete al Clan
+          </button>
 
-      {/* Join Modal */}
-      {joinModalOpen && (
+          {/* Join Modal */}
+          {joinModalOpen && (
         <div
           style={{
             position: "fixed",
@@ -3084,7 +3109,7 @@ export default function PageClient({ initialData = null, initialHash = null }) {
             alignItems: "center",
             justifyContent: "center",
             zIndex: 9999,
-            padding: 20,
+            padding: isMobile ? 12 : 20,
           }}
           onClick={() => setJoinModalOpen(false)}
         >
@@ -3098,7 +3123,7 @@ export default function PageClient({ initialData = null, initialHash = null }) {
               width: "100%",
               maxHeight: "90vh",
               overflow: "auto",
-              padding: 32,
+              padding: isMobile ? 16 : 32,
               position: "relative",
             }}
           >
@@ -3476,6 +3501,8 @@ export default function PageClient({ initialData = null, initialHash = null }) {
             </form>
           </div>
         </div>
+      )}
+        </>
       )}
     </>
   );

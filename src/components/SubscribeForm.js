@@ -113,9 +113,10 @@ export default function SubscribeForm({ inline = false }) {
 
           <input
             type="text"
-            placeholder="Tu nombre (opcional)"
+            placeholder="Tu nombre"
             value={name}
             onChange={(e) => setName(e.target.value)}
+            required
             disabled={loading}
             style={{
               width: '100%',
@@ -234,13 +235,14 @@ export default function SubscribeForm({ inline = false }) {
 
         <div>
           <label style={{ display: 'block', color: textMuted, fontSize: 12, marginBottom: 6 }}>
-            Nombre (opcional)
+            Nombre *
           </label>
           <input
             type="text"
             placeholder="Tu nombre"
             value={name}
             onChange={(e) => setName(e.target.value)}
+            required
             disabled={loading}
             style={{
               width: '100%',

@@ -47,6 +47,33 @@ export async function GET(request) {
   }
 }
 
+export async function PUT(request) {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.permissions?.is_admin && !session?.user?.permissions?.can_publish_blog) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
+  }
+
+  try {
+    const { id, is_active } = await request.json();
+
+    await sql`
+      UPDATE blog_subscribers
+      SET is_active = ${is_active},
+          unsubscribed_at = ${is_active ? null : new Date().toISOString()}
+      WHERE id = ${id}
+    `;
+
+    return NextResponse.json({ message: 'Suscriptor actualizado' });
+  } catch (error) {
+    console.error('Error actualizando suscriptor:', error);
+    return NextResponse.json(
+      { error: 'Error al actualizar suscriptor' },
+      { status: 500 }
+    );
+  }
+}
+
 export async function DELETE(request) {
   const session = await getServerSession(authOptions);
 
