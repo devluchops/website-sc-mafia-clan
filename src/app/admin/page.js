@@ -453,6 +453,7 @@ function AuditLogSection() {
                         year: "numeric",
                         hour: "2-digit",
                         minute: "2-digit",
+                        timeZone: "America/Lima",
                       })}
                     </td>
                     <td style={tdStyle}>
