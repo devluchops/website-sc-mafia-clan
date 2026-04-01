@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/db";
+import { logAudit } from "@/lib/audit";
 
 // Helper to check if user can manage permissions
 async function canManagePermissions(session) {
@@ -108,8 +109,16 @@ export async function PUT(request) {
       WHERE discord_id = ${discord_id} OR discord_username = ${username}
     `;
 
+    let recordId = null;
+    let isUpdate = false;
+    let oldPermissions = null;
+
     if (existing.length > 0) {
       // Update existing permissions
+      isUpdate = true;
+      recordId = existing[0].id;
+      oldPermissions = existing[0];
+
       await sql`
         UPDATE user_permissions
         SET
@@ -127,9 +136,28 @@ export async function PUT(request) {
           updated_at = NOW()
         WHERE discord_id = ${discord_id} OR discord_username = ${username}
       `;
+
+      // Get updated values
+      const updatedResult = await sql`
+        SELECT * FROM user_permissions
+        WHERE discord_id = ${discord_id} OR discord_username = ${username}
+      `;
+      const newPermissions = updatedResult[0];
+
+      // Log audit for UPDATE
+      await logAudit({
+        action: "UPDATE",
+        tableName: "user_permissions",
+        recordId: recordId,
+        session,
+        request,
+        oldValues: oldPermissions,
+        newValues: newPermissions,
+        permissionUsed: "is_admin",
+      });
     } else {
       // Create new permissions record
-      await sql`
+      const result = await sql`
         INSERT INTO user_permissions (
           discord_id,
           discord_username,
@@ -155,7 +183,21 @@ export async function PUT(request) {
           ${can_manage_permissions || false},
           ${can_manage_build_orders || false}
         )
+        RETURNING *
       `;
+      recordId = result[0].id;
+      const newPermissions = result[0];
+
+      // Log audit for CREATE
+      await logAudit({
+        action: "CREATE",
+        tableName: "user_permissions",
+        recordId: recordId,
+        session,
+        request,
+        newValues: newPermissions,
+        permissionUsed: "is_admin",
+      });
     }
 
     return Response.json({ success: true });

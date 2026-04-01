@@ -221,6 +221,339 @@ function Modal({ isOpen, onClose, title, children, zIndex = 1000 }) {
 }
 
 // ============================================================
+// AUDIT LOG COMPONENT
+// ============================================================
+
+function AuditLogSection() {
+  const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [filters, setFilters] = useState({
+    action: "",
+    table_name: "",
+    actor: "",
+    startDate: "",
+    endDate: "",
+  });
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalLogs, setTotalLogs] = useState(0);
+
+  useEffect(() => {
+    fetchLogs();
+  }, [filters, page]);
+
+  const fetchLogs = async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: "50",
+        ...Object.fromEntries(Object.entries(filters).filter(([_, v]) => v !== "")),
+      });
+
+      const res = await fetch(`/api/admin/audit-logs?${params}`);
+      const data = await res.json();
+
+      setLogs(data.logs || []);
+      setTotalPages(data.totalPages || 1);
+      setTotalLogs(data.totalLogs || 0);
+    } catch (error) {
+      console.error("Error fetching audit logs:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getActionColor = (action) => {
+    const colors = {
+      CREATE: "rgba(76, 175, 80, 0.2)",
+      UPDATE: "rgba(33, 150, 243, 0.2)",
+      DELETE: "rgba(244, 67, 54, 0.2)",
+      LOGIN: "rgba(76, 175, 80, 0.2)",
+      LOGOUT: "rgba(158, 158, 158, 0.2)",
+      LOGIN_FAILED: "rgba(244, 67, 54, 0.2)",
+    };
+    return colors[action] || "rgba(201, 168, 76, 0.2)";
+  };
+
+  const thStyle = {
+    padding: "12px 16px",
+    textAlign: "left",
+    color: gold,
+    fontSize: 11,
+    textTransform: "uppercase",
+    letterSpacing: 1,
+    fontWeight: 600,
+  };
+
+  const tdStyle = {
+    padding: "12px 16px",
+    color: textLight,
+    fontSize: 13,
+  };
+
+  return (
+    <AdminCard title="Audit Log" style={{ marginBottom: 24 }}>
+      <div style={{ marginBottom: 16, color: textMuted, fontSize: 13 }}>
+        Total de eventos: <strong style={{ color: gold }}>{totalLogs}</strong>
+      </div>
+
+      {/* Filtros */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16, marginBottom: 24 }}>
+        <div>
+          <label style={{ display: "block", fontSize: 11, color: textMuted, marginBottom: 4, textTransform: "uppercase" }}>
+            Acción
+          </label>
+          <select
+            value={filters.action}
+            onChange={(e) => {
+              setFilters({ ...filters, action: e.target.value });
+              setPage(1);
+            }}
+            style={getSelectStyle()}
+          >
+            <option value="">Todas las acciones</option>
+            <option value="CREATE">CREATE</option>
+            <option value="UPDATE">UPDATE</option>
+            <option value="DELETE">DELETE</option>
+            <option value="LOGIN">LOGIN</option>
+            <option value="LOGOUT">LOGOUT</option>
+            <option value="LOGIN_FAILED">LOGIN_FAILED</option>
+          </select>
+        </div>
+
+        <div>
+          <label style={{ display: "block", fontSize: 11, color: textMuted, marginBottom: 4, textTransform: "uppercase" }}>
+            Recurso
+          </label>
+          <select
+            value={filters.table_name}
+            onChange={(e) => {
+              setFilters({ ...filters, table_name: e.target.value });
+              setPage(1);
+            }}
+            style={getSelectStyle()}
+          >
+            <option value="">Todos los recursos</option>
+            <option value="posts">Posts</option>
+            <option value="videos">Videos</option>
+            <option value="events">Events</option>
+            <option value="members">Members</option>
+            <option value="user_permissions">Permissions</option>
+            <option value="tournaments">Tournaments</option>
+            <option value="build_orders">Build Orders</option>
+            <option value="clan_rules">Rules</option>
+          </select>
+        </div>
+
+        <div>
+          <label style={{ display: "block", fontSize: 11, color: textMuted, marginBottom: 4, textTransform: "uppercase" }}>
+            Usuario
+          </label>
+          <input
+            type="text"
+            placeholder="Buscar por nombre o email..."
+            value={filters.actor}
+            onChange={(e) => {
+              setFilters({ ...filters, actor: e.target.value });
+              setPage(1);
+            }}
+            style={{
+              width: "100%",
+              padding: "10px 14px",
+              background: bg,
+              border: `1px solid ${darkGold}`,
+              borderRadius: 6,
+              color: textLight,
+              fontSize: 13,
+              outline: "none",
+            }}
+          />
+        </div>
+
+        <div>
+          <label style={{ display: "block", fontSize: 11, color: textMuted, marginBottom: 4, textTransform: "uppercase" }}>
+            Fecha Inicio
+          </label>
+          <input
+            type="date"
+            value={filters.startDate}
+            onChange={(e) => {
+              setFilters({ ...filters, startDate: e.target.value });
+              setPage(1);
+            }}
+            style={{
+              width: "100%",
+              padding: "10px 14px",
+              background: bg,
+              border: `1px solid ${darkGold}`,
+              borderRadius: 6,
+              color: textLight,
+              fontSize: 13,
+              outline: "none",
+            }}
+          />
+        </div>
+
+        <div>
+          <label style={{ display: "block", fontSize: 11, color: textMuted, marginBottom: 4, textTransform: "uppercase" }}>
+            Fecha Fin
+          </label>
+          <input
+            type="date"
+            value={filters.endDate}
+            onChange={(e) => {
+              setFilters({ ...filters, endDate: e.target.value });
+              setPage(1);
+            }}
+            style={{
+              width: "100%",
+              padding: "10px 14px",
+              background: bg,
+              border: `1px solid ${darkGold}`,
+              borderRadius: 6,
+              color: textLight,
+              fontSize: 13,
+              outline: "none",
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Tabla de logs */}
+      {loading ? (
+        <div style={{ color: textMuted, textAlign: "center", padding: 40 }}>
+          Cargando logs...
+        </div>
+      ) : logs.length === 0 ? (
+        <div style={{ color: textMuted, textAlign: "center", padding: 40 }}>
+          No se encontraron eventos con los filtros seleccionados.
+        </div>
+      ) : (
+        <>
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+              <thead>
+                <tr style={{ borderBottom: `2px solid ${darkGold}` }}>
+                  <th style={thStyle}>Fecha</th>
+                  <th style={thStyle}>Acción</th>
+                  <th style={thStyle}>Recurso</th>
+                  <th style={thStyle}>Actor</th>
+                  <th style={thStyle}>Cambios</th>
+                  <th style={thStyle}>IP</th>
+                </tr>
+              </thead>
+              <tbody>
+                {logs.map((log) => (
+                  <tr key={log.id} style={{ borderBottom: `1px solid rgba(61,53,37,0.3)` }}>
+                    <td style={tdStyle}>
+                      {new Date(log.created_at).toLocaleString("es-PE", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </td>
+                    <td style={tdStyle}>
+                      <span style={{
+                        padding: "4px 8px",
+                        borderRadius: 4,
+                        fontSize: 11,
+                        background: getActionColor(log.action),
+                        fontWeight: 600,
+                      }}>
+                        {log.action}
+                      </span>
+                    </td>
+                    <td style={tdStyle}>
+                      {log.table_name ? (
+                        <div>
+                          <div style={{ fontWeight: 600 }}>{log.table_name}</div>
+                          {log.record_id && <div style={{ fontSize: 11, color: textMuted }}>#{log.record_id}</div>}
+                        </div>
+                      ) : (
+                        <span style={{ color: textMuted, fontStyle: "italic" }}>Session</span>
+                      )}
+                    </td>
+                    <td style={tdStyle}>
+                      <div>{log.actor_discord_username || "Unknown"}</div>
+                      {log.is_admin && <div style={{ fontSize: 10, color: gold }}>⭐ Admin</div>}
+                      {log.permission_used && !log.is_admin && (
+                        <div style={{ fontSize: 10, color: textMuted }}>{log.permission_used}</div>
+                      )}
+                    </td>
+                    <td style={tdStyle}>
+                      {log.changes && JSON.parse(log.changes) && Object.keys(JSON.parse(log.changes)).length > 0 ? (
+                        <details>
+                          <summary style={{ cursor: "pointer", color: gold, fontSize: 12 }}>
+                            {Object.keys(JSON.parse(log.changes)).length} campos modificados
+                          </summary>
+                          <pre style={{
+                            fontSize: 10,
+                            marginTop: 8,
+                            background: bg,
+                            padding: 8,
+                            borderRadius: 4,
+                            color: textLight,
+                            maxWidth: 300,
+                            overflow: "auto",
+                          }}>
+                            {JSON.stringify(JSON.parse(log.changes), null, 2)}
+                          </pre>
+                        </details>
+                      ) : log.action === "CREATE" && log.new_values ? (
+                        <span style={{ color: textMuted, fontSize: 11 }}>Nuevo registro</span>
+                      ) : log.action === "DELETE" && log.old_values ? (
+                        <span style={{ color: textMuted, fontSize: 11 }}>Registro eliminado</span>
+                      ) : (
+                        <span style={{ color: textMuted, fontSize: 11 }}>-</span>
+                      )}
+                    </td>
+                    <td style={tdStyle}>
+                      {log.ip_address ? (
+                        <span style={{ fontSize: 11, fontFamily: "monospace" }}>{log.ip_address}</span>
+                      ) : (
+                        <span style={{ color: textMuted }}>-</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Paginación */}
+          {totalPages > 1 && (
+            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 16, marginTop: 24 }}>
+              <Button
+                variant="secondary"
+                onClick={() => setPage(page - 1)}
+                disabled={page === 1}
+                style={{ padding: "8px 16px", fontSize: 12 }}
+              >
+                ← Anterior
+              </Button>
+              <span style={{ color: textLight, fontSize: 13 }}>
+                Página {page} de {totalPages}
+              </span>
+              <Button
+                variant="secondary"
+                onClick={() => setPage(page + 1)}
+                disabled={page === totalPages}
+                style={{ padding: "8px 16px", fontSize: 12 }}
+              >
+                Siguiente →
+              </Button>
+            </div>
+          )}
+        </>
+      )}
+    </AdminCard>
+  );
+}
+
+// ============================================================
 // MAIN COMPONENT
 // ============================================================
 
@@ -1169,6 +1502,18 @@ export default function AdminDashboard() {
     setLoading(false);
   };
 
+  const handleLogout = async () => {
+    try {
+      // Llamar al endpoint custom de logout para registrar en audit log
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch (error) {
+      console.error("Error logging logout:", error);
+    } finally {
+      // Hacer signOut de NextAuth
+      await signOut({ callbackUrl: "/" });
+    }
+  };
+
   const handleDeleteUser = async (user) => {
     if (!confirm(`¿Estás seguro de eliminar a ${user.discord_username}? Se eliminarán sus permisos y acceso.`)) return;
 
@@ -1500,7 +1845,7 @@ export default function AdminDashboard() {
           <Button variant="secondary" onClick={() => window.location.href = "/"}>
             Ver Sitio
           </Button>
-          <Button variant="secondary" onClick={() => signOut({ callbackUrl: "/" })}>
+          <Button variant="secondary" onClick={handleLogout}>
             Cerrar Sesión
           </Button>
         </div>
@@ -1733,6 +2078,28 @@ export default function AdminDashboard() {
               }}
             >
               Suscriptores
+            </button>
+          )}
+          {session?.user?.permissions?.is_admin && (
+            <button
+              onClick={() => setActiveSection("audit")}
+              style={{
+                background: activeSection === "audit" ? "rgba(201,168,76,0.08)" : "transparent",
+                border: "none",
+                color: activeSection === "audit" ? gold : textMuted,
+                fontFamily: "'Cinzel', serif",
+                fontSize: 12,
+                fontWeight: 600,
+                letterSpacing: 1.5,
+                textTransform: "uppercase",
+                padding: "16px 20px",
+                cursor: "pointer",
+                borderBottom: activeSection === "audit" ? `2px solid ${gold}` : "2px solid transparent",
+                transition: "all 0.2s",
+                whiteSpace: "nowrap",
+              }}
+            >
+              Audit Log
             </button>
           )}
         </div>
@@ -3887,6 +4254,9 @@ export default function AdminDashboard() {
             </AdminCard>
           );
         })()}
+
+        {/* Audit Log */}
+        {activeSection === "audit" && session?.user?.permissions?.is_admin && <AuditLogSection />}
       </main>
 
       {/* MODALS */}

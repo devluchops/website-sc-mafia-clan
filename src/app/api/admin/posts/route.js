@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { sendNewPostNotification } from "@/lib/email";
+import { logAudit } from "@/lib/audit";
 
 // GET: Obtener todos los posts con información del creador
 export async function GET() {
@@ -51,8 +52,13 @@ export async function POST(request) {
 
     let newPostId = null;
     let isNewPost = false;
+    let oldPost = null;
 
     if (id) {
+      // Obtener valores antiguos antes de actualizar
+      const oldPostResult = await sql`SELECT * FROM posts WHERE id = ${id}`;
+      oldPost = oldPostResult[0];
+
       // Actualizar
       await sql`
         UPDATE posts
@@ -64,15 +70,43 @@ export async function POST(request) {
             updated_at = NOW()
         WHERE id = ${id}
       `;
+
+      // Obtener valores nuevos después de actualizar
+      const updatedPostResult = await sql`SELECT * FROM posts WHERE id = ${id}`;
+      const updatedPost = updatedPostResult[0];
+
+      // Log audit
+      await logAudit({
+        action: "UPDATE",
+        tableName: "posts",
+        recordId: id,
+        session,
+        request,
+        oldValues: oldPost,
+        newValues: updatedPost,
+        permissionUsed: permissions?.is_admin ? "is_admin" : "can_publish_blog",
+      });
     } else {
       // Crear nuevo
       isNewPost = true;
       const result = await sql`
         INSERT INTO posts (tag, title, author, date, read_time, excerpt, content, image, media_type, video_url, created_by_member_id)
         VALUES (${tag}, ${title}, ${author}, ${date}, ${read_time}, ${excerpt}, ${content || ""}, ${image || null}, ${media_type || 'image'}, ${video_url || null}, ${createdByMemberId})
-        RETURNING id
+        RETURNING *
       `;
       newPostId = result[0].id;
+      const newPost = result[0];
+
+      // Log audit
+      await logAudit({
+        action: "CREATE",
+        tableName: "posts",
+        recordId: newPostId,
+        session,
+        request,
+        newValues: newPost,
+        permissionUsed: permissions?.is_admin ? "is_admin" : "can_publish_blog",
+      });
     }
 
     // Si es un post nuevo, enviar notificaciones por email a todos los miembros
@@ -122,7 +156,22 @@ export async function DELETE(request) {
     const { id } = await request.json();
     const sql = getDb();
 
+    // Obtener post antes de eliminarlo
+    const deletedPostResult = await sql`SELECT * FROM posts WHERE id = ${id}`;
+    const deletedPost = deletedPostResult[0];
+
     await sql`DELETE FROM posts WHERE id = ${id}`;
+
+    // Log audit
+    await logAudit({
+      action: "DELETE",
+      tableName: "posts",
+      recordId: id,
+      session,
+      request,
+      oldValues: deletedPost,
+      permissionUsed: permissions?.is_admin ? "is_admin" : "can_publish_blog",
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {

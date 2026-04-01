@@ -1404,7 +1404,9 @@ function RosterSection({ members }) {
 
   return (
     <div>
-      <SectionTitle>Miembros del clan</SectionTitle>
+      <SectionTitle>
+        Miembros del clan ({searchQuery ? `${filtered.length} / ${members.length}` : members.length})
+      </SectionTitle>
 
       {/* Buscador */}
       <div style={{ marginBottom: 16 }}>

@@ -1,5 +1,6 @@
 import DiscordProvider from "next-auth/providers/discord";
 import { getDb } from "@/lib/db";
+import { logSession } from "@/lib/audit";
 
 export const authOptions = {
   providers: [
@@ -68,6 +69,21 @@ export const authOptions = {
         // Permitir acceso si es miembro O usuario autorizado
         const isAllowed = isMember || isAuthorizedUser;
         console.log("Access allowed?", isAllowed);
+
+        // Log audit de sesión
+        if (isAllowed) {
+          await logSession({
+            action: "LOGIN",
+            user: profile,
+            request: null, // No tenemos request en signIn callback
+          });
+        } else {
+          await logSession({
+            action: "LOGIN_FAILED",
+            user: profile,
+            request: null,
+          });
+        }
 
         return isAllowed;
       } catch (error) {

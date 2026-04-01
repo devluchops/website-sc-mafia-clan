@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/db";
+import { logAudit } from "@/lib/audit";
 
 // GET: Obtener todos los eventos
 export async function GET() {
@@ -32,6 +33,10 @@ export async function POST(request) {
     const sql = getDb();
 
     if (id) {
+      // Obtener valores antiguos antes de actualizar
+      const oldEventResult = await sql`SELECT * FROM events WHERE id = ${id}`;
+      const oldEvent = oldEventResult[0];
+
       // Actualizar
       await sql`
         UPDATE events
@@ -39,12 +44,41 @@ export async function POST(request) {
             description = ${description}, status = ${status}, updated_at = NOW()
         WHERE id = ${id}
       `;
+
+      // Obtener valores nuevos después de actualizar
+      const updatedEventResult = await sql`SELECT * FROM events WHERE id = ${id}`;
+      const updatedEvent = updatedEventResult[0];
+
+      // Log audit
+      await logAudit({
+        action: "UPDATE",
+        tableName: "events",
+        recordId: id,
+        session,
+        request,
+        oldValues: oldEvent,
+        newValues: updatedEvent,
+        permissionUsed: permissions?.is_admin ? "is_admin" : "can_publish_events",
+      });
     } else {
       // Crear nuevo
-      await sql`
+      const result = await sql`
         INSERT INTO events (month, day, title, description, status)
         VALUES (${month}, ${day}, ${title}, ${description}, ${status})
+        RETURNING *
       `;
+      const newEvent = result[0];
+
+      // Log audit
+      await logAudit({
+        action: "CREATE",
+        tableName: "events",
+        recordId: newEvent.id,
+        session,
+        request,
+        newValues: newEvent,
+        permissionUsed: permissions?.is_admin ? "is_admin" : "can_publish_events",
+      });
     }
 
     return NextResponse.json({ success: true });
@@ -70,7 +104,22 @@ export async function DELETE(request) {
     const { id } = await request.json();
     const sql = getDb();
 
+    // Obtener evento antes de eliminarlo
+    const deletedEventResult = await sql`SELECT * FROM events WHERE id = ${id}`;
+    const deletedEvent = deletedEventResult[0];
+
     await sql`DELETE FROM events WHERE id = ${id}`;
+
+    // Log audit
+    await logAudit({
+      action: "DELETE",
+      tableName: "events",
+      recordId: id,
+      session,
+      request,
+      oldValues: deletedEvent,
+      permissionUsed: permissions?.is_admin ? "is_admin" : "can_publish_events",
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { sendInviteEmail } from "@/lib/email";
+import { logAudit } from "@/lib/audit";
 
 // GET: Obtener todos los miembros
 export async function GET() {
@@ -40,8 +41,13 @@ export async function POST(request) {
     const sql = getDb();
 
     let memberId = id;
+    let oldMember = null;
 
     if (id) {
+      // Obtener valores antiguos antes de actualizar
+      const oldMemberResult = await sql`SELECT * FROM members WHERE id = ${id}`;
+      oldMember = oldMemberResult[0];
+
       // Actualizar
       await sql`
         UPDATE members
@@ -65,6 +71,22 @@ export async function POST(request) {
             updated_at = NOW()
         WHERE id = ${id}
       `;
+
+      // Obtener valores nuevos después de actualizar
+      const updatedMemberResult = await sql`SELECT * FROM members WHERE id = ${id}`;
+      const updatedMember = updatedMemberResult[0];
+
+      // Log audit
+      await logAudit({
+        action: "UPDATE",
+        tableName: "members",
+        recordId: id,
+        session,
+        request,
+        oldValues: oldMember,
+        newValues: updatedMember,
+        permissionUsed: permissions?.is_admin ? "is_admin" : "can_manage_members",
+      });
     } else {
       // Crear nuevo
       const result = await sql`
@@ -84,9 +106,21 @@ export async function POST(request) {
           ${social_kick || ''}, ${social_instagram || ''}, ${social_twitter || ''}, ${social_youtube || ''},
           ${birth_date || null}, ${join_date || null}
         )
-        RETURNING id
+        RETURNING *
       `;
       memberId = result[0].id;
+      const newMember = result[0];
+
+      // Log audit
+      await logAudit({
+        action: "CREATE",
+        tableName: "members",
+        recordId: memberId,
+        session,
+        request,
+        newValues: newMember,
+        permissionUsed: permissions?.is_admin ? "is_admin" : "can_manage_members",
+      });
     }
 
     // Si tiene email y discord configurados, enviar invite automáticamente
@@ -143,8 +177,8 @@ export async function DELETE(request) {
     const { id } = await request.json();
     const sql = getDb();
 
-    // Obtener discord_id antes de eliminar
-    const [member] = await sql`SELECT discord_id FROM members WHERE id = ${id}`;
+    // Obtener miembro completo antes de eliminar
+    const [member] = await sql`SELECT * FROM members WHERE id = ${id}`;
 
     if (member && member.discord_id) {
       // Eliminar permisos asociados
@@ -156,6 +190,17 @@ export async function DELETE(request) {
 
     // Eliminar miembro
     await sql`DELETE FROM members WHERE id = ${id}`;
+
+    // Log audit
+    await logAudit({
+      action: "DELETE",
+      tableName: "members",
+      recordId: id,
+      session,
+      request,
+      oldValues: member,
+      permissionUsed: permissions?.is_admin ? "is_admin" : "can_manage_members",
+    });
 
     return NextResponse.json({
       success: true,

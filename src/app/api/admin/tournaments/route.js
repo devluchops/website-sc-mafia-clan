@@ -15,6 +15,7 @@ import {
   bulkAddParticipants,
   finalizeTournament
 } from "@/lib/challonge";
+import { logAudit } from "@/lib/audit";
 
 // GET: Obtener todos los torneos
 export async function GET(request) {
@@ -74,6 +75,18 @@ export async function POST(request) {
     if (action === 'create') {
       // Crear nuevo torneo
       const tournament = await createTournament(tournamentData);
+
+      // Log audit
+      await logAudit({
+        action: "CREATE",
+        tableName: "tournaments",
+        recordId: tournament.id,
+        session,
+        request,
+        newValues: { ...tournamentData, tournament_id: tournament.id },
+        permissionUsed: permissions?.is_admin ? "is_admin" : "can_publish_events",
+      });
+
       return NextResponse.json({
         success: true,
         tournament,
@@ -82,6 +95,18 @@ export async function POST(request) {
     } else if (action === 'start') {
       // Iniciar torneo
       const tournament = await startTournament(tournamentId);
+
+      // Log audit
+      await logAudit({
+        action: "UPDATE",
+        tableName: "tournaments",
+        recordId: tournamentId,
+        session,
+        request,
+        newValues: { action: 'start', tournament_id: tournamentId, state: 'underway' },
+        permissionUsed: permissions?.is_admin ? "is_admin" : "can_publish_events",
+      });
+
       return NextResponse.json({
         success: true,
         tournament,
@@ -90,6 +115,18 @@ export async function POST(request) {
     } else if (action === 'add_participant') {
       // Agregar participante
       const result = await addParticipant(tournamentId, participant);
+
+      // Log audit
+      await logAudit({
+        action: "CREATE",
+        tableName: "tournaments",
+        recordId: tournamentId,
+        session,
+        request,
+        newValues: { action: 'add_participant', tournament_id: tournamentId, participant },
+        permissionUsed: permissions?.is_admin ? "is_admin" : "can_publish_events",
+      });
+
       return NextResponse.json({
         success: true,
         participant: result,
@@ -98,6 +135,18 @@ export async function POST(request) {
     } else if (action === 'delete_participant') {
       // Eliminar participante
       const result = await deleteParticipant(tournamentId, participantId);
+
+      // Log audit
+      await logAudit({
+        action: "DELETE",
+        tableName: "tournaments",
+        recordId: tournamentId,
+        session,
+        request,
+        oldValues: { action: 'delete_participant', tournament_id: tournamentId, participant_id: participantId },
+        permissionUsed: permissions?.is_admin ? "is_admin" : "can_publish_events",
+      });
+
       return NextResponse.json({
         success: true,
         message: 'Participante eliminado correctamente'
@@ -105,6 +154,18 @@ export async function POST(request) {
     } else if (action === 'update_match') {
       // Actualizar resultado de un partido
       const result = await updateMatch(tournamentId, matchId, matchData);
+
+      // Log audit
+      await logAudit({
+        action: "UPDATE",
+        tableName: "tournaments",
+        recordId: tournamentId,
+        session,
+        request,
+        newValues: { action: 'update_match', tournament_id: tournamentId, match_id: matchId, match_data: matchData },
+        permissionUsed: permissions?.is_admin ? "is_admin" : "can_publish_events",
+      });
+
       return NextResponse.json({
         success: true,
         match: result,
@@ -113,6 +174,18 @@ export async function POST(request) {
     } else if (action === 'bulk_add_participants') {
       // Agregar múltiples participantes (útil para copiar clasificados de grupos a playoffs)
       const results = await bulkAddParticipants(tournamentId, participants);
+
+      // Log audit
+      await logAudit({
+        action: "CREATE",
+        tableName: "tournaments",
+        recordId: tournamentId,
+        session,
+        request,
+        newValues: { action: 'bulk_add_participants', tournament_id: tournamentId, participants_count: participants.length, participants },
+        permissionUsed: permissions?.is_admin ? "is_admin" : "can_publish_events",
+      });
+
       return NextResponse.json({
         success: true,
         results,
@@ -121,6 +194,18 @@ export async function POST(request) {
     } else if (action === 'finalize') {
       // Finalizar torneo (bloquea resultados finales)
       const tournament = await finalizeTournament(tournamentId);
+
+      // Log audit
+      await logAudit({
+        action: "UPDATE",
+        tableName: "tournaments",
+        recordId: tournamentId,
+        session,
+        request,
+        newValues: { action: 'finalize', tournament_id: tournamentId, state: 'complete' },
+        permissionUsed: permissions?.is_admin ? "is_admin" : "can_publish_events",
+      });
+
       return NextResponse.json({
         success: true,
         tournament,
@@ -159,7 +244,28 @@ export async function DELETE(request) {
 
   try {
     const { tournamentId } = await request.json();
+
+    // Obtener información del torneo antes de eliminarlo (para audit log)
+    let tournamentInfo = null;
+    try {
+      tournamentInfo = await getTournament(tournamentId);
+    } catch (e) {
+      // Si no se puede obtener, continuar igual
+      console.warn('Could not fetch tournament info for audit log:', e);
+    }
+
     await deleteTournament(tournamentId);
+
+    // Log audit
+    await logAudit({
+      action: "DELETE",
+      tableName: "tournaments",
+      recordId: tournamentId,
+      session,
+      request,
+      oldValues: { tournament_id: tournamentId, tournament_info: tournamentInfo },
+      permissionUsed: permissions?.is_admin ? "is_admin" : "can_publish_events",
+    });
 
     return NextResponse.json({
       success: true,

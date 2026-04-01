@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/db";
+import { logAudit } from "@/lib/audit";
 
 // GET: Obtener todos los build orders
 export async function GET() {
@@ -48,6 +49,10 @@ export async function POST(request) {
     const sql = getDb();
 
     if (id) {
+      // Obtener valores antiguos antes de actualizar
+      const oldBuildOrderResult = await sql`SELECT * FROM build_orders WHERE id = ${id}`;
+      const oldBuildOrder = oldBuildOrderResult[0];
+
       // Actualizar
       await sql`
         UPDATE build_orders
@@ -62,9 +67,25 @@ export async function POST(request) {
             updated_at = NOW()
         WHERE id = ${id}
       `;
+
+      // Obtener valores nuevos después de actualizar
+      const updatedBuildOrderResult = await sql`SELECT * FROM build_orders WHERE id = ${id}`;
+      const updatedBuildOrder = updatedBuildOrderResult[0];
+
+      // Log audit
+      await logAudit({
+        action: "UPDATE",
+        tableName: "build_orders",
+        recordId: id,
+        session,
+        request,
+        oldValues: oldBuildOrder,
+        newValues: updatedBuildOrder,
+        permissionUsed: permissions?.is_admin ? "is_admin" : "can_manage_build_orders",
+      });
     } else {
       // Crear nuevo
-      await sql`
+      const result = await sql`
         INSERT INTO build_orders (
           name, race, matchups, description, build_steps,
           video_url, difficulty, tags
@@ -74,7 +95,20 @@ export async function POST(request) {
           ${JSON.stringify(build_steps)}, ${video_url || null},
           ${difficulty || "Intermedio"}, ${tags || []}
         )
+        RETURNING *
       `;
+      const newBuildOrder = result[0];
+
+      // Log audit
+      await logAudit({
+        action: "CREATE",
+        tableName: "build_orders",
+        recordId: newBuildOrder.id,
+        session,
+        request,
+        newValues: newBuildOrder,
+        permissionUsed: permissions?.is_admin ? "is_admin" : "can_manage_build_orders",
+      });
     }
 
     return NextResponse.json({ success: true });
@@ -103,7 +137,22 @@ export async function DELETE(request) {
     const { id } = await request.json();
     const sql = getDb();
 
+    // Obtener build order antes de eliminarlo
+    const deletedBuildOrderResult = await sql`SELECT * FROM build_orders WHERE id = ${id}`;
+    const deletedBuildOrder = deletedBuildOrderResult[0];
+
     await sql`DELETE FROM build_orders WHERE id = ${id}`;
+
+    // Log audit
+    await logAudit({
+      action: "DELETE",
+      tableName: "build_orders",
+      recordId: id,
+      session,
+      request,
+      oldValues: deletedBuildOrder,
+      permissionUsed: permissions?.is_admin ? "is_admin" : "can_manage_build_orders",
+    });
 
     return NextResponse.json({
       success: true,
