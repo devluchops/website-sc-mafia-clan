@@ -485,31 +485,45 @@ function AuditLogSection() {
                       )}
                     </td>
                     <td style={tdStyle}>
-                      {log.changes && JSON.parse(log.changes) && Object.keys(JSON.parse(log.changes)).length > 0 ? (
-                        <details>
-                          <summary style={{ cursor: "pointer", color: gold, fontSize: 12 }}>
-                            {Object.keys(JSON.parse(log.changes)).length} campos modificados
-                          </summary>
-                          <pre style={{
-                            fontSize: 10,
-                            marginTop: 8,
-                            background: bg,
-                            padding: 8,
-                            borderRadius: 4,
-                            color: textLight,
-                            maxWidth: 300,
-                            overflow: "auto",
-                          }}>
-                            {JSON.stringify(JSON.parse(log.changes), null, 2)}
-                          </pre>
-                        </details>
-                      ) : log.action === "CREATE" && log.new_values ? (
-                        <span style={{ color: textMuted, fontSize: 11 }}>Nuevo registro</span>
-                      ) : log.action === "DELETE" && log.old_values ? (
-                        <span style={{ color: textMuted, fontSize: 11 }}>Registro eliminado</span>
-                      ) : (
-                        <span style={{ color: textMuted, fontSize: 11 }}>-</span>
-                      )}
+                      {(() => {
+                        // Parse changes safely - puede ser string JSON u objeto
+                        let changesObj = null;
+                        try {
+                          changesObj = typeof log.changes === 'string'
+                            ? JSON.parse(log.changes)
+                            : log.changes;
+                        } catch (e) {
+                          changesObj = null;
+                        }
+
+                        if (changesObj && typeof changesObj === 'object' && Object.keys(changesObj).length > 0) {
+                          return (
+                            <details>
+                              <summary style={{ cursor: "pointer", color: gold, fontSize: 12 }}>
+                                {Object.keys(changesObj).length} campos modificados
+                              </summary>
+                              <pre style={{
+                                fontSize: 10,
+                                marginTop: 8,
+                                background: bg,
+                                padding: 8,
+                                borderRadius: 4,
+                                color: textLight,
+                                maxWidth: 300,
+                                overflow: "auto",
+                              }}>
+                                {JSON.stringify(changesObj, null, 2)}
+                              </pre>
+                            </details>
+                          );
+                        } else if (log.action === "CREATE" && log.new_values) {
+                          return <span style={{ color: textMuted, fontSize: 11 }}>Nuevo registro</span>;
+                        } else if (log.action === "DELETE" && log.old_values) {
+                          return <span style={{ color: textMuted, fontSize: 11 }}>Registro eliminado</span>;
+                        } else {
+                          return <span style={{ color: textMuted, fontSize: 11 }}>-</span>;
+                        }
+                      })()}
                     </td>
                     <td style={tdStyle}>
                       {log.ip_address ? (
