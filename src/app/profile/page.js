@@ -445,14 +445,14 @@ export default function ProfilePage() {
 
           <div style={{ display: "grid", gap: 16 }}>
             {[
-              { key: "social_facebook", label: "Facebook", icon: "Facebook" },
-              { key: "social_discord", label: "Discord", icon: "Discord" },
-              { key: "social_tiktok", label: "TikTok", icon: "TikTok" },
-              { key: "social_kick", label: "Kick", icon: "Kick" },
-              { key: "social_instagram", label: "Instagram", icon: "Instagram" },
-              { key: "social_twitter", label: "Twitter", icon: "Twitter" },
-              { key: "social_youtube", label: "YouTube", icon: "YouTube" },
-            ].map(({ key, label, icon }) => {
+              { key: "social_facebook", label: "Facebook", icon: "Facebook", type: "url", placeholder: "https://facebook.com/tu-perfil" },
+              { key: "social_discord", label: "Discord", icon: "Discord", type: "text", placeholder: "tu_usuario_discord" },
+              { key: "social_tiktok", label: "TikTok", icon: "TikTok", type: "url", placeholder: "https://tiktok.com/@tu-usuario" },
+              { key: "social_kick", label: "Kick", icon: "Kick", type: "url", placeholder: "https://kick.com/tu-canal" },
+              { key: "social_instagram", label: "Instagram", icon: "Instagram", type: "url", placeholder: "https://instagram.com/tu-perfil" },
+              { key: "social_twitter", label: "Twitter", icon: "Twitter", type: "url", placeholder: "https://twitter.com/tu-usuario" },
+              { key: "social_youtube", label: "YouTube", icon: "YouTube", type: "url", placeholder: "https://youtube.com/@tu-canal" },
+            ].map(({ key, label, icon, type, placeholder }) => {
               const Icon = SocialIcons[icon];
               return (
                 <div key={key}>
@@ -470,10 +470,10 @@ export default function ProfilePage() {
                     {label}
                   </label>
                   <input
-                    type="url"
+                    type={type}
                     value={formData[key]}
                     onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
-                    placeholder={`URL de ${label}`}
+                    placeholder={placeholder}
                     style={{
                       width: "100%",
                       padding: 12,
