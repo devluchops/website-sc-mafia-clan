@@ -486,16 +486,21 @@ function AuditLogSection() {
                     </td>
                     <td style={tdStyle}>
                       {(() => {
-                        // Parse changes safely - puede ser string JSON u objeto
-                        let changesObj = null;
-                        try {
-                          changesObj = typeof log.changes === 'string'
-                            ? JSON.parse(log.changes)
-                            : log.changes;
-                        } catch (e) {
-                          changesObj = null;
-                        }
+                        // Helper para parsear JSON de forma segura
+                        const safeParseJSON = (data) => {
+                          try {
+                            return typeof data === 'string' ? JSON.parse(data) : data;
+                          } catch (e) {
+                            return null;
+                          }
+                        };
 
+                        // Parse de los diferentes campos
+                        const changesObj = safeParseJSON(log.changes);
+                        const newValuesObj = safeParseJSON(log.new_values);
+                        const oldValuesObj = safeParseJSON(log.old_values);
+
+                        // UPDATE - Mostrar cambios (diff)
                         if (changesObj && typeof changesObj === 'object' && Object.keys(changesObj).length > 0) {
                           return (
                             <details>
@@ -516,13 +521,56 @@ function AuditLogSection() {
                               </pre>
                             </details>
                           );
-                        } else if (log.action === "CREATE" && log.new_values) {
-                          return <span style={{ color: textMuted, fontSize: 11 }}>Nuevo registro</span>;
-                        } else if (log.action === "DELETE" && log.old_values) {
-                          return <span style={{ color: textMuted, fontSize: 11 }}>Registro eliminado</span>;
-                        } else {
-                          return <span style={{ color: textMuted, fontSize: 11 }}>-</span>;
                         }
+
+                        // CREATE - Mostrar registro completo creado
+                        if (log.action === "CREATE" && newValuesObj) {
+                          return (
+                            <details>
+                              <summary style={{ cursor: "pointer", color: "#4CC982", fontSize: 12 }}>
+                                Ver registro creado
+                              </summary>
+                              <pre style={{
+                                fontSize: 10,
+                                marginTop: 8,
+                                background: bg,
+                                padding: 8,
+                                borderRadius: 4,
+                                color: textLight,
+                                maxWidth: 300,
+                                overflow: "auto",
+                              }}>
+                                {JSON.stringify(newValuesObj, null, 2)}
+                              </pre>
+                            </details>
+                          );
+                        }
+
+                        // DELETE - Mostrar registro antes de eliminarse
+                        if (log.action === "DELETE" && oldValuesObj) {
+                          return (
+                            <details>
+                              <summary style={{ cursor: "pointer", color: "#f44336", fontSize: 12 }}>
+                                Ver registro eliminado
+                              </summary>
+                              <pre style={{
+                                fontSize: 10,
+                                marginTop: 8,
+                                background: bg,
+                                padding: 8,
+                                borderRadius: 4,
+                                color: textLight,
+                                maxWidth: 300,
+                                overflow: "auto",
+                              }}>
+                                {JSON.stringify(oldValuesObj, null, 2)}
+                              </pre>
+                            </details>
+                          );
+                        }
+
+                        // Sin datos para mostrar
+                        return <span style={{ color: textMuted, fontSize: 11 }}>-</span>;
                       })()}
                     </td>
                     <td style={tdStyle}>
