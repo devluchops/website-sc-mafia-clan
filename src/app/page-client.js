@@ -1566,7 +1566,8 @@ function RosterSection({ members }) {
                   <span>
                     Miembro desde {new Date(m.joinDate).toLocaleDateString('es-PE', {
                       month: 'short',
-                      year: 'numeric'
+                      year: 'numeric',
+                      timeZone: 'America/Lima'
                     })}
                   </span>
                 </div>

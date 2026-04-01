@@ -2284,7 +2284,8 @@ export default function AdminDashboard() {
                         month: '2-digit',
                         year: 'numeric',
                         hour: '2-digit',
-                        minute: '2-digit'
+                        minute: '2-digit',
+                        timeZone: 'America/Lima'
                       })
                     : 'Nunca';
 
@@ -3071,7 +3072,7 @@ export default function AdminDashboard() {
                                     border: `1px solid ${darkGold}`
                                   }}>
                                     <p style={{ color: textMuted, fontSize: 10, marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>🎂 Fecha de Nacimiento</p>
-                                    <p style={{ color: textLight, fontSize: 12, fontWeight: 500 }}>{new Date(member.birth_date).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                                    <p style={{ color: textLight, fontSize: 12, fontWeight: 500 }}>{new Date(member.birth_date).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'America/Lima' })}</p>
                                   </div>
                                 )}
                                 {member.join_date && (
@@ -3082,7 +3083,7 @@ export default function AdminDashboard() {
                                     border: `1px solid ${darkGold}`
                                   }}>
                                     <p style={{ color: textMuted, fontSize: 10, marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>⭐ Ingreso al Clan</p>
-                                    <p style={{ color: gold, fontSize: 12, fontWeight: 500 }}>{new Date(member.join_date).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                                    <p style={{ color: gold, fontSize: 12, fontWeight: 500 }}>{new Date(member.join_date).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'America/Lima' })}</p>
                                   </div>
                                 )}
                               </div>
@@ -3292,7 +3293,7 @@ export default function AdminDashboard() {
                                 }}>
                                   <p style={{ color: textMuted, fontSize: 10, marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>Miembro desde</p>
                                   <p style={{ color: textLight, fontSize: 12, fontWeight: 500 }}>
-                                    {member.created_at ? new Date(member.created_at).toLocaleDateString('es-ES') : "N/A"}
+                                    {member.created_at ? new Date(member.created_at).toLocaleDateString('es-ES', { timeZone: 'America/Lima' }) : "N/A"}
                                   </p>
                                 </div>
                                 <div style={{
@@ -4140,6 +4141,7 @@ export default function AdminDashboard() {
                             day: "numeric",
                             month: "short",
                             year: "numeric",
+                            timeZone: "America/Lima",
                           })}
                         </td>
                         <td style={{ padding: "12px 8px", textAlign: "center" }}>
