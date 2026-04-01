@@ -58,6 +58,13 @@ export const authOptions = {
           `;
         }
 
+        // Actualizar discord_id en discord_authorized_users si existe
+        await sql`
+          UPDATE discord_authorized_users
+          SET discord_id = ${profile.id}, updated_at = NOW()
+          WHERE discord_username = ${profile.username} AND discord_id IS NULL
+        `;
+
         // Permitir acceso si es miembro O usuario autorizado
         const isAllowed = isMember || isAuthorizedUser;
         console.log("Access allowed?", isAllowed);

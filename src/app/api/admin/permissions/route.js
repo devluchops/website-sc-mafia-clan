@@ -27,7 +27,7 @@ export async function GET(request) {
       SELECT
         dau.discord_id,
         dau.discord_username,
-        dau.email,
+        COALESCE(m.email, dau.email) as email,
         m.id as member_id,
         m.name as member_name,
         m.rank as member_rank,
