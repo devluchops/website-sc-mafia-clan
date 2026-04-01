@@ -198,7 +198,7 @@ export async function sendNewPostNotification({
     return;
   }
 
-  const postUrl = `${SITE_URL}/#blog-${postId}`;
+  const postUrl = `${SITE_URL}/#post-${postId}`;
 
   try {
     // Enviar email a cada destinatario
