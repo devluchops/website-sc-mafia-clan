@@ -2899,18 +2899,17 @@ function LandingSections({ posts = [], members = [], videos = [], session, onTab
 export default function PageClient({ initialData = null, initialHash = null }) {
   const { data: session } = useSession();
   const [mounted, setMounted] = useState(false);
-  const [activeTab, setActiveTab] = useState(() => {
-    // Leer el hash de la URL al cargar
-    if (typeof window !== 'undefined') {
-      const hash = window.location.hash.replace('#', '');
-      return hash || "inicio";
-    }
-    return "inicio";
-  });
+  // Default fijo para que el render del servidor coincida con el del cliente
+  // (el hash se lee en el efecto de montaje, abajo).
+  const [activeTab, setActiveTab] = useState("inicio");
 
-  // Esperar a que el componente se monte en el cliente
+  // Esperar a que el componente se monte en el cliente + leer hash (#roster, etc.)
   useEffect(() => {
     setMounted(true);
+    if (typeof window !== "undefined") {
+      const hash = window.location.hash.replace("#", "");
+      if (hash) setActiveTab(hash);
+    }
   }, []);
   const [logoErr, setLogoErr] = useState(false);
   const [data, setData] = useState(initialData);
@@ -3010,8 +3009,9 @@ export default function PageClient({ initialData = null, initialHash = null }) {
     }
   }, []);
 
-  // Esperar a que el componente se monte para evitar hydration mismatch
-  if (!mounted || loading || !data) {
+  // Con initialData (SSR) ya hay contenido; solo mostramos "Cargando" si de
+  // verdad no hay datos todavía.
+  if (loading || !data) {
     return (
       <div
         style={{
