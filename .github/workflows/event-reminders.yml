@@ -1,0 +1,17 @@
+name: Event reminders
+
+# El plan Hobby de Vercel solo permite cron diario, así que disparamos los
+# recordatorios desde GitHub Actions (gratis) cada 15 minutos.
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger reminders endpoint
+        run: |
+          curl -fsS -X GET "https://clanmafia.devluchops.space/api/cron/event-reminders" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
