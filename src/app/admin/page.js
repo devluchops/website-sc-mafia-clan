@@ -644,6 +644,7 @@ export default function AdminDashboard() {
   const [notifResult, setNotifResult] = useState("");
   const [pushCount, setPushCount] = useState(null);
   const [pushLog, setPushLog] = useState([]);
+  const [moreOpen, setMoreOpen] = useState(false);
 
   // Modal states
   const [memberModal, setMemberModal] = useState({ isOpen: false, member: null });
@@ -2281,8 +2282,64 @@ export default function AdminDashboard() {
         </select>
       </nav>
 
+      {/* Barra inferior del admin (móvil) con "Más" */}
+      {(() => {
+        const p = session?.user?.permissions || {};
+        const all = [
+          { id: "info", label: "Info", icon: "info", can: p.is_admin },
+          { id: "members", label: "Miembros", icon: "members", can: p.is_admin || p.can_manage_members },
+          { id: "blog", label: "Blog", icon: "blog", can: p.is_admin || p.can_publish_blog },
+          { id: "events", label: "Eventos", icon: "events", can: p.is_admin || p.can_publish_events },
+          { id: "notifications", label: "Notis", icon: "bell", can: p.is_admin || p.can_publish_events },
+          { id: "rules", label: "Reglas", icon: "rules", can: p.is_admin || p.can_edit_rules },
+          { id: "permissions", label: "Permisos", icon: "key", can: p.is_admin || p.can_manage_permissions },
+          { id: "subscribers", label: "Suscriptores", icon: "mail", can: p.is_admin || p.can_publish_blog },
+          { id: "audit", label: "Audit Log", icon: "log", can: p.is_admin },
+        ].filter((s) => s.can);
+        const primary = all.slice(0, 4);
+        const rest = all.slice(4);
+        const sp = { width: 21, height: 21, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" };
+        const icon = (k) => {
+          if (k === "info") return (<svg {...sp}><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 8h.01" /></svg>);
+          if (k === "members") return (<svg {...sp}><circle cx="9" cy="8" r="3" /><path d="M3.5 20c0-3 2.7-5 5.5-5s5.5 2 5.5 5" /><path d="M16 6a3 3 0 0 1 0 6" /></svg>);
+          if (k === "blog") return (<svg {...sp}><path d="M6 3h9l4 4v14H6z" /><path d="M15 3v5h5M9 13h6M9 17h4" /></svg>);
+          if (k === "events") return (<svg {...sp}><rect x="3" y="4.5" width="18" height="16.5" rx="2" /><path d="M3 9.5h18M8 2.5v4M16 2.5v4" /></svg>);
+          if (k === "bell") return (<svg {...sp}><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6" /><path d="M10 20a2 2 0 0 0 4 0" /></svg>);
+          return (<svg {...sp}><circle cx="5" cy="12" r="1.3" /><circle cx="12" cy="12" r="1.3" /><circle cx="19" cy="12" r="1.3" /></svg>);
+        };
+        const go = (id) => { setActiveSection(id); setMoreOpen(false); if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" }); };
+        return (
+          <>
+            <nav className="admin-bottomnav" style={{ gridTemplateColumns: `repeat(${primary.length + (rest.length ? 1 : 0)}, 1fr)` }}>
+              {primary.map((s) => (
+                <button key={s.id} className={activeSection === s.id ? "active" : ""} onClick={() => go(s.id)}>
+                  {icon(s.icon)}<span>{s.label}</span>
+                </button>
+              ))}
+              {rest.length > 0 && (
+                <button className={rest.some((r) => r.id === activeSection) ? "active" : ""} onClick={() => setMoreOpen(true)}>
+                  {icon("more")}<span>Más</span>
+                </button>
+              )}
+            </nav>
+            <div className={moreOpen ? "admin-more open" : "admin-more"}>
+              <div className="admin-more-backdrop" onClick={() => setMoreOpen(false)}>
+                <div className="admin-more-panel" onClick={(e) => e.stopPropagation()}>
+                  <div className="amp-title">Más secciones</div>
+                  {rest.map((s) => (
+                    <button key={s.id} className={activeSection === s.id ? "active" : ""} onClick={() => go(s.id)}>
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </>
+        );
+      })()}
+
       {/* Main Content */}
-      <main style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 24px" }}>
+      <main className="admin-main-pad" style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 24px" }}>
         {message && (
           <div
             style={{
