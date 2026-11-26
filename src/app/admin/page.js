@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { SocialIcons } from "@/components/SocialIcons";
+import CalendarSection from "@/components/CalendarSection";
 
 const gold = "#ffc24e";
 const darkGold = "#242a38";
@@ -642,6 +643,7 @@ export default function AdminDashboard() {
   const [notifSending, setNotifSending] = useState(false);
   const [notifResult, setNotifResult] = useState("");
   const [pushCount, setPushCount] = useState(null);
+  const [pushLog, setPushLog] = useState([]);
 
   // Modal states
   const [memberModal, setMemberModal] = useState({ isOpen: false, member: null });
@@ -1149,7 +1151,10 @@ export default function AdminDashboard() {
     try {
       const res = await fetch("/api/admin/push");
       const d = await res.json();
-      if (res.ok) setPushCount(d.count);
+      if (res.ok) {
+        setPushCount(d.count);
+        setPushLog(d.log || []);
+      }
     } catch (_e) {}
   };
 
@@ -2029,7 +2034,7 @@ export default function AdminDashboard() {
               Blog
             </button>
           )}
-          {(session?.user?.permissions?.is_admin || session?.user?.permissions?.can_publish_videos) && (
+          {false && (session?.user?.permissions?.is_admin || session?.user?.permissions?.can_publish_videos) && (
             <button
               onClick={() => setActiveSection("videos")}
               style={{
@@ -2051,7 +2056,7 @@ export default function AdminDashboard() {
               Videos
             </button>
           )}
-          {(session?.user?.permissions?.is_admin || session?.user?.permissions?.can_manage_build_orders) && (
+          {false && (session?.user?.permissions?.is_admin || session?.user?.permissions?.can_manage_build_orders) && (
             <button
               onClick={() => setActiveSection("build-orders")}
               style={{
@@ -2095,7 +2100,7 @@ export default function AdminDashboard() {
               Eventos
             </button>
           )}
-          {(session?.user?.permissions?.is_admin || session?.user?.permissions?.can_publish_events) && (
+          {false && (session?.user?.permissions?.is_admin || session?.user?.permissions?.can_publish_events) && (
             <button
               onClick={() => setActiveSection("tournaments")}
               style={{
@@ -3808,6 +3813,10 @@ export default function AdminDashboard() {
           const paginatedEvents = events.slice(startIndex, endIndex);
 
           return (
+            <>
+            <AdminCard title="Calendario" style={{ marginBottom: 24 }}>
+              <CalendarSection events={events} />
+            </AdminCard>
             <AdminCard title="Eventos" style={{ marginBottom: 24 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                 <p style={{ color: textMuted, fontSize: 14 }}>
@@ -3885,6 +3894,7 @@ export default function AdminDashboard() {
                 </div>
               )}
             </AdminCard>
+            </>
           );
         })()}
 
@@ -4388,6 +4398,7 @@ export default function AdminDashboard() {
         {activeSection === "audit" && session?.user?.permissions?.is_admin && <AuditLogSection />}
 
         {activeSection === "notifications" && (session?.user?.permissions?.is_admin || session?.user?.permissions?.can_publish_events) && (
+          <>
           <AdminCard title="Enviar notificación push">
             <p style={{ color: textMuted, fontSize: 13, marginBottom: 16 }}>
               Dispositivos suscritos: <strong style={{ color: gold }}>{pushCount ?? "…"}</strong>.
@@ -4425,6 +4436,32 @@ export default function AdminDashboard() {
               </p>
             </div>
           </AdminCard>
+
+          <AdminCard title="Historial de notificaciones" style={{ marginTop: 20 }}>
+            {pushLog.length === 0 ? (
+              <p style={{ color: textMuted, fontSize: 13 }}>Aún no se han enviado notificaciones.</p>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {pushLog.map((n) => (
+                  <div key={n.id} style={{ background: bg, border: `1px solid ${darkGold}`, borderRadius: 8, padding: 12 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
+                      <strong style={{ color: textLight, fontSize: 14 }}>{n.title}</strong>
+                      <span style={{ color: textMuted, fontSize: 12 }}>
+                        {(() => { try { return new Date(n.created_at).toLocaleString("es-PE", { timeZone: "America/Lima" }); } catch (_e) { return ""; } })()}
+                      </span>
+                    </div>
+                    <p style={{ color: textMuted, fontSize: 13, margin: "4px 0 0" }}>{n.body}</p>
+                    <div style={{ marginTop: 6, fontSize: 11.5, color: textMuted, display: "flex", gap: 12, flexWrap: "wrap" }}>
+                      <span>Por: <strong style={{ color: gold }}>{n.sent_by || "—"}</strong></span>
+                      <span>Tipo: {n.kind}</span>
+                      <span>Enviadas: <strong style={{ color: gold }}>{n.sent}</strong>/{n.total}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </AdminCard>
+          </>
         )}
       </main>
 

@@ -133,12 +133,15 @@ export async function POST(request) {
       const when = event_date
         ? ` · ${deriveMonthDay(event_date).day} ${deriveMonthDay(event_date).month}${event_time ? " " + event_time : ""}`
         : "";
-      await sendPushToAll({
-        title: `${typeLabel}: ${title}`,
-        body: (description ? description.slice(0, 120) : "Nuevo evento del clan") + when,
-        url: "/#events",
-        tag: `event-${newEvent.id}`,
-      });
+      await sendPushToAll(
+        {
+          title: `${typeLabel}: ${title}`,
+          body: (description ? description.slice(0, 120) : "Nuevo evento del clan") + when,
+          url: "/#events",
+          tag: `event-${newEvent.id}`,
+        },
+        { kind: "evento", sentBy: session.user?.discordUsername || session.user?.name || "admin" }
+      );
     } catch (e) {
       console.error("Push de evento falló:", e.message);
     }

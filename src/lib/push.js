@@ -61,16 +61,40 @@ export async function countSubscriptions() {
   return row?.n || 0;
 }
 
+// Historial de notificaciones enviadas
+export async function ensurePushLogTable(sql) {
+  await sql`
+    CREATE TABLE IF NOT EXISTS push_log (
+      id SERIAL PRIMARY KEY,
+      title TEXT,
+      body TEXT,
+      url TEXT,
+      kind VARCHAR(40) DEFAULT 'manual',
+      sent_by VARCHAR(255),
+      sent INTEGER DEFAULT 0,
+      removed INTEGER DEFAULT 0,
+      total INTEGER DEFAULT 0,
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `;
+}
+
+export async function getPushLog(limit = 30) {
+  const sql = getDb();
+  await ensurePushLogTable(sql);
+  return await sql`SELECT * FROM push_log ORDER BY created_at DESC LIMIT ${limit}`;
+}
+
 /**
  * Envía una push a TODOS los dispositivos suscritos.
  * payload: { title, body, url?, icon?, image?, tag? }
  * Limpia automáticamente las suscripciones muertas (404/410).
  */
-export async function sendPushToAll(payload) {
+export async function sendPushToAll(payload, meta = {}) {
+  const sql = getDb();
   if (!configure()) {
     return { ok: false, sent: 0, error: "VAPID no configurado" };
   }
-  const sql = getDb();
   await ensurePushTable(sql);
   const subs = await sql`SELECT * FROM push_subscriptions`;
   const body = JSON.stringify(payload);
@@ -94,6 +118,18 @@ export async function sendPushToAll(payload) {
       }
     })
   );
+
+  // Registrar en el historial (no bloquea si falla)
+  try {
+    await ensurePushLogTable(sql);
+    await sql`
+      INSERT INTO push_log (title, body, url, kind, sent_by, sent, removed, total)
+      VALUES (${payload.title || ""}, ${payload.body || ""}, ${payload.url || null},
+              ${meta.kind || "manual"}, ${meta.sentBy || null}, ${sent}, ${removed}, ${subs.length})
+    `;
+  } catch (e) {
+    console.error("No se pudo registrar el log de push:", e.message);
+  }
 
   return { ok: true, sent, removed, total: subs.length };
 }
