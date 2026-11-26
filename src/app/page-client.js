@@ -2709,6 +2709,17 @@ const TABS = [
   // Ocultos (no en uso): videos, tournaments, build-orders — se maneja todo por Eventos
 ];
 
+// Íconos de la barra inferior (móvil)
+function navIcon(id) {
+  const p = { width: 22, height: 22, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" };
+  if (id === "inicio") return (<svg {...p}><path d="M3 10.5 12 3l9 7.5" /><path d="M5 9.8V21h14V9.8" /></svg>);
+  if (id === "blog") return (<svg {...p}><path d="M6 3h9l4 4v14H6z" /><path d="M15 3v5h5" /><path d="M9 13h6M9 17h4" /></svg>);
+  if (id === "roster") return (<svg {...p}><circle cx="9" cy="8" r="3" /><path d="M3.5 20c0-3 2.7-5 5.5-5s5.5 2 5.5 5" /><path d="M16 6a3 3 0 0 1 0 6" /><path d="M20.5 20c0-2.3-1.6-4-3.8-4.7" /></svg>);
+  if (id === "events") return (<svg {...p}><rect x="3" y="4.5" width="18" height="16.5" rx="2" /><path d="M3 9.5h18M8 2.5v4M16 2.5v4" /></svg>);
+  if (id === "rules") return (<svg {...p}><path d="M12 3l7 3v5c0 4.6-3 7.6-7 9-4-1.4-7-4.4-7-9V6z" /></svg>);
+  return null;
+}
+
 // ============================================================
 //  LANDING (home "inicio") — teasers de cada sección
 // ============================================================
@@ -3339,11 +3350,29 @@ export default function PageClient({ initialData = null, initialHash = null }) {
         </p>
       </footer>
 
+      {/* Barra de navegación inferior (solo móvil) */}
+      <nav className="lz-bottomnav">
+        {TABS.map((t) => (
+          <button
+            key={t.id}
+            className={activeTab === t.id ? "active" : ""}
+            onClick={() => {
+              setActiveTab(t.id);
+              if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+          >
+            {navIcon(t.id)}
+            <span>{t.label}</span>
+          </button>
+        ))}
+      </nav>
+
       {/* Floating Join Button */}
       {/* Botón Únete al Clan - Solo para usuarios no autenticados */}
       {!session && (
         <>
           <button
+            className="lz-floating-join"
             onClick={() => setJoinModalOpen(true)}
             style={{
               position: "fixed",
