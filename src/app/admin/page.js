@@ -1968,7 +1968,7 @@ export default function AdminDashboard() {
           WebkitOverflowScrolling: "touch",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-start", gap: 4, padding: "0 16px", flexWrap: "nowrap", width: "max-content", minWidth: "100%" }}>
+        <div className="admin-nav-tabs" style={{ display: "flex", alignItems: "center", justifyContent: "flex-start", gap: 4, padding: "0 16px", flexWrap: "nowrap", width: "max-content", minWidth: "100%" }}>
           {session?.user?.permissions?.is_admin && (
             <button
               onClick={() => setActiveSection("info")}
@@ -2234,6 +2234,51 @@ export default function AdminDashboard() {
             </button>
           )}
         </div>
+
+        {/* Selector de sección (solo móvil / PWA) */}
+        <select
+          className="admin-nav-select"
+          value={activeSection}
+          onChange={(e) => setActiveSection(e.target.value)}
+          style={{
+            width: "100%",
+            padding: "14px 16px",
+            background: "#0b0d14",
+            color: gold,
+            border: "none",
+            fontFamily: "'Oxanium', sans-serif",
+            fontSize: 14,
+            fontWeight: 600,
+            letterSpacing: 1,
+            textTransform: "uppercase",
+            outline: "none",
+            appearance: "none",
+            backgroundImage:
+              "url(\"data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23ffc24e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E\")",
+            backgroundRepeat: "no-repeat",
+            backgroundPosition: "right 16px center",
+          }}
+        >
+          {(() => {
+            const p = session?.user?.permissions || {};
+            const items = [
+              { id: "info", label: "Información", can: p.is_admin },
+              { id: "members", label: "Miembros", can: p.is_admin || p.can_manage_members },
+              { id: "blog", label: "Blog", can: p.is_admin || p.can_publish_blog },
+              { id: "events", label: "Eventos", can: p.is_admin || p.can_publish_events },
+              { id: "rules", label: "Reglas", can: p.is_admin || p.can_edit_rules },
+              { id: "permissions", label: "Permisos", can: p.is_admin || p.can_manage_permissions },
+              { id: "subscribers", label: "Suscriptores", can: p.is_admin || p.can_publish_blog },
+              { id: "audit", label: "Audit Log", can: p.is_admin },
+              { id: "notifications", label: "Notificaciones", can: p.is_admin || p.can_publish_events },
+            ];
+            return items.filter((s) => s.can).map((s) => (
+              <option key={s.id} value={s.id} style={{ background: "#0b0d14", color: "#eef1f8" }}>
+                {s.label}
+              </option>
+            ));
+          })()}
+        </select>
       </nav>
 
       {/* Main Content */}

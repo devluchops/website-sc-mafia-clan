@@ -397,3 +397,10 @@ html {
 .pushctl-chip { font-family: 'Oxanium', sans-serif; font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--text-muted); cursor: pointer; transition: all .15s; }
 .pushctl-chip:hover { border-color: var(--gold); color: var(--text-light); }
 .pushctl-chip.on { color: #15110a; background: linear-gradient(135deg, var(--gold-hi), var(--gold)); border-color: transparent; }
+
+/* --- admin: selector de sección en móvil (en vez de pestañas) --- */
+.admin-nav-select { display: none; }
+@media (max-width: 768px) {
+  .admin-nav-tabs { display: none !important; }
+  .admin-nav-select { display: block !important; }
+}
