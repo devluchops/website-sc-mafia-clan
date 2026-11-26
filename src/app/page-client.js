@@ -224,7 +224,7 @@ function Avatar({ name, race, avatar, size = 48 }) {
           background: rc.bg,
         }}
       >
-        <img
+        <img loading="lazy" decoding="async"
           src={imageSrc}
           alt={name}
           onError={() => setErr(true)}
@@ -307,16 +307,15 @@ function SectionTitle({ children }) {
     <h2
       style={{
         fontFamily: "'Oxanium', sans-serif",
-        fontSize: 18,
-        fontWeight: 600,
-        letterSpacing: 3.5,
+        fontSize: "clamp(24px, 5vw, 34px)",
+        fontWeight: 800,
+        letterSpacing: "0.02em",
         textTransform: "uppercase",
-        color: gold,
+        color: textLight,
         marginBottom: 24,
-        paddingBottom: 12,
-        borderBottom: `1px solid ${darkGold}`,
       }}
     >
+      <span style={{ color: gold, marginRight: 10 }}>//</span>
       {children}
     </h2>
   );
@@ -447,7 +446,7 @@ function BlogPost({ post, session, onViewFull }) {
           }}
           onClick={onViewFull}
         >
-          <img
+          <img loading="lazy" decoding="async"
             src={post.image}
             alt={post.title}
             style={{
@@ -486,7 +485,7 @@ function BlogPost({ post, session, onViewFull }) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           {post.created_by_member_avatar && (
-            <img
+            <img loading="lazy" decoding="async"
               src={post.created_by_member_avatar}
               alt={post.created_by_member_name}
               style={{
@@ -1139,7 +1138,7 @@ function BlogSection({ posts }) {
                   justifyContent: "center",
                 }}
               >
-                <img
+                <img loading="lazy" decoding="async"
                   src={selectedPost.image}
                   alt={selectedPost.title}
                   style={{
@@ -1169,7 +1168,7 @@ function BlogSection({ posts }) {
 
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 24 }}>
               {selectedPost.created_by_member_avatar && (
-                <img
+                <img loading="lazy" decoding="async"
                   src={selectedPost.created_by_member_avatar}
                   alt={selectedPost.created_by_member_name}
                   style={{
@@ -2764,7 +2763,7 @@ function LandingSections({ posts = [], members = [], videos = [], session, onTab
                 <article key={p.id} className="lz-card" onClick={() => onTab("blog")}>
                   <div className="lz-thumb">
                     {p.image ? (
-                      <img src={p.image} alt={p.title} />
+                      <img loading="lazy" decoding="async" src={p.image} alt={p.title} />
                     ) : (
                       <span className="glyph">{(p.title || "M")[0]}</span>
                     )}
@@ -2844,7 +2843,7 @@ function LandingSections({ posts = [], members = [], videos = [], session, onTab
                     onClick={() => (url ? window.open(url, "_blank") : onTab("videos"))}
                   >
                     <div className="lz-thumb">
-                      {thumb ? <img src={thumb} alt={v.title || "video"} /> : <span className="glyph">▶</span>}
+                      {thumb ? <img loading="lazy" decoding="async" src={thumb} alt={v.title || "video"} /> : <span className="glyph">▶</span>}
                     </div>
                     {v.title && (
                       <div className="lz-cbody">
@@ -3057,7 +3056,7 @@ export default function PageClient({ initialData = null, initialHash = null }) {
             style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
           >
             {!logoErr ? (
-              <img src={clan.logo} alt={clan.name} onError={() => setLogoErr(true)} />
+              <img loading="lazy" decoding="async" src={clan.logo} alt={clan.name} onError={() => setLogoErr(true)} />
             ) : (
               <span
                 style={{
