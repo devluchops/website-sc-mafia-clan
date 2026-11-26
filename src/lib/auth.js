@@ -7,6 +7,10 @@ export const authOptions = {
     DiscordProvider({
       clientId: process.env.DISCORD_CLIENT_ID,
       clientSecret: process.env.DISCORD_CLIENT_SECRET,
+      // Discord ahora envía el parámetro `iss` en el callback y openid-client
+      // (next-auth v4) lo rechaza si el provider no declara su issuer.
+      // Bug upstream: nextauthjs/next-auth#12694
+      issuer: "https://discord.com",
     }),
   ],
   callbacks: {
