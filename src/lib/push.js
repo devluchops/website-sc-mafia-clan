@@ -1,5 +1,8 @@
-import webpush from "web-push";
+import * as webpushImport from "web-push";
 import { getDb } from "@/lib/db";
+
+// web-push es CommonJS: según el bundle, el default puede venir en .default
+const webpush = webpushImport.default || webpushImport;
 
 let configured = false;
 
