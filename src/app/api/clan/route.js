@@ -92,6 +92,10 @@ export async function GET() {
         status: e.status,
         date: e.date,
         link: e.link,
+        event_date: e.event_date,
+        event_time: e.event_time,
+        event_type: e.event_type,
+        remind_before_min: e.remind_before_min,
       })),
       rules: rules.map(r => ({
         category: r.category,

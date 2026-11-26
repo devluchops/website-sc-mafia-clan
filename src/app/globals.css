@@ -352,3 +352,27 @@ html {
   .lz-notif { grid-template-columns: 1fr; }
   .pushctl-row { justify-content: flex-start; }
 }
+
+/* --- barra de navegación inferior (móvil, estilo app) --- */
+.lz-bottomnav { display: none; }
+.lz-bottomnav button {
+  background: none; border: none; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 9px 2px 6px; color: var(--text-muted);
+  font-family: 'Oxanium', sans-serif; font-size: 10px; font-weight: 600;
+  letter-spacing: 0.03em; text-transform: uppercase;
+}
+.lz-bottomnav button.active { color: var(--gold); }
+.lz-bottomnav svg { width: 22px; height: 22px; }
+@media (max-width: 900px) {
+  .lz-bottomnav {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
+    background: rgba(9,9,11,0.96); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    border-top: 1px solid var(--line);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  body { padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px)); }
+  .lz-floating-join { display: none !important; }
+}
