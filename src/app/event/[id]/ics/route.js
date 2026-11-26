@@ -27,7 +27,9 @@ function esc(s) {
 export async function GET(_req, { params }) {
   try {
     const sql = getDb();
-    const [ev] = await sql`SELECT * FROM events WHERE id = ${params.id}`;
+    const eventId = parseInt(params.id, 10);
+    if (!eventId) return new Response("ID inválido", { status: 400 });
+    const [ev] = await sql`SELECT * FROM events WHERE id = ${eventId}`;
     if (!ev || !ev.event_date) {
       return new Response("Evento sin fecha", { status: 404 });
     }
