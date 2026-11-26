@@ -389,3 +389,11 @@ html {
   .lz-livecard { padding: 16px; }
   .lz-sechead h2 { font-size: clamp(26px, 8vw, 34px); }
 }
+
+/* --- chips de preferencias de notificación --- */
+.pushctl-topics { margin-top: 14px; }
+.pushctl-topics-label { font-family: 'Oxanium', sans-serif; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 8px; }
+.pushctl-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.pushctl-chip { font-family: 'Oxanium', sans-serif; font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--text-muted); cursor: pointer; transition: all .15s; }
+.pushctl-chip:hover { border-color: var(--gold); color: var(--text-light); }
+.pushctl-chip.on { color: #15110a; background: linear-gradient(135deg, var(--gold-hi), var(--gold)); border-color: transparent; }

@@ -139,6 +139,7 @@ export async function POST(request) {
           body: (description ? description.slice(0, 120) : "Nuevo evento del clan") + when,
           url: "/#events",
           tag: `event-${newEvent.id}`,
+          topic: event_type,
         },
         { kind: "evento", sentBy: session.user?.discordUsername || session.user?.name || "admin" }
       );

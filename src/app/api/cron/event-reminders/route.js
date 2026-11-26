@@ -81,6 +81,7 @@ export async function GET(request) {
             body: `${leadTxt}${ev.event_time ? " · " + ev.event_time : ""}`,
             url: "/#events",
             tag: `event-reminder-${ev.id}`,
+            topic: ev.event_type,
           });
           await sql`UPDATE events SET reminded_at = NOW() WHERE id = ${ev.id}`;
           sent.push({ id: ev.id, title: ev.title });

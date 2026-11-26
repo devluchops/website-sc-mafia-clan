@@ -33,7 +33,7 @@ export async function POST(request) {
     }
     const sentBy = session.user?.discordUsername || session.user?.name || session.user?.email || "admin";
     const result = await sendPushToAll(
-      { title, body, url: url || "/", tag: "anuncio" },
+      { title, body, url: url || "/", tag: "anuncio", topic: "anuncio" },
       { kind: "manual", sentBy }
     );
     return NextResponse.json(result);

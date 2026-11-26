@@ -29,9 +29,11 @@ export async function ensurePushTable(sql) {
       created_at TIMESTAMP DEFAULT NOW()
     )
   `;
+  // topics = CSV de temas elegidos; NULL/'' = recibe todo
+  await sql`ALTER TABLE push_subscriptions ADD COLUMN IF NOT EXISTS topics TEXT`;
 }
 
-export async function saveSubscription(subscription, userAgent) {
+export async function saveSubscription(subscription, userAgent, topics) {
   const sql = getDb();
   await ensurePushTable(sql);
   const { endpoint } = subscription;
@@ -40,11 +42,12 @@ export async function saveSubscription(subscription, userAgent) {
   if (!endpoint || !p256dh || !auth) {
     throw new Error("Suscripción inválida");
   }
+  const topicsCsv = Array.isArray(topics) && topics.length ? topics.join(",") : null;
   await sql`
-    INSERT INTO push_subscriptions (endpoint, p256dh, auth, user_agent)
-    VALUES (${endpoint}, ${p256dh}, ${auth}, ${userAgent || null})
+    INSERT INTO push_subscriptions (endpoint, p256dh, auth, user_agent, topics)
+    VALUES (${endpoint}, ${p256dh}, ${auth}, ${userAgent || null}, ${topicsCsv})
     ON CONFLICT (endpoint)
-    DO UPDATE SET p256dh = ${p256dh}, auth = ${auth}, user_agent = ${userAgent || null}
+    DO UPDATE SET p256dh = ${p256dh}, auth = ${auth}, user_agent = ${userAgent || null}, topics = ${topicsCsv}
   `;
 }
 
@@ -97,13 +100,23 @@ export async function sendPushToAll(payload, meta = {}) {
   }
   await ensurePushTable(sql);
   const subs = await sql`SELECT * FROM push_subscriptions`;
+
+  // Filtrar por tema: una suscripción sin temas (NULL) recibe todo
+  const topic = payload.topic || null;
+  const targets = topic
+    ? subs.filter((s) => {
+        if (!s.topics) return true;
+        return s.topics.split(",").map((t) => t.trim()).filter(Boolean).includes(topic);
+      })
+    : subs;
+
   const body = JSON.stringify(payload);
 
   let sent = 0;
   let removed = 0;
 
   await Promise.all(
-    subs.map(async (s) => {
+    targets.map(async (s) => {
       try {
         await webpush.sendNotification(
           { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },

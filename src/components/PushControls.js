@@ -13,6 +13,14 @@ function urlBase64ToUint8Array(base64String) {
 
 const VAPID = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
 
+const PUSH_TOPICS = [
+  { key: "showmatch", label: "Showmatches" },
+  { key: "partida", label: "Partidas" },
+  { key: "torneo", label: "Torneos" },
+  { key: "reunion", label: "Reuniones" },
+  { key: "anuncio", label: "Anuncios" },
+];
+
 export default function PushControls({ compact = false }) {
   const [supported, setSupported] = useState(true);
   const [permission, setPermission] = useState("default");
@@ -22,6 +30,8 @@ export default function PushControls({ compact = false }) {
   const [installEvent, setInstallEvent] = useState(null);
   const [installed, setInstalled] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
+  const [subObj, setSubObj] = useState(null);
+  const [topics, setTopics] = useState(PUSH_TOPICS.map((t) => t.key));
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -43,7 +53,7 @@ export default function PushControls({ compact = false }) {
     if (okPush) {
       navigator.serviceWorker.ready
         .then((reg) => reg.pushManager.getSubscription())
-        .then((sub) => setSubscribed(!!sub))
+        .then((sub) => { setSubscribed(!!sub); setSubObj(sub || null); })
         .catch(() => {});
     }
 
@@ -97,11 +107,12 @@ export default function PushControls({ compact = false }) {
       const res = await fetch("/api/push/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(sub),
+        body: JSON.stringify({ subscription: sub, topics }),
       });
       if (!res.ok) throw new Error("No se pudo guardar la suscripción");
+      setSubObj(sub);
       setSubscribed(true);
-      setMsg("¡Listo! Te avisaremos de showmatches, torneos y anuncios.");
+      setMsg("¡Listo! Elige abajo qué avisos quieres recibir.");
     } catch (err) {
       setMsg("Error activando notificaciones: " + err.message);
     } finally {
@@ -139,6 +150,19 @@ export default function PushControls({ compact = false }) {
       await installEvent.userChoice;
     } catch (_e) {}
     setInstallEvent(null);
+  };
+
+  const toggleTopic = async (key) => {
+    const next = topics.includes(key) ? topics.filter((t) => t !== key) : [...topics, key];
+    setTopics(next);
+    if (!subObj) return;
+    try {
+      await fetch("/api/push/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subscription: subObj, topics: next }),
+      });
+    } catch (_e) {}
   };
 
   const showInstall = !installed && (installEvent || isIOS);
@@ -180,6 +204,27 @@ export default function PushControls({ compact = false }) {
       )}
 
       {msg && <p className="pushctl-msg">{msg}</p>}
+
+      {subscribed && (
+        <div className="pushctl-topics">
+          <span className="pushctl-topics-label">Quiero recibir:</span>
+          <div className="pushctl-chips">
+            {PUSH_TOPICS.map((t) => {
+              const on = topics.includes(t.key);
+              return (
+                <button
+                  key={t.key}
+                  type="button"
+                  className={on ? "pushctl-chip on" : "pushctl-chip"}
+                  onClick={() => toggleTopic(t.key)}
+                >
+                  {on ? "✓ " : ""}{t.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
