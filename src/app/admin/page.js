@@ -1965,9 +1965,10 @@ export default function AdminDashboard() {
           background: "#0b0d14",
           borderBottom: `1px solid ${darkGold}`,
           overflowX: "auto",
+          WebkitOverflowScrolling: "touch",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, padding: "0 24px", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-start", gap: 4, padding: "0 16px", flexWrap: "nowrap", width: "max-content", minWidth: "100%" }}>
           {session?.user?.permissions?.is_admin && (
             <button
               onClick={() => setActiveSection("info")}
