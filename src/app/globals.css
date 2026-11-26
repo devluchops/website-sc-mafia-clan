@@ -399,8 +399,42 @@ html {
 .pushctl-chip.on { color: #15110a; background: linear-gradient(135deg, var(--gold-hi), var(--gold)); border-color: transparent; }
 
 /* --- admin: selector de sección en móvil (en vez de pestañas) --- */
-.admin-nav-select { display: none; }
+.admin-nav-select { display: none !important; }
+
+/* admin: barra inferior con "Más" en móvil */
+.admin-bottomnav { display: none; }
+.admin-more { display: none; }
+.admin-bottomnav button {
+  background: none; border: none; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 9px 2px 6px; color: var(--text-muted);
+  font-family: 'Oxanium', sans-serif; font-size: 10px; font-weight: 600;
+  letter-spacing: 0.03em; text-transform: uppercase;
+}
+.admin-bottomnav button.active { color: var(--gold); }
+.admin-bottomnav svg { width: 21px; height: 21px; }
+.admin-more-backdrop { position: fixed; inset: 0; z-index: 70; background: rgba(0,0,0,0.6); }
+.admin-more-panel {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  background: var(--panel-2); border-top: 1px solid var(--line);
+  border-radius: 16px 16px 0 0;
+  padding: 10px 16px calc(14px + env(safe-area-inset-bottom, 0px));
+}
+.admin-more-panel .amp-title { font-family: 'Oxanium', sans-serif; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-muted); padding: 10px 6px 6px; }
+.admin-more-panel button {
+  display: block; width: 100%; text-align: left; background: none; border: none;
+  border-top: 1px solid var(--line-2); padding: 15px 6px;
+  color: var(--text-light); font-family: 'Oxanium', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer;
+}
+.admin-more-panel button.active { color: var(--gold); }
 @media (max-width: 768px) {
   .admin-nav-tabs { display: none !important; }
-  .admin-nav-select { display: block !important; }
+  .admin-bottomnav {
+    display: grid; position: fixed; left: 0; right: 0; bottom: 0; z-index: 60;
+    background: rgba(9,9,11,0.97); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    border-top: 1px solid var(--line);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .admin-more.open { display: block; }
+  .admin-main-pad { padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px)) !important; }
 }
