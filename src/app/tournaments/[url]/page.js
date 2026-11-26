@@ -7,13 +7,13 @@ import Link from "next/link";
 // Forzar renderizado dinámico (no pre-renderizar)
 export const dynamic = 'force-dynamic';
 
-const gold = "#c9a84c";
-const darkGold = "#3d3525";
-const cardBg = "#252220";
-const bg = "#1e1b18";
-const textMuted = "#8b7b5e";
-const textLight = "#e8dcc0";
-const textBody = "#d4c5a0";
+const gold = "#ffc24e";
+const darkGold = "#242a38";
+const cardBg = "#141826";
+const bg = "#090a0f";
+const textMuted = "#8690a6";
+const textLight = "#eef1f8";
+const textBody = "#c3cad9";
 
 export default function TournamentPage() {
   const params = useParams();
@@ -40,7 +40,7 @@ export default function TournamentPage() {
   if (loading) {
     return (
       <div style={{ minHeight: "100vh", background: bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <p style={{ color: textMuted, fontFamily: "'Cinzel', serif", letterSpacing: 2 }}>Cargando...</p>
+        <p style={{ color: textMuted, fontFamily: "'Oxanium', sans-serif", letterSpacing: 2 }}>Cargando...</p>
       </div>
     );
   }
@@ -68,9 +68,9 @@ export default function TournamentPage() {
   };
 
   const stateColors = {
-    pending: { bg: "rgba(201,168,76,0.1)", text: gold },
+    pending: { bg: "rgba(255,194,78,0.1)", text: gold },
     underway: { bg: "rgba(76,201,130,0.1)", text: "#4cc982" },
-    awaiting_review: { bg: "rgba(100,160,200,0.1)", text: "#7ab8d4" },
+    awaiting_review: { bg: "rgba(78,168,255,0.1)", text: "#4ea8ff" },
     complete: { bg: "rgba(139,92,92,0.1)", text: "#c9a08a" }
   };
 
@@ -89,7 +89,7 @@ export default function TournamentPage() {
             ← Volver a Torneos
           </Link>
           <h1 style={{
-            fontFamily: "'Cinzel', serif",
+            fontFamily: "'Oxanium', sans-serif",
             fontSize: 32,
             fontWeight: 700,
             color: gold,
@@ -132,7 +132,7 @@ export default function TournamentPage() {
             padding: 24,
             marginBottom: 24,
           }}>
-            <h2 style={{ color: gold, fontSize: 18, marginBottom: 12, fontFamily: "'Cinzel', serif" }}>Descripción</h2>
+            <h2 style={{ color: gold, fontSize: 18, marginBottom: 12, fontFamily: "'Oxanium', sans-serif" }}>Descripción</h2>
             <p style={{ color: textBody, fontSize: 15, lineHeight: 1.8, margin: 0 }}>
               {t.description}
             </p>
@@ -148,7 +148,7 @@ export default function TournamentPage() {
             padding: 24,
             marginBottom: 24,
           }}>
-            <h2 style={{ color: gold, fontSize: 18, marginBottom: 16, fontFamily: "'Cinzel', serif" }}>
+            <h2 style={{ color: gold, fontSize: 18, marginBottom: 16, fontFamily: "'Oxanium', sans-serif" }}>
               Participantes ({t.participants.length})
             </h2>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 12 }}>
@@ -170,7 +170,7 @@ export default function TournamentPage() {
                           fontSize: 11,
                           color: gold,
                           fontWeight: 700,
-                          background: "rgba(201,168,76,0.1)",
+                          background: "rgba(255,194,78,0.1)",
                           padding: "4px 8px",
                           borderRadius: 4
                         }}>
@@ -196,7 +196,7 @@ export default function TournamentPage() {
           padding: 24,
           marginBottom: 24,
         }}>
-          <h2 style={{ color: gold, fontSize: 18, marginBottom: 16, fontFamily: "'Cinzel', serif" }}>Bracket</h2>
+          <h2 style={{ color: gold, fontSize: 18, marginBottom: 16, fontFamily: "'Oxanium', sans-serif" }}>Bracket</h2>
           {t.full_challonge_url ? (
             <div style={{
               background: "#fff",
@@ -236,7 +236,7 @@ export default function TournamentPage() {
               fontSize: 14,
               fontWeight: 600,
               textDecoration: "none",
-              fontFamily: "'Cinzel', serif",
+              fontFamily: "'Oxanium', sans-serif",
               letterSpacing: 1,
               textTransform: "uppercase",
             }}

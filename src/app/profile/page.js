@@ -6,12 +6,12 @@ import { useRouter } from "next/navigation";
 import { SocialIcons } from "@/components/SocialIcons";
 
 // Theme colors
-const gold = "#c9a84c";
-const darkGold = "#3d3525";
-const cardBg = "#252220";
-const textMuted = "#8b7b5e";
-const textLight = "#e8dcc0";
-const bg = "#1e1b18";
+const gold = "#ffc24e";
+const darkGold = "#242a38";
+const cardBg = "#141826";
+const textMuted = "#8690a6";
+const textLight = "#eef1f8";
+const bg = "#090a0f";
 
 export default function ProfilePage() {
   const { data: session, status } = useSession();
@@ -101,7 +101,7 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div style={{ minHeight: "100vh", background: bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <p style={{ color: textMuted, fontFamily: "'Cinzel', serif", letterSpacing: 2 }}>Cargando...</p>
+        <p style={{ color: textMuted, fontFamily: "'Oxanium', sans-serif", letterSpacing: 2 }}>Cargando...</p>
       </div>
     );
   }
@@ -119,7 +119,7 @@ export default function ProfilePage() {
               padding: "0.5rem 1rem",
               cursor: "pointer",
               borderRadius: "4px",
-              fontFamily: "'Cinzel', serif",
+              fontFamily: "'Oxanium', sans-serif",
               fontSize: 12,
               letterSpacing: 1.5,
               textTransform: "uppercase",
@@ -128,7 +128,7 @@ export default function ProfilePage() {
           >
             ← Volver
           </button>
-          <h1 style={{ fontFamily: "'Cinzel', serif", fontSize: "2rem", marginBottom: "1rem", color: gold }}>Mi Perfil</h1>
+          <h1 style={{ fontFamily: "'Oxanium', sans-serif", fontSize: "2rem", marginBottom: "1rem", color: gold }}>Mi Perfil</h1>
           <div style={{
             background: "rgba(201, 76, 76, 0.1)",
             border: "1px solid rgba(201, 76, 76, 0.3)",
@@ -153,7 +153,7 @@ export default function ProfilePage() {
         <div style={{ maxWidth: 1000, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
           <div>
             <h1 style={{
-              fontFamily: "'Cinzel', serif",
+              fontFamily: "'Oxanium', sans-serif",
               fontSize: 24,
               fontWeight: 700,
               color: gold,
@@ -175,7 +175,7 @@ export default function ProfilePage() {
               padding: "10px 20px",
               cursor: "pointer",
               borderRadius: 6,
-              fontFamily: "'Cinzel', serif",
+              fontFamily: "'Oxanium', sans-serif",
               fontSize: 12,
               fontWeight: 600,
               letterSpacing: 1.5,
@@ -212,7 +212,7 @@ export default function ProfilePage() {
           marginBottom: 24,
         }}>
           <h2 style={{
-            fontFamily: "'Cinzel', serif",
+            fontFamily: "'Oxanium', sans-serif",
             fontSize: 18,
             fontWeight: 600,
             color: gold,
@@ -284,17 +284,17 @@ export default function ProfilePage() {
           <div style={{ marginTop: 20, paddingTop: 20, borderTop: `1px solid ${darkGold}` }}>
             <p style={{ fontSize: 12, color: textMuted, marginBottom: 12, letterSpacing: 1 }}>NIVELES POR RAZA</p>
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-              <div style={{ flex: 1, minWidth: 100, textAlign: "center", background: "rgba(201,168,76,0.08)", padding: 12, borderRadius: 6, border: `1px solid rgba(201,168,76,0.2)` }}>
+              <div style={{ flex: 1, minWidth: 100, textAlign: "center", background: "rgba(255,194,78,0.08)", padding: 12, borderRadius: 6, border: `1px solid rgba(255,194,78,0.2)` }}>
                 <p style={{ fontSize: 10, color: gold, margin: 0, marginBottom: 4, letterSpacing: 1 }}>PROTOSS</p>
                 <p style={{ fontSize: 20, color: gold, fontWeight: 700, margin: 0 }}>{member.protoss_level || '-'}</p>
               </div>
-              <div style={{ flex: 1, minWidth: 100, textAlign: "center", background: "rgba(100,160,200,0.08)", padding: 12, borderRadius: 6, border: `1px solid rgba(100,160,200,0.2)` }}>
-                <p style={{ fontSize: 10, color: "#7ab8d4", margin: 0, marginBottom: 4, letterSpacing: 1 }}>TERRAN</p>
-                <p style={{ fontSize: 20, color: "#7ab8d4", fontWeight: 700, margin: 0 }}>{member.terran_level || '-'}</p>
+              <div style={{ flex: 1, minWidth: 100, textAlign: "center", background: "rgba(78,168,255,0.08)", padding: 12, borderRadius: 6, border: `1px solid rgba(78,168,255,0.2)` }}>
+                <p style={{ fontSize: 10, color: "#4ea8ff", margin: 0, marginBottom: 4, letterSpacing: 1 }}>TERRAN</p>
+                <p style={{ fontSize: 20, color: "#4ea8ff", fontWeight: 700, margin: 0 }}>{member.terran_level || '-'}</p>
               </div>
-              <div style={{ flex: 1, minWidth: 100, textAlign: "center", background: "rgba(160,100,180,0.08)", padding: 12, borderRadius: 6, border: `1px solid rgba(160,100,180,0.2)` }}>
-                <p style={{ fontSize: 10, color: "#c09ad8", margin: 0, marginBottom: 4, letterSpacing: 1 }}>ZERG</p>
-                <p style={{ fontSize: 20, color: "#c09ad8", fontWeight: 700, margin: 0 }}>{member.zerg_level || '-'}</p>
+              <div style={{ flex: 1, minWidth: 100, textAlign: "center", background: "rgba(176,124,255,0.08)", padding: 12, borderRadius: 6, border: `1px solid rgba(176,124,255,0.2)` }}>
+                <p style={{ fontSize: 10, color: "#b07cff", margin: 0, marginBottom: 4, letterSpacing: 1 }}>ZERG</p>
+                <p style={{ fontSize: 20, color: "#b07cff", fontWeight: 700, margin: 0 }}>{member.zerg_level || '-'}</p>
               </div>
             </div>
           </div>
@@ -308,7 +308,7 @@ export default function ProfilePage() {
           padding: 24,
         }}>
           <h3 style={{
-            fontFamily: "'Cinzel', serif",
+            fontFamily: "'Oxanium', sans-serif",
             fontSize: 18,
             fontWeight: 600,
             color: gold,
@@ -500,7 +500,7 @@ export default function ProfilePage() {
               border: "none",
               borderRadius: 6,
               cursor: saving ? "not-allowed" : "pointer",
-              fontFamily: "'Cinzel', serif",
+              fontFamily: "'Oxanium', sans-serif",
               fontWeight: 600,
               fontSize: 14,
               letterSpacing: 1.5,

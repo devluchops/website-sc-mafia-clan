@@ -2,12 +2,12 @@
 
 import { useState } from 'react';
 
-const gold = "#c9a84c";
-const darkGold = "#3d3525";
-const bg = "#1e1b18";
-const cardBg = "#252220";
-const textLight = "#e8dcc0";
-const textMuted = "#8b7b5e";
+const gold = "#ffc24e";
+const darkGold = "#242a38";
+const bg = "#090a0f";
+const cardBg = "#141826";
+const textLight = "#eef1f8";
+const textMuted = "#8690a6";
 
 export default function SubscribeForm({ inline = false }) {
   const [email, setEmail] = useState('');
@@ -61,7 +61,7 @@ export default function SubscribeForm({ inline = false }) {
     // Versión inline para footer/sidebar
     return (
       <div style={{
-        background: `linear-gradient(135deg, ${cardBg} 0%, #1e1b18 100%)`,
+        background: `linear-gradient(135deg, ${cardBg} 0%, #090a0f 100%)`,
         border: `1.5px solid ${darkGold}`,
         borderRadius: 10,
         padding: 24,
@@ -73,7 +73,7 @@ export default function SubscribeForm({ inline = false }) {
             color: gold,
             margin: 0,
             fontSize: 19,
-            fontFamily: "'Cinzel', serif",
+            fontFamily: "'Oxanium', sans-serif",
             fontWeight: 600,
           }}>
             Mantente al Día
@@ -147,17 +147,17 @@ export default function SubscribeForm({ inline = false }) {
               fontWeight: 700,
               cursor: loading ? 'not-allowed' : 'pointer',
               transition: 'all 0.2s',
-              boxShadow: loading ? 'none' : '0 2px 8px rgba(201,168,76,0.3)',
+              boxShadow: loading ? 'none' : '0 2px 8px rgba(255,194,78,0.3)',
             }}
             onMouseEnter={(e) => {
               if (!loading) {
                 e.target.style.transform = 'translateY(-1px)';
-                e.target.style.boxShadow = '0 4px 12px rgba(201,168,76,0.4)';
+                e.target.style.boxShadow = '0 4px 12px rgba(255,194,78,0.4)';
               }
             }}
             onMouseLeave={(e) => {
               e.target.style.transform = 'translateY(0)';
-              e.target.style.boxShadow = '0 2px 8px rgba(201,168,76,0.3)';
+              e.target.style.boxShadow = '0 2px 8px rgba(255,194,78,0.3)';
             }}
           >
             {loading ? '⏳ Suscribiendo...' : '✉️ Suscribirse Gratis'}
@@ -192,7 +192,7 @@ export default function SubscribeForm({ inline = false }) {
         color: gold,
         margin: '0 0 10px 0',
         fontSize: 24,
-        fontFamily: "'Cinzel', serif",
+        fontFamily: "'Oxanium', sans-serif",
         textAlign: 'center',
       }}>
         📰 Suscríbete al Blog
@@ -285,7 +285,7 @@ export default function SubscribeForm({ inline = false }) {
             margin: 0,
             textAlign: 'center',
             padding: 12,
-            background: 'rgba(201,168,76,0.1)',
+            background: 'rgba(255,194,78,0.1)',
             borderRadius: 6,
           }}>
             ✓ {message}

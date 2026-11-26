@@ -3,17 +3,17 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 
-const gold = "#c9a84c";
-const darkGold = "#3d3525";
-const cardBg = "#252220";
-const bg = "#1e1b18";
-const textMuted = "#8b7b5e";
-const textLight = "#e8dcc0";
+const gold = "#ffc24e";
+const darkGold = "#242a38";
+const cardBg = "#141826";
+const bg = "#090a0f";
+const textMuted = "#8690a6";
+const textLight = "#eef1f8";
 
 const RACE_COLORS = {
-  Protoss: { bg: "rgba(201,168,76,0.15)", border: "#c9a84c", text: "#c9a84c" },
-  Terran: { bg: "rgba(100,160,200,0.15)", border: "#7ab8d4", text: "#7ab8d4" },
-  Zerg: { bg: "rgba(160,100,180,0.15)", border: "#c09ad8", text: "#c09ad8" },
+  Protoss: { bg: "rgba(255,194,78,0.15)", border: "#ffc24e", text: "#ffc24e" },
+  Terran: { bg: "rgba(78,168,255,0.15)", border: "#4ea8ff", text: "#4ea8ff" },
+  Zerg: { bg: "rgba(176,124,255,0.15)", border: "#b07cff", text: "#b07cff" },
 };
 
 export default function BuildOrdersPage() {
@@ -284,7 +284,7 @@ const styles = {
     transition: "all 0.2s",
   },
   mainTitle: {
-    fontFamily: "'Cinzel', serif",
+    fontFamily: "'Oxanium', sans-serif",
     fontSize: 48,
     fontWeight: 700,
     color: gold,
@@ -371,7 +371,7 @@ const styles = {
     flexWrap: "wrap",
   },
   matchupTag: {
-    background: "rgba(201,168,76,0.1)",
+    background: "rgba(255,194,78,0.1)",
     color: gold,
     padding: "2px 8px",
     borderRadius: 4,
@@ -414,7 +414,7 @@ const styles = {
     fontSize: 32,
     fontWeight: 700,
     margin: "0 0 16px 0",
-    fontFamily: "'Cinzel', serif",
+    fontFamily: "'Oxanium', sans-serif",
   },
   buildMeta: {
     display: "flex",
@@ -442,7 +442,7 @@ const styles = {
     marginBottom: 30,
   },
   sectionTitle: {
-    fontFamily: "'Cinzel', serif",
+    fontFamily: "'Oxanium', sans-serif",
     fontSize: 20,
     fontWeight: 600,
     color: gold,
@@ -491,7 +491,7 @@ const styles = {
     alignItems: "center",
   },
   supply: {
-    background: "rgba(201,168,76,0.15)",
+    background: "rgba(255,194,78,0.15)",
     color: gold,
     padding: "4px 10px",
     borderRadius: 4,
@@ -499,16 +499,16 @@ const styles = {
     fontWeight: 700,
   },
   time: {
-    background: "rgba(100,160,200,0.15)",
-    color: "#7ab8d4",
+    background: "rgba(78,168,255,0.15)",
+    color: "#4ea8ff",
     padding: "4px 10px",
     borderRadius: 4,
     fontSize: 13,
     fontWeight: 700,
   },
   trigger: {
-    background: "rgba(160,100,180,0.15)",
-    color: "#c09ad8",
+    background: "rgba(176,124,255,0.15)",
+    color: "#b07cff",
     padding: "4px 10px",
     borderRadius: 4,
     fontSize: 13,
@@ -543,7 +543,7 @@ const styles = {
     flexWrap: "wrap",
   },
   tag: {
-    background: "rgba(201,168,76,0.1)",
+    background: "rgba(255,194,78,0.1)",
     color: gold,
     padding: "6px 14px",
     borderRadius: 6,
