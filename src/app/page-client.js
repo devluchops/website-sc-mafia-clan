@@ -1919,7 +1919,7 @@ function RosterSection({ members }) {
 
             <div style={{ marginBottom: 20 }}>
               <p style={{ fontSize: 12, color: textMuted, marginBottom: 12, fontWeight: 600 }}>NIVELES POR RAZA</p>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(90px, 1fr))", gap: 12 }}>
                 <div style={{
                   background: "rgba(255,194,78,0.08)",
                   padding: "16px",
