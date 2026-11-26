@@ -7,12 +7,12 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { SocialIcons } from "@/components/SocialIcons";
 
-const gold = "#c9a84c";
-const darkGold = "#3d3525";
-const cardBg = "#252220";
-const textMuted = "#8b7b5e";
-const textLight = "#e8dcc0";
-const bg = "#1e1b18";
+const gold = "#ffc24e";
+const darkGold = "#242a38";
+const cardBg = "#141826";
+const textMuted = "#8690a6";
+const textLight = "#eef1f8";
+const bg = "#090a0f";
 
 // ============================================================
 // HELPER FUNCTIONS
@@ -22,7 +22,7 @@ const bg = "#1e1b18";
 const getSelectStyle = (customStyle = {}) => ({
   width: "100%",
   padding: "10px 36px 10px 14px",
-  background: `linear-gradient(180deg, ${bg} 0%, #16130f 100%)`,
+  background: `linear-gradient(180deg, ${bg} 0%, #05060a 100%)`,
   border: `1.5px solid ${darkGold}`,
   borderRadius: 6,
   color: textLight,
@@ -30,7 +30,7 @@ const getSelectStyle = (customStyle = {}) => ({
   fontFamily: "inherit",
   cursor: "pointer",
   appearance: "none",
-  backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23c9a84c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
+  backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23ffc24e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
   backgroundRepeat: "no-repeat",
   backgroundPosition: "right 12px center",
   transition: "all 0.2s ease",
@@ -55,7 +55,7 @@ function AdminCard({ title, children, style }) {
     >
       <h2
         style={{
-          fontFamily: "'Cinzel', serif",
+          fontFamily: "'Oxanium', sans-serif",
           fontSize: 18,
           fontWeight: 600,
           color: gold,
@@ -153,7 +153,7 @@ function Button({ onClick, children, variant = "primary", loading, disabled, sty
         color: isDanger ? "#fff" : (isPrimary ? bg : gold),
         border: (isPrimary || isDanger) ? "none" : `1px solid ${gold}`,
         borderRadius: 6,
-        fontFamily: "'Cinzel', serif",
+        fontFamily: "'Oxanium', sans-serif",
         fontSize: 12,
         fontWeight: 600,
         letterSpacing: 1.5,
@@ -204,7 +204,7 @@ function Modal({ isOpen, onClose, title, children, zIndex = 1000 }) {
       >
         <h3
           style={{
-            fontFamily: "'Cinzel', serif",
+            fontFamily: "'Oxanium', sans-serif",
             fontSize: 20,
             fontWeight: 600,
             color: gold,
@@ -638,6 +638,10 @@ export default function AdminDashboard() {
   const [tournaments, setTournaments] = useState([]);
   const [subscribers, setSubscribers] = useState([]);
   const [subscriberStats, setSubscriberStats] = useState(null);
+  const [notifForm, setNotifForm] = useState({ title: "", body: "", url: "" });
+  const [notifSending, setNotifSending] = useState(false);
+  const [notifResult, setNotifResult] = useState("");
+  const [pushCount, setPushCount] = useState(null);
 
   // Modal states
   const [memberModal, setMemberModal] = useState({ isOpen: false, member: null });
@@ -719,6 +723,7 @@ export default function AdminDashboard() {
     if (typeof window !== 'undefined') {
       window.location.hash = activeSection;
     }
+    if (activeSection === "notifications") loadPushCount();
   }, [activeSection]);
 
   useEffect(() => {
@@ -1138,6 +1143,41 @@ export default function AdminDashboard() {
       showMessage("❌ Error: " + error.message);
     }
     setLoading(false);
+  };
+
+  const loadPushCount = async () => {
+    try {
+      const res = await fetch("/api/admin/push");
+      const d = await res.json();
+      if (res.ok) setPushCount(d.count);
+    } catch (_e) {}
+  };
+
+  const handleSendNotification = async () => {
+    if (!notifForm.title || !notifForm.body) {
+      setNotifResult("⚠️ Completa título y mensaje");
+      return;
+    }
+    setNotifSending(true);
+    setNotifResult("");
+    try {
+      const res = await fetch("/api/admin/push", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(notifForm),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setNotifResult(`✅ Enviada a ${data.sent} dispositivo(s)${data.removed ? ` · ${data.removed} inactivos limpiados` : ""}`);
+        setNotifForm({ title: "", body: "", url: "" });
+        loadPushCount();
+      } else {
+        setNotifResult("❌ " + (data.error || "Error al enviar"));
+      }
+    } catch (e) {
+      setNotifResult("❌ " + e.message);
+    }
+    setNotifSending(false);
   };
 
   const handleDeleteEvent = async (id) => {
@@ -1695,7 +1735,7 @@ export default function AdminDashboard() {
         .custom-datepicker {
           width: 100%;
           padding: 12px 16px;
-          background: linear-gradient(180deg, ${bg} 0%, #16130f 100%);
+          background: linear-gradient(180deg, ${bg} 0%, #05060a 100%);
           border: 1.5px solid ${darkGold};
           border-radius: 6px;
           color: ${textLight};
@@ -1891,7 +1931,7 @@ export default function AdminDashboard() {
         <div>
           <h1
             style={{
-              fontFamily: "'Cinzel', serif",
+              fontFamily: "'Oxanium', sans-serif",
               fontSize: 24,
               fontWeight: 700,
               color: gold,
@@ -1917,7 +1957,7 @@ export default function AdminDashboard() {
       {/* Navigation Tabs */}
       <nav
         style={{
-          background: "#0d0d0a",
+          background: "#0b0d14",
           borderBottom: `1px solid ${darkGold}`,
           overflowX: "auto",
         }}
@@ -1927,10 +1967,10 @@ export default function AdminDashboard() {
             <button
               onClick={() => setActiveSection("info")}
               style={{
-                background: activeSection === "info" ? "rgba(201,168,76,0.08)" : "transparent",
+                background: activeSection === "info" ? "rgba(255,194,78,0.08)" : "transparent",
                 border: "none",
                 color: activeSection === "info" ? gold : textMuted,
-                fontFamily: "'Cinzel', serif",
+                fontFamily: "'Oxanium', sans-serif",
                 fontSize: 12,
                 fontWeight: 600,
                 letterSpacing: 1.5,
@@ -1949,10 +1989,10 @@ export default function AdminDashboard() {
             <button
               onClick={() => setActiveSection("members")}
               style={{
-                background: activeSection === "members" ? "rgba(201,168,76,0.08)" : "transparent",
+                background: activeSection === "members" ? "rgba(255,194,78,0.08)" : "transparent",
                 border: "none",
                 color: activeSection === "members" ? gold : textMuted,
-                fontFamily: "'Cinzel', serif",
+                fontFamily: "'Oxanium', sans-serif",
                 fontSize: 12,
                 fontWeight: 600,
                 letterSpacing: 1.5,
@@ -1971,10 +2011,10 @@ export default function AdminDashboard() {
             <button
               onClick={() => setActiveSection("blog")}
               style={{
-                background: activeSection === "blog" ? "rgba(201,168,76,0.08)" : "transparent",
+                background: activeSection === "blog" ? "rgba(255,194,78,0.08)" : "transparent",
                 border: "none",
                 color: activeSection === "blog" ? gold : textMuted,
-                fontFamily: "'Cinzel', serif",
+                fontFamily: "'Oxanium', sans-serif",
                 fontSize: 12,
                 fontWeight: 600,
                 letterSpacing: 1.5,
@@ -1993,10 +2033,10 @@ export default function AdminDashboard() {
             <button
               onClick={() => setActiveSection("videos")}
               style={{
-                background: activeSection === "videos" ? "rgba(201,168,76,0.08)" : "transparent",
+                background: activeSection === "videos" ? "rgba(255,194,78,0.08)" : "transparent",
                 border: "none",
                 color: activeSection === "videos" ? gold : textMuted,
-                fontFamily: "'Cinzel', serif",
+                fontFamily: "'Oxanium', sans-serif",
                 fontSize: 12,
                 fontWeight: 600,
                 letterSpacing: 1.5,
@@ -2015,10 +2055,10 @@ export default function AdminDashboard() {
             <button
               onClick={() => setActiveSection("build-orders")}
               style={{
-                background: activeSection === "build-orders" ? "rgba(201,168,76,0.08)" : "transparent",
+                background: activeSection === "build-orders" ? "rgba(255,194,78,0.08)" : "transparent",
                 border: "none",
                 color: activeSection === "build-orders" ? gold : textMuted,
-                fontFamily: "'Cinzel', serif",
+                fontFamily: "'Oxanium', sans-serif",
                 fontSize: 12,
                 fontWeight: 600,
                 letterSpacing: 1.5,
@@ -2037,10 +2077,10 @@ export default function AdminDashboard() {
             <button
               onClick={() => setActiveSection("events")}
               style={{
-                background: activeSection === "events" ? "rgba(201,168,76,0.08)" : "transparent",
+                background: activeSection === "events" ? "rgba(255,194,78,0.08)" : "transparent",
                 border: "none",
                 color: activeSection === "events" ? gold : textMuted,
-                fontFamily: "'Cinzel', serif",
+                fontFamily: "'Oxanium', sans-serif",
                 fontSize: 12,
                 fontWeight: 600,
                 letterSpacing: 1.5,
@@ -2059,10 +2099,10 @@ export default function AdminDashboard() {
             <button
               onClick={() => setActiveSection("tournaments")}
               style={{
-                background: activeSection === "tournaments" ? "rgba(201,168,76,0.08)" : "transparent",
+                background: activeSection === "tournaments" ? "rgba(255,194,78,0.08)" : "transparent",
                 border: "none",
                 color: activeSection === "tournaments" ? gold : textMuted,
-                fontFamily: "'Cinzel', serif",
+                fontFamily: "'Oxanium', sans-serif",
                 fontSize: 12,
                 fontWeight: 600,
                 letterSpacing: 1.5,
@@ -2081,10 +2121,10 @@ export default function AdminDashboard() {
             <button
               onClick={() => setActiveSection("rules")}
               style={{
-                background: activeSection === "rules" ? "rgba(201,168,76,0.08)" : "transparent",
+                background: activeSection === "rules" ? "rgba(255,194,78,0.08)" : "transparent",
                 border: "none",
                 color: activeSection === "rules" ? gold : textMuted,
-                fontFamily: "'Cinzel', serif",
+                fontFamily: "'Oxanium', sans-serif",
                 fontSize: 12,
                 fontWeight: 600,
                 letterSpacing: 1.5,
@@ -2103,10 +2143,10 @@ export default function AdminDashboard() {
             <button
               onClick={() => setActiveSection("permissions")}
               style={{
-                background: activeSection === "permissions" ? "rgba(201,168,76,0.08)" : "transparent",
+                background: activeSection === "permissions" ? "rgba(255,194,78,0.08)" : "transparent",
                 border: "none",
                 color: activeSection === "permissions" ? gold : textMuted,
-                fontFamily: "'Cinzel', serif",
+                fontFamily: "'Oxanium', sans-serif",
                 fontSize: 12,
                 fontWeight: 600,
                 letterSpacing: 1.5,
@@ -2125,10 +2165,10 @@ export default function AdminDashboard() {
             <button
               onClick={() => setActiveSection("subscribers")}
               style={{
-                background: activeSection === "subscribers" ? "rgba(201,168,76,0.08)" : "transparent",
+                background: activeSection === "subscribers" ? "rgba(255,194,78,0.08)" : "transparent",
                 border: "none",
                 color: activeSection === "subscribers" ? gold : textMuted,
-                fontFamily: "'Cinzel', serif",
+                fontFamily: "'Oxanium', sans-serif",
                 fontSize: 12,
                 fontWeight: 600,
                 letterSpacing: 1.5,
@@ -2147,10 +2187,10 @@ export default function AdminDashboard() {
             <button
               onClick={() => setActiveSection("audit")}
               style={{
-                background: activeSection === "audit" ? "rgba(201,168,76,0.08)" : "transparent",
+                background: activeSection === "audit" ? "rgba(255,194,78,0.08)" : "transparent",
                 border: "none",
                 color: activeSection === "audit" ? gold : textMuted,
-                fontFamily: "'Cinzel', serif",
+                fontFamily: "'Oxanium', sans-serif",
                 fontSize: 12,
                 fontWeight: 600,
                 letterSpacing: 1.5,
@@ -2163,6 +2203,28 @@ export default function AdminDashboard() {
               }}
             >
               Audit Log
+            </button>
+          )}
+          {(session?.user?.permissions?.is_admin || session?.user?.permissions?.can_publish_events) && (
+            <button
+              onClick={() => setActiveSection("notifications")}
+              style={{
+                background: activeSection === "notifications" ? "rgba(255,194,78,0.08)" : "transparent",
+                border: "none",
+                color: activeSection === "notifications" ? gold : textMuted,
+                fontFamily: "'Oxanium', sans-serif",
+                fontSize: 12,
+                fontWeight: 600,
+                letterSpacing: 1.5,
+                textTransform: "uppercase",
+                padding: "16px 20px",
+                cursor: "pointer",
+                borderBottom: activeSection === "notifications" ? `2px solid ${gold}` : "2px solid transparent",
+                transition: "all 0.2s",
+                whiteSpace: "nowrap",
+              }}
+            >
+              Notificaciones
             </button>
           )}
         </div>
@@ -2379,7 +2441,7 @@ export default function AdminDashboard() {
                               padding: "2px 8px",
                               fontSize: 11,
                               fontWeight: 700,
-                              background: "rgba(201,168,76,0.15)",
+                              background: "rgba(255,194,78,0.15)",
                               color: gold,
                               borderRadius: 4,
                             }}>
@@ -3192,8 +3254,8 @@ export default function AdminDashboard() {
                                 <div style={{
                                   flex: 1,
                                   padding: "16px",
-                                  background: "rgba(201,168,76,0.08)",
-                                  border: "2px solid rgba(201,168,76,0.3)",
+                                  background: "rgba(255,194,78,0.08)",
+                                  border: "2px solid rgba(255,194,78,0.3)",
                                   borderRadius: 8,
                                   textAlign: "center"
                                 }}>
@@ -3217,13 +3279,13 @@ export default function AdminDashboard() {
                                 <div style={{
                                   flex: 1,
                                   padding: "16px",
-                                  background: "rgba(100,160,200,0.08)",
-                                  border: "2px solid rgba(100,160,200,0.3)",
+                                  background: "rgba(78,168,255,0.08)",
+                                  border: "2px solid rgba(78,168,255,0.3)",
                                   borderRadius: 8,
                                   textAlign: "center"
                                 }}>
                                   <p style={{
-                                    color: "#7ab8d4",
+                                    color: "#4ea8ff",
                                     fontSize: 11,
                                     fontWeight: 700,
                                     letterSpacing: 1,
@@ -3231,7 +3293,7 @@ export default function AdminDashboard() {
                                     textTransform: "uppercase"
                                   }}>Terran</p>
                                   <p style={{
-                                    color: "#7ab8d4",
+                                    color: "#4ea8ff",
                                     fontSize: 32,
                                     fontWeight: 900,
                                     lineHeight: 1
@@ -3242,13 +3304,13 @@ export default function AdminDashboard() {
                                 <div style={{
                                   flex: 1,
                                   padding: "16px",
-                                  background: "rgba(160,100,180,0.08)",
-                                  border: "2px solid rgba(160,100,180,0.3)",
+                                  background: "rgba(176,124,255,0.08)",
+                                  border: "2px solid rgba(176,124,255,0.3)",
                                   borderRadius: 8,
                                   textAlign: "center"
                                 }}>
                                   <p style={{
-                                    color: "#c09ad8",
+                                    color: "#b07cff",
                                     fontSize: 11,
                                     fontWeight: 700,
                                     letterSpacing: 1,
@@ -3256,7 +3318,7 @@ export default function AdminDashboard() {
                                     textTransform: "uppercase"
                                   }}>Zerg</p>
                                   <p style={{
-                                    color: "#c09ad8",
+                                    color: "#b07cff",
                                     fontSize: 32,
                                     fontWeight: 900,
                                     lineHeight: 1
@@ -3708,7 +3770,7 @@ export default function AdminDashboard() {
                           href={build.video_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          style={{ color: "#7ab8d4", fontSize: 12, textDecoration: "none" }}
+                          style={{ color: "#4ea8ff", fontSize: 12, textDecoration: "none" }}
                         >
                           Ver video →
                         </a>
@@ -3751,7 +3813,7 @@ export default function AdminDashboard() {
                 <p style={{ color: textMuted, fontSize: 14 }}>
                   Total: <strong style={{ color: gold }}>{events.length}</strong>
                 </p>
-                <Button onClick={() => setEventModal({ isOpen: true, event: { month: "Ene", day: "1", title: "", description: "", status: "Abierto" } })}>
+                <Button onClick={() => setEventModal({ isOpen: true, event: { title: "", description: "", status: "Abierto", event_date: new Date().toISOString().slice(0, 10), event_time: "8:00 AM - 12:00 AM", event_type: "showmatch" } })}>
                   + Agregar Evento
                 </Button>
               </div>
@@ -3773,7 +3835,9 @@ export default function AdminDashboard() {
                     <div style={{ flex: 1 }}>
                       <p style={{ fontWeight: 600, color: textLight, marginBottom: 4 }}>{event.title}</p>
                       <p style={{ fontSize: 12, color: textMuted }}>
-                        {event.month} {event.day} • {event.status}
+                        {(event.event_date ? String(event.event_date).slice(0, 10) : `${event.month || ""} ${event.day || ""}`)}
+                        {event.event_time ? ` · ${event.event_time}` : ""}
+                        {event.event_type ? ` · ${event.event_type}` : ""} • {event.status}
                       </p>
                     </div>
                     <div style={{ display: "flex", gap: 8 }}>
@@ -3845,7 +3909,7 @@ export default function AdminDashboard() {
               </Button>
             </div>
 
-            <div style={{ marginBottom: 16, padding: 12, background: "rgba(201,168,76,0.05)", borderRadius: 6 }}>
+            <div style={{ marginBottom: 16, padding: 12, background: "rgba(255,194,78,0.05)", borderRadius: 6 }}>
               <p style={{ fontSize: 12, color: textMuted, margin: 0 }}>
                 <strong>💡 Sobre Challonge:</strong> Los torneos se crean en Challonge.com y se sincronizan aquí.
                 Podrás compartir el enlace del torneo con los participantes.
@@ -3856,9 +3920,9 @@ export default function AdminDashboard() {
               {tournaments.map((t) => {
                 const tournament = t.tournament;
                 const stateColors = {
-                  pending: { bg: "rgba(201,168,76,0.1)", text: gold },
+                  pending: { bg: "rgba(255,194,78,0.1)", text: gold },
                   underway: { bg: "rgba(76,201,130,0.1)", text: "#4cc982" },
-                  awaiting_review: { bg: "rgba(100,160,200,0.1)", text: "#7ab8d4" },
+                  awaiting_review: { bg: "rgba(78,168,255,0.1)", text: "#4ea8ff" },
                   complete: { bg: "rgba(139,92,92,0.1)", text: "#c9a08a" }
                 };
                 const stateColor = stateColors[tournament.state] || stateColors.pending;
@@ -3912,7 +3976,7 @@ export default function AdminDashboard() {
                           href={tournament.full_challonge_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          style={{ color: "#7ab8d4", fontSize: 12, textDecoration: "none" }}
+                          style={{ color: "#4ea8ff", fontSize: 12, textDecoration: "none" }}
                         >
                           Ver en Challonge →
                         </a>
@@ -4116,7 +4180,7 @@ export default function AdminDashboard() {
                 </div>
               )}
 
-              <div style={{ marginTop: 16, padding: "12px", background: "rgba(201,168,76,0.05)", borderRadius: 6 }}>
+              <div style={{ marginTop: 16, padding: "12px", background: "rgba(255,194,78,0.05)", borderRadius: 6 }}>
                 <p style={{ fontSize: 12, color: textMuted, margin: 0 }}>
                   <strong>💡 Nota:</strong> Los administradores tienen acceso completo a todas las funciones automáticamente.
                   Los permisos granulares solo aplican a usuarios no-admin. Al agregar un nuevo usuario, se le otorgará acceso al sitio
@@ -4135,19 +4199,19 @@ export default function AdminDashboard() {
             {subscriberStats && (
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 16, marginBottom: 24 }}>
                 <div style={{ background: bg, padding: 16, borderRadius: 8, border: `1px solid ${darkGold}`, textAlign: "center" }}>
-                  <div style={{ fontSize: 28, fontWeight: 700, color: gold, fontFamily: "'Cinzel', serif" }}>
+                  <div style={{ fontSize: 28, fontWeight: 700, color: gold, fontFamily: "'Oxanium', sans-serif" }}>
                     {subscriberStats.total}
                   </div>
                   <div style={{ fontSize: 12, color: textMuted, marginTop: 4 }}>Total</div>
                 </div>
                 <div style={{ background: bg, padding: 16, borderRadius: 8, border: `1px solid rgba(76, 201, 130, 0.3)`, textAlign: "center" }}>
-                  <div style={{ fontSize: 28, fontWeight: 700, color: "#4CC982", fontFamily: "'Cinzel', serif" }}>
+                  <div style={{ fontSize: 28, fontWeight: 700, color: "#4CC982", fontFamily: "'Oxanium', sans-serif" }}>
                     {subscriberStats.active}
                   </div>
                   <div style={{ fontSize: 12, color: textMuted, marginTop: 4 }}>Activos</div>
                 </div>
                 <div style={{ background: bg, padding: 16, borderRadius: 8, border: `1px solid rgba(139, 123, 94, 0.3)`, textAlign: "center" }}>
-                  <div style={{ fontSize: 28, fontWeight: 700, color: textMuted, fontFamily: "'Cinzel', serif" }}>
+                  <div style={{ fontSize: 28, fontWeight: 700, color: textMuted, fontFamily: "'Oxanium', sans-serif" }}>
                     {subscriberStats.inactive}
                   </div>
                   <div style={{ fontSize: 12, color: textMuted, marginTop: 4 }}>Inactivos</div>
@@ -4222,7 +4286,7 @@ export default function AdminDashboard() {
               </table>
             </div>
 
-            <div style={{ marginTop: 16, padding: "12px", background: "rgba(201,168,76,0.05)", borderRadius: 6 }}>
+            <div style={{ marginTop: 16, padding: "12px", background: "rgba(255,194,78,0.05)", borderRadius: 6 }}>
               <p style={{ fontSize: 12, color: textMuted, margin: 0 }}>
                 <strong>💡 Nota:</strong> Los suscriptores reciben un email automáticamente cuando se publica un nuevo post en el blog.
                 Pueden cancelar su suscripción en cualquier momento desde el link en cada email.
@@ -4322,6 +4386,46 @@ export default function AdminDashboard() {
 
         {/* Audit Log */}
         {activeSection === "audit" && session?.user?.permissions?.is_admin && <AuditLogSection />}
+
+        {activeSection === "notifications" && (session?.user?.permissions?.is_admin || session?.user?.permissions?.can_publish_events) && (
+          <AdminCard title="Enviar notificación push">
+            <p style={{ color: textMuted, fontSize: 13, marginBottom: 16 }}>
+              Dispositivos suscritos: <strong style={{ color: gold }}>{pushCount ?? "…"}</strong>.
+              La notificación llega a todos los que activaron avisos (web y móvil con la app instalada).
+            </p>
+            <Input
+              label="Título"
+              value={notifForm.title}
+              onChange={(val) => setNotifForm({ ...notifForm, title: val })}
+              placeholder="Ej: Bienvenido al clan / Baja / Anuncio"
+            />
+            <Input
+              label="Mensaje"
+              textarea
+              value={notifForm.body}
+              onChange={(val) => setNotifForm({ ...notifForm, body: val })}
+              placeholder="Texto que verá la gente en la notificación"
+            />
+            <Input
+              label="Enlace al tocar (opcional)"
+              value={notifForm.url}
+              onChange={(val) => setNotifForm({ ...notifForm, url: val })}
+              placeholder="/#roster, /#events o una URL completa"
+            />
+            <div style={{ display: "flex", gap: 12, marginTop: 20, alignItems: "center", flexWrap: "wrap" }}>
+              <Button onClick={handleSendNotification} loading={notifSending}>
+                Enviar a todos
+              </Button>
+              {notifResult && <span style={{ color: textMuted, fontSize: 13 }}>{notifResult}</span>}
+            </div>
+            <div style={{ marginTop: 20, paddingTop: 16, borderTop: `1px solid ${darkGold}` }}>
+              <p style={{ color: textMuted, fontSize: 12 }}>
+                Úsalo para avisar manualmente cuando entra o sale un miembro, un showmatch de último
+                minuto, o cualquier anuncio del clan. Los eventos del calendario ya avisan solos al crearse.
+              </p>
+            </div>
+          </AdminCard>
+        )}
       </main>
 
       {/* MODALS */}
@@ -4584,7 +4688,7 @@ export default function AdminDashboard() {
               Soporta: YouTube, TikTok, o URL directa de video (.mp4, .webm, .ogg)
             </p>
             {postModal.post?.video_url && (
-              <div style={{ marginTop: 12, padding: 12, background: "rgba(201,168,76,0.1)", borderRadius: 6, border: `1px solid ${darkGold}` }}>
+              <div style={{ marginTop: 12, padding: 12, background: "rgba(255,194,78,0.1)", borderRadius: 6, border: `1px solid ${darkGold}` }}>
                 <p style={{ fontSize: 11, color: gold, marginBottom: 4 }}>✓ URL de video configurada</p>
                 <p style={{ fontSize: 10, color: textMuted, wordBreak: "break-all" }}>{postModal.post.video_url}</p>
               </div>
@@ -4661,16 +4765,31 @@ export default function AdminDashboard() {
           placeholder="Título del evento"
         />
         <Input
-          label="Mes"
-          value={eventModal.event?.month || ""}
-          onChange={(val) => setEventModal({ ...eventModal, event: { ...eventModal.event, month: val } })}
-          placeholder="Ene"
+          label="Fecha"
+          type="date"
+          value={(eventModal.event?.event_date || "").slice(0, 10)}
+          onChange={(val) => setEventModal({ ...eventModal, event: { ...eventModal.event, event_date: val } })}
         />
         <Input
-          label="Día"
-          value={eventModal.event?.day || ""}
-          onChange={(val) => setEventModal({ ...eventModal, event: { ...eventModal.event, day: val } })}
-          placeholder="1"
+          label="Hora"
+          value={eventModal.event?.event_time || ""}
+          onChange={(val) => setEventModal({ ...eventModal, event: { ...eventModal.event, event_time: val } })}
+          placeholder="8:00 AM - 12:00 AM"
+        />
+        <Select
+          label="Tipo"
+          value={eventModal.event?.event_type || "showmatch"}
+          onChange={(val) => setEventModal({ ...eventModal, event: { ...eventModal.event, event_type: val } })}
+          options={["showmatch", "partida", "torneo", "reunion", "anuncio", "evento"]}
+        />
+        <Select
+          label="Avisar antes (push)"
+          value={({ 0: "Al empezar", 15: "15 min antes", 30: "30 min antes", 60: "1 hora antes", 120: "2 horas antes", 1440: "1 día antes" })[eventModal.event?.remind_before_min || 0] || "Al empezar"}
+          onChange={(val) => {
+            const map = { "Al empezar": 0, "15 min antes": 15, "30 min antes": 30, "1 hora antes": 60, "2 horas antes": 120, "1 día antes": 1440 };
+            setEventModal({ ...eventModal, event: { ...eventModal.event, remind_before_min: map[val] ?? 0 } });
+          }}
+          options={["Al empezar", "15 min antes", "30 min antes", "1 hora antes", "2 horas antes", "1 día antes"]}
         />
         <Input
           label="Descripción"
@@ -4678,6 +4797,12 @@ export default function AdminDashboard() {
           value={eventModal.event?.description || ""}
           onChange={(val) => setEventModal({ ...eventModal, event: { ...eventModal.event, description: val } })}
           placeholder="Descripción del evento"
+        />
+        <Input
+          label="Enlace (opcional)"
+          value={eventModal.event?.link || ""}
+          onChange={(val) => setEventModal({ ...eventModal, event: { ...eventModal.event, link: val } })}
+          placeholder="https://twitch.tv/... (stream, bracket, etc.)"
         />
         <Select
           label="Estado"
@@ -4743,7 +4868,7 @@ export default function AdminDashboard() {
         onClose={() => setDiscordUserModal({ isOpen: false, selectedMemberId: null })}
         title="Agregar Usuario"
       >
-        <div style={{ marginBottom: 20, padding: 12, background: "rgba(201,168,76,0.05)", borderRadius: 6 }}>
+        <div style={{ marginBottom: 20, padding: 12, background: "rgba(255,194,78,0.05)", borderRadius: 6 }}>
           <p style={{ fontSize: 12, color: textMuted, margin: 0 }}>
             <strong>💡 Selecciona un miembro</strong> que tiene Discord configurado para darle acceso al sitio.
           </p>
@@ -4987,7 +5112,7 @@ export default function AdminDashboard() {
             Permitir registro público
           </label>
         </div>
-        <div style={{ marginBottom: 16, padding: 12, background: "rgba(201,168,76,0.05)", borderRadius: 6 }}>
+        <div style={{ marginBottom: 16, padding: 12, background: "rgba(255,194,78,0.05)", borderRadius: 6 }}>
           <p style={{ fontSize: 11, color: textMuted, margin: 0, lineHeight: 1.5 }}>
             <strong>Nota:</strong> El torneo se creará en Challonge.com bajo tu cuenta.
             Podrás gestionar participantes y resultados desde Challonge o este panel.
@@ -5138,7 +5263,7 @@ export default function AdminDashboard() {
                 fontSize: 11,
                 padding: "4px 10px",
                 borderRadius: 4,
-                background: selectedTournament.tournament?.state === 'pending' ? "rgba(201,168,76,0.1)" :
+                background: selectedTournament.tournament?.state === 'pending' ? "rgba(255,194,78,0.1)" :
                            selectedTournament.tournament?.state === 'underway' ? "rgba(76,201,130,0.1)" : "rgba(139,92,92,0.1)",
                 color: selectedTournament.tournament?.state === 'pending' ? gold :
                        selectedTournament.tournament?.state === 'underway' ? "#4cc982" : "#c9a08a",
@@ -5168,7 +5293,7 @@ export default function AdminDashboard() {
                 href={selectedTournament.tournament?.full_challonge_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{ color: "#7ab8d4", fontSize: 12, textDecoration: "none" }}
+                style={{ color: "#4ea8ff", fontSize: 12, textDecoration: "none" }}
               >
                 Abrir en Challonge.com →
               </a>

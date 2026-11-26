@@ -5,6 +5,8 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { SocialIcons } from "@/components/SocialIcons";
 import SubscribeForm from "@/components/SubscribeForm";
+import PushControls from "@/components/PushControls";
+import CalendarSection, { EVENT_TYPES } from "@/components/CalendarSection";
 import { getVideoEmbedUrl } from "@/lib/video-utils";
 
 // ============================================================
@@ -15,22 +17,22 @@ import { getVideoEmbedUrl } from "@/lib/video-utils";
 // ============================================================
 //  THEME CONSTANTS
 // ============================================================
-const gold = "#c9a84c";
-const darkGold = "#3d3525";
-const cardBg = "#252220";
-const bg = "#1e1b18";
-const textMuted = "#8b7b5e";
-const textLight = "#e8dcc0";
-const textBody = "#d4c5a0";
+const gold = "#ffc24e";
+const darkGold = "#242a38";
+const cardBg = "#141826";
+const bg = "#090a0f";
+const textMuted = "#8690a6";
+const textLight = "#eef1f8";
+const textBody = "#c3cad9";
 
 const RACE_COLORS = {
-  Terran: { bg: "rgba(100,160,200,0.12)", border: "rgba(100,160,200,0.35)", text: "#7ab8d4" },
-  Zerg: { bg: "rgba(160,100,180,0.12)", border: "rgba(160,100,180,0.35)", text: "#c09ad8" },
-  Protoss: { bg: "rgba(201,168,76,0.12)", border: "rgba(201,168,76,0.35)", text: "#c9a84c" },
+  Terran: { bg: "rgba(78,168,255,0.12)", border: "rgba(78,168,255,0.35)", text: "#4ea8ff" },
+  Zerg: { bg: "rgba(176,124,255,0.12)", border: "rgba(176,124,255,0.35)", text: "#b07cff" },
+  Protoss: { bg: "rgba(255,194,78,0.12)", border: "rgba(255,194,78,0.35)", text: "#ffc24e" },
 };
 
 const TAG_COLORS = {
-  Guia: { bg: "rgba(201,168,76,0.1)", color: "#c9a84c" },
+  Guia: { bg: "rgba(255,194,78,0.1)", color: "#ffc24e" },
   Recap: { bg: "rgba(139,92,92,0.15)", color: "#c9a08a" },
   Noticias: { bg: "rgba(107,92,62,0.2)", color: "#a89060" },
 };
@@ -59,7 +61,7 @@ function VideoPlayer({ videoUrl, onClick }) {
           borderRadius: 8,
           overflow: "hidden",
           marginBottom: 12,
-          background: "#1a1810",
+          background: "#0f121b",
           cursor: onClick ? "pointer" : "default",
         }}
         onClick={onClick}
@@ -91,7 +93,7 @@ function VideoPlayer({ videoUrl, onClick }) {
           borderRadius: 8,
           overflow: "hidden",
           marginBottom: 12,
-          background: "#1a1810",
+          background: "#0f121b",
           cursor: onClick ? "pointer" : "default",
           display: "flex",
           justifyContent: "center",
@@ -122,7 +124,7 @@ function VideoPlayer({ videoUrl, onClick }) {
           borderRadius: 8,
           overflow: "hidden",
           marginBottom: 12,
-          background: "#1a1810",
+          background: "#0f121b",
           cursor: onClick ? "pointer" : "default",
         }}
         onClick={onClick}
@@ -147,9 +149,9 @@ function VideoPlayer({ videoUrl, onClick }) {
 
 function RaceBadge({ race, level, small = false }) {
   const colors = {
-    Protoss: { bg: "rgba(201,168,76,0.15)", border: "rgba(201,168,76,0.4)", text: "#c9a84c" },
-    Terran: { bg: "rgba(100,160,200,0.15)", border: "rgba(100,160,200,0.4)", text: "#7ab8d4" },
-    Zerg: { bg: "rgba(160,100,180,0.15)", border: "rgba(160,100,180,0.4)", text: "#c09ad8" },
+    Protoss: { bg: "rgba(255,194,78,0.15)", border: "rgba(255,194,78,0.4)", text: "#ffc24e" },
+    Terran: { bg: "rgba(78,168,255,0.15)", border: "rgba(78,168,255,0.4)", text: "#4ea8ff" },
+    Zerg: { bg: "rgba(176,124,255,0.15)", border: "rgba(176,124,255,0.4)", text: "#b07cff" },
   };
 
   const c = colors[race] || colors.Terran;
@@ -247,7 +249,7 @@ function Avatar({ name, race, avatar, size = 48 }) {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        fontFamily: "'Cinzel', serif",
+        fontFamily: "'Oxanium', sans-serif",
         fontWeight: 700,
         fontSize: size * 0.38,
         color: rc.text,
@@ -288,7 +290,7 @@ function StatusBadge({ status }) {
         fontWeight: 600,
         padding: "5px 14px",
         borderRadius: 4,
-        background: isOpen ? "rgba(201,168,76,0.1)" : "rgba(107,92,62,0.15)",
+        background: isOpen ? "rgba(255,194,78,0.1)" : "rgba(107,92,62,0.15)",
         color: isOpen ? gold : "#a89060",
         whiteSpace: "nowrap",
         marginLeft: "auto",
@@ -304,7 +306,7 @@ function SectionTitle({ children }) {
   return (
     <h2
       style={{
-        fontFamily: "'Cinzel', serif",
+        fontFamily: "'Oxanium', sans-serif",
         fontSize: 18,
         fontWeight: 600,
         letterSpacing: 3.5,
@@ -440,7 +442,7 @@ function BlogPost({ post, session, onViewFull }) {
             borderRadius: 8,
             overflow: "hidden",
             marginBottom: 12,
-            background: "#1a1810",
+            background: "#0f121b",
             cursor: "pointer",
           }}
           onClick={onViewFull}
@@ -459,7 +461,7 @@ function BlogPost({ post, session, onViewFull }) {
       <Tag label={post.tag} />
       <h3
         style={{
-          fontFamily: "'Cinzel', serif",
+          fontFamily: "'Oxanium', sans-serif",
           fontSize: 19,
           fontWeight: 600,
           color: textLight,
@@ -583,7 +585,7 @@ function BlogPost({ post, session, onViewFull }) {
                     color: bg,
                     border: "none",
                     borderRadius: 6,
-                    fontFamily: "'Cinzel', serif",
+                    fontFamily: "'Oxanium', sans-serif",
                     fontSize: 12,
                     fontWeight: 600,
                     letterSpacing: 1,
@@ -655,7 +657,7 @@ function CommentItem({ comment, session, onReply, onDelete, depth = 0 }) {
       borderLeft: depth > 0 ? `2px solid ${darkGold}` : "none",
     }}>
       <div style={{
-        background: "rgba(201,168,76,0.03)",
+        background: "rgba(255,194,78,0.03)",
         border: `1px solid ${darkGold}`,
         borderRadius: 8,
         padding: 12,
@@ -673,7 +675,7 @@ function CommentItem({ comment, session, onReply, onDelete, depth = 0 }) {
               width: 32,
               height: 32,
               borderRadius: "50%",
-              background: "rgba(201,168,76,0.15)",
+              background: "rgba(255,194,78,0.15)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -693,7 +695,7 @@ function CommentItem({ comment, session, onReply, onDelete, depth = 0 }) {
                 <span style={{
                   fontSize: 10,
                   color: gold,
-                  background: "rgba(201,168,76,0.1)",
+                  background: "rgba(255,194,78,0.1)",
                   padding: "2px 6px",
                   borderRadius: 3,
                 }}>
@@ -827,7 +829,7 @@ function BuildOrdersSection({ builds }) {
                 {selectedBuild.difficulty}
               </span>
               {selectedBuild.matchups && selectedBuild.matchups.map((m) => (
-                <span key={m} style={{ background: "rgba(201,168,76,0.1)", color: gold, padding: "2px 8px", borderRadius: 4, fontSize: 11, fontWeight: 600 }}>
+                <span key={m} style={{ background: "rgba(255,194,78,0.1)", color: gold, padding: "2px 8px", borderRadius: 4, fontSize: 11, fontWeight: 600 }}>
                   {m}
                 </span>
               ))}
@@ -879,7 +881,7 @@ function BuildOrdersSection({ builds }) {
                     </span>
                     <span style={{ color: textLight, fontSize: 14, lineHeight: 1.5, flex: 1 }}>
                       {parts.length > 0 && (
-                        <span style={{ color: "#7ab8d4", fontWeight: 600 }}>
+                        <span style={{ color: "#4ea8ff", fontWeight: 600 }}>
                           [{parts.join(' • ')}]
                         </span>
                       )}
@@ -900,7 +902,7 @@ function BuildOrdersSection({ builds }) {
                   <span
                     key={tag}
                     style={{
-                      background: "rgba(201,168,76,0.1)",
+                      background: "rgba(255,194,78,0.1)",
                       color: gold,
                       padding: "6px 12px",
                       borderRadius: 6,
@@ -991,12 +993,12 @@ function BuildOrdersSection({ builds }) {
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                   {build.matchups && build.matchups.slice(0, 2).map((m) => (
-                    <span key={m} style={{ background: "rgba(201,168,76,0.1)", color: gold, padding: "2px 6px", borderRadius: 3, fontSize: 10, fontWeight: 600 }}>
+                    <span key={m} style={{ background: "rgba(255,194,78,0.1)", color: gold, padding: "2px 6px", borderRadius: 3, fontSize: 10, fontWeight: 600 }}>
                       {m}
                     </span>
                   ))}
                   {build.matchups && build.matchups.length > 2 && (
-                    <span style={{ background: "rgba(201,168,76,0.1)", color: gold, padding: "2px 6px", borderRadius: 3, fontSize: 10, fontWeight: 600 }}>
+                    <span style={{ background: "rgba(255,194,78,0.1)", color: gold, padding: "2px 6px", borderRadius: 3, fontSize: 10, fontWeight: 600 }}>
                       +{build.matchups.length - 2}
                     </span>
                   )}
@@ -1075,9 +1077,18 @@ function BlogSection({ posts }) {
       {/* Subscribe Form - Solo para usuarios no autenticados */}
       {!session && <SubscribeForm inline={true} />}
 
-      {posts.map((p, i) => (
-        <BlogPost key={i} post={p} session={session} onViewFull={() => openPost(p)} />
-      ))}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))",
+          gap: 18,
+          alignItems: "start",
+        }}
+      >
+        {posts.map((p, i) => (
+          <BlogPost key={i} post={p} session={session} onViewFull={() => openPost(p)} />
+        ))}
+      </div>
 
       {/* Post Detail Modal */}
       {selectedPost && (
@@ -1122,7 +1133,7 @@ function BlogSection({ posts }) {
                   borderRadius: 10,
                   overflow: "hidden",
                   marginBottom: 24,
-                  background: "#1a1810",
+                  background: "#0f121b",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -1145,7 +1156,7 @@ function BlogSection({ posts }) {
 
             <h3
               style={{
-                fontFamily: "'Cinzel', serif",
+                fontFamily: "'Oxanium', sans-serif",
                 fontSize: 28,
                 fontWeight: 700,
                 color: gold,
@@ -1196,7 +1207,7 @@ function BlogSection({ posts }) {
                 border: `1px solid ${gold}`,
                 borderRadius: 6,
                 color: gold,
-                fontFamily: "'Cinzel', serif",
+                fontFamily: "'Oxanium', sans-serif",
                 fontSize: 12,
                 fontWeight: 600,
                 letterSpacing: 1.5,
@@ -1244,7 +1255,7 @@ function VideosSection({ videos }) {
                   aspectRatio: "16/9",
                   background: thumb
                     ? `url(${thumb}) center/cover`
-                    : "#1a1810",
+                    : "#0f121b",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -1293,7 +1304,7 @@ function VideosSection({ videos }) {
               <div style={{ padding: "14px 16px" }}>
                 <p
                   style={{
-                    fontFamily: "'Cinzel', serif",
+                    fontFamily: "'Oxanium', sans-serif",
                     fontSize: 15,
                     fontWeight: 600,
                     color: textLight,
@@ -1386,7 +1397,7 @@ function RosterSection({ members }) {
     if (level === 'S') return '#ff4655';
     if (level?.includes('A')) return '#ff9500';
     if (level?.includes('B')) return gold;
-    if (level?.includes('C')) return '#8b7b5e';
+    if (level?.includes('C')) return '#8690a6';
     return '#5a5a5a';
   };
 
@@ -1438,10 +1449,10 @@ function RosterSection({ members }) {
             onClick={() => setSortBy(s)}
             style={{
               background:
-                sortBy === s ? "rgba(201,168,76,0.12)" : "transparent",
+                sortBy === s ? "rgba(255,194,78,0.12)" : "transparent",
               border: `1px solid ${sortBy === s ? gold : darkGold}`,
               color: sortBy === s ? gold : textMuted,
-              fontFamily: "'Cinzel', serif",
+              fontFamily: "'Oxanium', sans-serif",
               fontSize: 12,
               fontWeight: 600,
               letterSpacing: 1.5,
@@ -1481,7 +1492,7 @@ function RosterSection({ members }) {
               }}
               onMouseOver={(e) => {
                 e.currentTarget.style.transform = "translateY(-4px)";
-                e.currentTarget.style.boxShadow = `0 8px 24px rgba(201,168,76,0.15)`;
+                e.currentTarget.style.boxShadow = `0 8px 24px rgba(255,194,78,0.15)`;
               }}
               onMouseOut={(e) => {
                 e.currentTarget.style.transform = "translateY(0)";
@@ -1519,7 +1530,7 @@ function RosterSection({ members }) {
               {/* Nombre */}
               <p
                 style={{
-                  fontFamily: "'Cinzel', serif",
+                  fontFamily: "'Oxanium', sans-serif",
                   fontSize: 18,
                   fontWeight: 600,
                   color: textLight,
@@ -1576,7 +1587,7 @@ function RosterSection({ members }) {
               {/* MMR */}
               <div
                 style={{
-                  background: "rgba(201,168,76,0.08)",
+                  background: "rgba(255,194,78,0.08)",
                   padding: "6px 14px",
                   borderRadius: 4,
                   fontSize: 14,
@@ -1603,7 +1614,7 @@ function RosterSection({ members }) {
                         justifyContent: "center",
                         width: 36,
                         height: 36,
-                        background: "rgba(201,168,76,0.08)",
+                        background: "rgba(255,194,78,0.08)",
                         border: `1px solid ${darkGold}`,
                         borderRadius: 6,
                         color: textMuted,
@@ -1633,7 +1644,7 @@ function RosterSection({ members }) {
                         justifyContent: "center",
                         width: 36,
                         height: 36,
-                        background: "rgba(201,168,76,0.08)",
+                        background: "rgba(255,194,78,0.08)",
                         border: `1px solid ${darkGold}`,
                         borderRadius: 6,
                         color: textMuted,
@@ -1664,7 +1675,7 @@ function RosterSection({ members }) {
                         justifyContent: "center",
                         width: 36,
                         height: 36,
-                        background: "rgba(201,168,76,0.08)",
+                        background: "rgba(255,194,78,0.08)",
                         border: `1px solid ${darkGold}`,
                         borderRadius: 6,
                         color: textMuted,
@@ -1694,7 +1705,7 @@ function RosterSection({ members }) {
                         justifyContent: "center",
                         width: 36,
                         height: 36,
-                        background: "rgba(201,168,76,0.08)",
+                        background: "rgba(255,194,78,0.08)",
                         border: `1px solid ${darkGold}`,
                         borderRadius: 6,
                         color: textMuted,
@@ -1724,7 +1735,7 @@ function RosterSection({ members }) {
                         justifyContent: "center",
                         width: 36,
                         height: 36,
-                        background: "rgba(201,168,76,0.08)",
+                        background: "rgba(255,194,78,0.08)",
                         border: `1px solid ${darkGold}`,
                         borderRadius: 6,
                         color: textMuted,
@@ -1754,7 +1765,7 @@ function RosterSection({ members }) {
                         justifyContent: "center",
                         width: 36,
                         height: 36,
-                        background: "rgba(201,168,76,0.08)",
+                        background: "rgba(255,194,78,0.08)",
                         border: `1px solid ${darkGold}`,
                         borderRadius: 6,
                         color: textMuted,
@@ -1784,7 +1795,7 @@ function RosterSection({ members }) {
                         justifyContent: "center",
                         width: 36,
                         height: 36,
-                        background: "rgba(201,168,76,0.08)",
+                        background: "rgba(255,194,78,0.08)",
                         border: `1px solid ${darkGold}`,
                         borderRadius: 6,
                         color: textMuted,
@@ -1852,7 +1863,7 @@ function RosterSection({ members }) {
               />
               <h3
                 style={{
-                  fontFamily: "'Cinzel', serif",
+                  fontFamily: "'Oxanium', sans-serif",
                   fontSize: 24,
                   fontWeight: 700,
                   color: gold,
@@ -1882,7 +1893,7 @@ function RosterSection({ members }) {
                   style={{
                     fontSize: 14,
                     color: textMuted,
-                    background: "rgba(201,168,76,0.06)",
+                    background: "rgba(255,194,78,0.06)",
                     padding: "4px 12px",
                     borderRadius: 4,
                   }}
@@ -1896,7 +1907,7 @@ function RosterSection({ members }) {
             <div style={{ marginBottom: 20 }}>
               <p style={{ fontSize: 12, color: textMuted, marginBottom: 12, fontWeight: 600 }}>SOBRE MÍ</p>
               <div style={{
-                background: "rgba(201,168,76,0.04)",
+                background: "rgba(255,194,78,0.04)",
                 padding: "16px",
                 borderRadius: 8,
                 border: `1px solid ${darkGold}`,
@@ -1911,13 +1922,13 @@ function RosterSection({ members }) {
               <p style={{ fontSize: 12, color: textMuted, marginBottom: 12, fontWeight: 600 }}>NIVELES POR RAZA</p>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
                 <div style={{
-                  background: "rgba(201,168,76,0.08)",
+                  background: "rgba(255,194,78,0.08)",
                   padding: "16px",
                   borderRadius: 8,
-                  border: `1px solid rgba(201,168,76,0.3)`,
+                  border: `1px solid rgba(255,194,78,0.3)`,
                   textAlign: "center"
                 }}>
-                  <p style={{ fontSize: 12, color: "#c9a84c", fontWeight: 700, margin: 0, marginBottom: 8, letterSpacing: 1 }}>
+                  <p style={{ fontSize: 12, color: "#ffc24e", fontWeight: 700, margin: 0, marginBottom: 8, letterSpacing: 1 }}>
                     PROTOSS
                   </p>
                   <p style={{ fontSize: 28, color: gold, fontWeight: 700, margin: 0 }}>
@@ -1925,30 +1936,30 @@ function RosterSection({ members }) {
                   </p>
                 </div>
                 <div style={{
-                  background: "rgba(100,160,200,0.08)",
+                  background: "rgba(78,168,255,0.08)",
                   padding: "16px",
                   borderRadius: 8,
-                  border: `1px solid rgba(100,160,200,0.3)`,
+                  border: `1px solid rgba(78,168,255,0.3)`,
                   textAlign: "center"
                 }}>
-                  <p style={{ fontSize: 12, color: "#7ab8d4", fontWeight: 700, margin: 0, marginBottom: 8, letterSpacing: 1 }}>
+                  <p style={{ fontSize: 12, color: "#4ea8ff", fontWeight: 700, margin: 0, marginBottom: 8, letterSpacing: 1 }}>
                     TERRAN
                   </p>
-                  <p style={{ fontSize: 28, color: "#7ab8d4", fontWeight: 700, margin: 0 }}>
+                  <p style={{ fontSize: 28, color: "#4ea8ff", fontWeight: 700, margin: 0 }}>
                     {selectedMember.terranLevel || '-'}
                   </p>
                 </div>
                 <div style={{
-                  background: "rgba(160,100,180,0.08)",
+                  background: "rgba(176,124,255,0.08)",
                   padding: "16px",
                   borderRadius: 8,
-                  border: `1px solid rgba(160,100,180,0.3)`,
+                  border: `1px solid rgba(176,124,255,0.3)`,
                   textAlign: "center"
                 }}>
-                  <p style={{ fontSize: 12, color: "#c09ad8", fontWeight: 700, margin: 0, marginBottom: 8, letterSpacing: 1 }}>
+                  <p style={{ fontSize: 12, color: "#b07cff", fontWeight: 700, margin: 0, marginBottom: 8, letterSpacing: 1 }}>
                     ZERG
                   </p>
-                  <p style={{ fontSize: 28, color: "#c09ad8", fontWeight: 700, margin: 0 }}>
+                  <p style={{ fontSize: 28, color: "#b07cff", fontWeight: 700, margin: 0 }}>
                     {selectedMember.zergLevel || '-'}
                   </p>
                 </div>
@@ -1972,7 +1983,7 @@ function RosterSection({ members }) {
                         alignItems: "center",
                         gap: 10,
                         padding: "10px 14px",
-                        background: "rgba(201,168,76,0.08)",
+                        background: "rgba(255,194,78,0.08)",
                         border: `1px solid ${darkGold}`,
                         borderRadius: 6,
                         color: textLight,
@@ -1994,7 +2005,7 @@ function RosterSection({ members }) {
                         alignItems: "center",
                         gap: 10,
                         padding: "10px 14px",
-                        background: "rgba(201,168,76,0.08)",
+                        background: "rgba(255,194,78,0.08)",
                         border: `1px solid ${darkGold}`,
                         borderRadius: 6,
                         color: textLight,
@@ -2017,7 +2028,7 @@ function RosterSection({ members }) {
                         alignItems: "center",
                         gap: 10,
                         padding: "10px 14px",
-                        background: "rgba(201,168,76,0.08)",
+                        background: "rgba(255,194,78,0.08)",
                         border: `1px solid ${darkGold}`,
                         borderRadius: 6,
                         color: textLight,
@@ -2039,7 +2050,7 @@ function RosterSection({ members }) {
                         alignItems: "center",
                         gap: 10,
                         padding: "10px 14px",
-                        background: "rgba(201,168,76,0.08)",
+                        background: "rgba(255,194,78,0.08)",
                         border: `1px solid ${darkGold}`,
                         borderRadius: 6,
                         color: textLight,
@@ -2061,7 +2072,7 @@ function RosterSection({ members }) {
                         alignItems: "center",
                         gap: 10,
                         padding: "10px 14px",
-                        background: "rgba(201,168,76,0.08)",
+                        background: "rgba(255,194,78,0.08)",
                         border: `1px solid ${darkGold}`,
                         borderRadius: 6,
                         color: textLight,
@@ -2083,7 +2094,7 @@ function RosterSection({ members }) {
                         alignItems: "center",
                         gap: 10,
                         padding: "10px 14px",
-                        background: "rgba(201,168,76,0.08)",
+                        background: "rgba(255,194,78,0.08)",
                         border: `1px solid ${darkGold}`,
                         borderRadius: 6,
                         color: textLight,
@@ -2105,7 +2116,7 @@ function RosterSection({ members }) {
                         alignItems: "center",
                         gap: 10,
                         padding: "10px 14px",
-                        background: "rgba(201,168,76,0.08)",
+                        background: "rgba(255,194,78,0.08)",
                         border: `1px solid ${darkGold}`,
                         borderRadius: 6,
                         color: textLight,
@@ -2131,7 +2142,7 @@ function RosterSection({ members }) {
                 border: `1px solid ${gold}`,
                 borderRadius: 6,
                 color: gold,
-                fontFamily: "'Cinzel', serif",
+                fontFamily: "'Oxanium', sans-serif",
                 fontSize: 12,
                 fontWeight: 600,
                 letterSpacing: 1.5,
@@ -2158,9 +2169,9 @@ function TournamentsSection({ tournaments }) {
   };
 
   const stateColors = {
-    pending: { bg: "rgba(201,168,76,0.1)", text: gold },
+    pending: { bg: "rgba(255,194,78,0.1)", text: gold },
     underway: { bg: "rgba(76,201,130,0.1)", text: "#4cc982" },
-    awaiting_review: { bg: "rgba(100,160,200,0.1)", text: "#7ab8d4" },
+    awaiting_review: { bg: "rgba(78,168,255,0.1)", text: "#4ea8ff" },
     complete: { bg: "rgba(139,92,92,0.1)", text: "#c9a08a" }
   };
 
@@ -2196,7 +2207,7 @@ function TournamentsSection({ tournaments }) {
                 <div style={{ flex: 1 }}>
                   <h3
                     style={{
-                      fontFamily: "'Cinzel', serif",
+                      fontFamily: "'Oxanium', sans-serif",
                       fontSize: 18,
                       fontWeight: 600,
                       color: gold,
@@ -2368,7 +2379,7 @@ function EventsSection({ events }) {
               </p>
               <p
                 style={{
-                  fontFamily: "'Cinzel', serif",
+                  fontFamily: "'Oxanium', sans-serif",
                   fontSize: 28,
                   fontWeight: 700,
                   color: textLight,
@@ -2382,7 +2393,7 @@ function EventsSection({ events }) {
             <div style={{ flex: 1 }}>
               <p
                 style={{
-                  fontFamily: "'Cinzel', serif",
+                  fontFamily: "'Oxanium', sans-serif",
                   fontSize: 17,
                   fontWeight: 600,
                   color: textLight,
@@ -2437,7 +2448,7 @@ function EventsSection({ events }) {
                 style={{
                   display: "inline-block",
                   padding: "16px 24px",
-                  background: "rgba(201,168,76,0.1)",
+                  background: "rgba(255,194,78,0.1)",
                   border: `2px solid ${gold}`,
                   borderRadius: 10,
                 }}
@@ -2456,7 +2467,7 @@ function EventsSection({ events }) {
                 </p>
                 <p
                   style={{
-                    fontFamily: "'Cinzel', serif",
+                    fontFamily: "'Oxanium', sans-serif",
                     fontSize: 48,
                     fontWeight: 700,
                     color: textLight,
@@ -2473,7 +2484,7 @@ function EventsSection({ events }) {
             {/* Título y descripción */}
             <h3
               style={{
-                fontFamily: "'Cinzel', serif",
+                fontFamily: "'Oxanium', sans-serif",
                 fontSize: 24,
                 fontWeight: 700,
                 color: gold,
@@ -2511,7 +2522,7 @@ function EventsSection({ events }) {
                     border: "none",
                     borderRadius: 6,
                     color: bg,
-                    fontFamily: "'Cinzel', serif",
+                    fontFamily: "'Oxanium', sans-serif",
                     fontSize: 13,
                     fontWeight: 600,
                     letterSpacing: 1.5,
@@ -2533,11 +2544,11 @@ function EventsSection({ events }) {
                 style={{
                   width: "100%",
                   padding: "14px",
-                  background: "rgba(201,168,76,0.1)",
+                  background: "rgba(255,194,78,0.1)",
                   border: `1px solid ${gold}`,
                   borderRadius: 6,
                   color: gold,
-                  fontFamily: "'Cinzel', serif",
+                  fontFamily: "'Oxanium', sans-serif",
                   fontSize: 13,
                   fontWeight: 600,
                   letterSpacing: 1.5,
@@ -2545,8 +2556,8 @@ function EventsSection({ events }) {
                   cursor: "pointer",
                   transition: "all 0.2s",
                 }}
-                onMouseOver={(e) => e.currentTarget.style.background = 'rgba(201,168,76,0.15)'}
-                onMouseOut={(e) => e.currentTarget.style.background = 'rgba(201,168,76,0.1)'}
+                onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,194,78,0.15)'}
+                onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255,194,78,0.1)'}
               >
                 📅 Agregar a Google Calendar
               </button>
@@ -2560,7 +2571,7 @@ function EventsSection({ events }) {
                   border: `1px solid ${darkGold}`,
                   borderRadius: 6,
                   color: textMuted,
-                  fontFamily: "'Cinzel', serif",
+                  fontFamily: "'Oxanium', sans-serif",
                   fontSize: 12,
                   fontWeight: 600,
                   letterSpacing: 1.5,
@@ -2593,7 +2604,7 @@ function RulesSection({ rules }) {
       <SectionTitle>Reglas y Código de Conducta</SectionTitle>
 
       <div style={{
-        background: "rgba(201,168,76,0.05)",
+        background: "rgba(255,194,78,0.05)",
         padding: 20,
         borderRadius: 10,
         border: `1px solid ${darkGold}`,
@@ -2614,7 +2625,7 @@ function RulesSection({ rules }) {
         {Object.entries(categories).map(([category, categoryRules]) => (
           <div key={category}>
             <h3 style={{
-              fontFamily: "'Cinzel', serif",
+              fontFamily: "'Oxanium', sans-serif",
               fontSize: 17,
               fontWeight: 700,
               color: gold,
@@ -2641,13 +2652,13 @@ function RulesSection({ rules }) {
                     <span style={{
                       minWidth: 32,
                       height: 32,
-                      background: "rgba(201,168,76,0.15)",
+                      background: "rgba(255,194,78,0.15)",
                       border: `2px solid ${gold}`,
                       borderRadius: "50%",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      fontFamily: "'Cinzel', serif",
+                      fontFamily: "'Oxanium', sans-serif",
                       fontSize: 14,
                       fontWeight: 700,
                       color: gold,
@@ -2657,7 +2668,7 @@ function RulesSection({ rules }) {
                     </span>
                     <div style={{ flex: 1 }}>
                       <h4 style={{
-                        fontFamily: "'Cinzel', serif",
+                        fontFamily: "'Oxanium', sans-serif",
                         fontSize: 16,
                         fontWeight: 600,
                         color: textLight,
@@ -2690,14 +2701,189 @@ function RulesSection({ rules }) {
 // ============================================================
 
 const TABS = [
+  { id: "inicio", label: "Inicio" },
   { id: "blog", label: "Blog" },
-  { id: "videos", label: "Videos" },
   { id: "roster", label: "Miembros" },
   { id: "events", label: "Eventos" },
-  { id: "tournaments", label: "Torneos" },
   { id: "rules", label: "Reglas" },
-  { id: "build-orders", label: "Build Orders" },
+  // Ocultos (no en uso): videos, tournaments, build-orders — se maneja todo por Eventos
 ];
+
+// ============================================================
+//  LANDING (home "inicio") — teasers de cada sección
+// ============================================================
+function LandingSections({ posts = [], members = [], videos = [], session, onTab, onJoin }) {
+  const tagClass = (tag) => {
+    const t = (tag || "").toLowerCase();
+    if (t.includes("gu")) return "guia";
+    if (t.includes("recap")) return "recap";
+    return "news";
+  };
+  const raceClass = (race) => {
+    const r = (race || "").toLowerCase();
+    if (r.includes("terran")) return "terran";
+    if (r.includes("zerg")) return "zerg";
+    if (r.includes("protoss")) return "protoss";
+    return "protoss";
+  };
+
+  const topPosts = [...posts].slice(0, 3);
+  const topMembers = [...members]
+    .sort((a, b) => (b.mmr || 0) - (a.mmr || 0))
+    .slice(0, 4);
+  const topVideos = [...videos].slice(0, 3);
+
+  return (
+    <>
+      {/* NOTICIAS */}
+      {topPosts.length > 0 && (
+        <section className="lz-band">
+          <div className="lz-wrap">
+            <div className="lz-sechead">
+              <div>
+                <span className="lz-eyebrow">Lo último</span>
+                <h2>Noticias</h2>
+              </div>
+              <button className="lz-more" onClick={() => onTab("blog")}>
+                Ver todas →
+              </button>
+            </div>
+            <div className="lz-grid-3">
+              {topPosts.map((p) => (
+                <article key={p.id} className="lz-card" onClick={() => onTab("blog")}>
+                  <div className="lz-thumb">
+                    {p.image ? (
+                      <img src={p.image} alt={p.title} />
+                    ) : (
+                      <span className="glyph">{(p.title || "M")[0]}</span>
+                    )}
+                    {p.tag && <span className={`chip ${tagClass(p.tag)}`} style={{ position: "absolute", top: 12, left: 12 }}>{p.tag}</span>}
+                  </div>
+                  <div className="lz-cbody">
+                    <h3>{p.title}</h3>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ROSTER */}
+      {topMembers.length > 0 && (
+        <section className="lz-band">
+          <div className="lz-wrap">
+            <div className="lz-sechead">
+              <div>
+                <span className="lz-eyebrow">La familia</span>
+                <h2>Roster</h2>
+              </div>
+              <button className="lz-more" onClick={() => onTab("roster")}>
+                Ver los {members.length} miembros →
+              </button>
+            </div>
+            <div className="lz-grid-4">
+              {topMembers.map((m) => {
+                const race = m.mainRace || m.race;
+                return (
+                  <div
+                    key={m.id}
+                    className={`lz-player ${raceClass(race)}`}
+                    onClick={() => onTab("roster")}
+                  >
+                    <div className="av">
+                      <Avatar name={m.name} race={race} avatar={m.avatar} size={70} />
+                    </div>
+                    <div className="pname">{m.name}</div>
+                    <div className="prank">{m.rank}</div>
+                    <div className="mmr">
+                      <b>{m.mmr || 0}</b>
+                      <span>MMR</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* VIDEOS (oculto: no en uso) */}
+      {false && topVideos.length > 0 && (
+        <section className="lz-band">
+          <div className="lz-wrap">
+            <div className="lz-sechead">
+              <div>
+                <span className="lz-eyebrow">Highlights</span>
+                <h2>Videos</h2>
+              </div>
+              <button className="lz-more" onClick={() => onTab("videos")}>
+                Ver todos →
+              </button>
+            </div>
+            <div className="lz-grid-3">
+              {topVideos.map((v, i) => {
+                const url = v.video_url || (v.youtube_id ? `https://youtube.com/watch?v=${v.youtube_id}` : null);
+                const info = url ? getVideoEmbedUrl(url) : null;
+                const thumb = info?.thumbnail || null;
+                return (
+                  <div
+                    key={i}
+                    className="lz-card"
+                    onClick={() => (url ? window.open(url, "_blank") : onTab("videos"))}
+                  >
+                    <div className="lz-thumb">
+                      {thumb ? <img src={thumb} alt={v.title || "video"} /> : <span className="glyph">▶</span>}
+                    </div>
+                    {v.title && (
+                      <div className="lz-cbody">
+                        <h3>{v.title}</h3>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* RECLUTA */}
+      {!session && (
+        <section className="lz-recruit">
+          <div className="lz-wrap">
+            <h2>¿Listo para entrar a <span className="g">la familia</span>?</h2>
+            <p>Buscamos jugadores activos de Fastest que quieran competir, mejorar y representar a MAFIA en los torneos. Sin importar tu raza.</p>
+            <button className="lz-btn lz-btn-gold" onClick={onJoin}>Solicitar ingreso</button>
+          </div>
+        </section>
+      )}
+
+      {/* NOTIFICACIONES / INSTALAR APP */}
+      <section className="lz-band">
+        <div className="lz-wrap">
+          <div className="lz-notif">
+            <div className="ntxt">
+              <h3>Llévate MAFIA al bolsillo</h3>
+              <p>
+                Instala la app y activa las notificaciones para enterarte al instante de
+                showmatches, torneos, reuniones y anuncios del clan.
+              </p>
+            </div>
+            <PushControls />
+          </div>
+        </div>
+      </section>
+
+      {/* NEWSLETTER */}
+      <section className="lz-band">
+        <div className="lz-wrap" style={{ maxWidth: 760 }}>
+          <SubscribeForm />
+        </div>
+      </section>
+    </>
+  );
+}
 
 export default function PageClient({ initialData = null, initialHash = null }) {
   const { data: session } = useSession();
@@ -2706,9 +2892,9 @@ export default function PageClient({ initialData = null, initialHash = null }) {
     // Leer el hash de la URL al cargar
     if (typeof window !== 'undefined') {
       const hash = window.location.hash.replace('#', '');
-      return hash || "blog";
+      return hash || "inicio";
     }
-    return "blog";
+    return "inicio";
   });
 
   // Esperar a que el componente se monte en el cliente
@@ -2832,245 +3018,224 @@ export default function PageClient({ initialData = null, initialHash = null }) {
 
   const { clan, members, posts, videos, events, rules } = data;
 
+  // Próximo evento (desde hoy en adelante) para la tarjeta del hero
+  const _today = new Date();
+  _today.setHours(0, 0, 0, 0);
+  const nextEvent = (events || [])
+    .map((e) => {
+      let d = null;
+      if (e.event_date) {
+        const dd = new Date(String(e.event_date).slice(0, 10) + "T00:00:00");
+        if (!isNaN(dd.getTime())) d = dd;
+      }
+      return { ...e, _d: d };
+    })
+    .filter((e) => e._d && e._d >= _today)
+    .sort((a, b) => a._d - b._d)[0];
+
+  const MESES_ABBR = ["ENE","FEB","MAR","ABR","MAY","JUN","JUL","AGO","SEP","OCT","NOV","DIC"];
+
   return (
     <>
-      {/* HERO */}
-      <header
-        style={{
-          padding: "48px 24px 32px",
-          textAlign: "center",
-          borderBottom: `1px solid ${darkGold}`,
-          position: "relative",
-          overflow: "hidden",
-        }}
-      >
-        <div
-          style={{
-            position: "absolute",
-            top: -80,
-            left: "50%",
-            transform: "translateX(-50%)",
-            width: 500,
-            height: 500,
-            background:
-              "radial-gradient(circle, rgba(201,168,76,0.06) 0%, transparent 70%)",
-            pointerEvents: "none",
-          }}
-        />
-
-        <div
-          style={{
-            width: 160,
-            height: 160,
-            margin: "0 auto 20px",
-            borderRadius: "50%",
-            overflow: "hidden",
-            border: `3px solid ${gold}`,
-            background: cardBg,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          {!logoErr ? (
-            <img
-              src={clan.logo}
-              alt={clan.name}
-              onError={() => setLogoErr(true)}
-              style={{ width: "100%", height: "100%", objectFit: "cover" }}
-            />
-          ) : (
-            <span
-              style={{
-                fontFamily: "'Cinzel', serif",
-                fontSize: 70,
-                fontWeight: 700,
-                color: gold,
-              }}
-            >
-              {clan.name[0]}
-            </span>
-          )}
-        </div>
-
-        <h1
-          style={{
-            fontFamily: "'Cinzel', serif",
-            fontSize: 40,
-            fontWeight: 700,
-            letterSpacing: 7,
-            color: gold,
-            textTransform: "uppercase",
-            margin: 0,
-          }}
-        >
-          {clan.name}
-        </h1>
-        <p
-          style={{
-            fontSize: 15,
-            color: textMuted,
-            marginTop: 10,
-            letterSpacing: 2.5,
-            textTransform: "uppercase",
-          }}
-        >
-          {clan.tagline}
-        </p>
-      </header>
-
-      {/* NAV */}
-      <nav
-        className="main-nav"
-        style={{
-          padding: "12px 16px",
-          background: "#0d0d0a",
-          borderBottom: `1px solid ${darkGold}`,
-          position: "sticky",
-          top: 0,
-          zIndex: 10,
-          minHeight: 60,
-        }}
-      >
-        {/* Tabs */}
-        <div className="nav-tabs">
-          {TABS.map((t) => (
-            <button
-              key={t.id}
-              onClick={() => setActiveTab(t.id)}
-              style={{
-                background:
-                  activeTab === t.id
-                    ? "rgba(201,168,76,0.08)"
-                    : "transparent",
-                border: "none",
-                color: activeTab === t.id ? gold : textMuted,
-                fontFamily: "'Cinzel', serif",
-                fontSize: 12,
-                fontWeight: 600,
-                letterSpacing: 1.5,
-                textTransform: "uppercase",
-                padding: "10px 16px",
-                cursor: "pointer",
-                borderRadius: 6,
-                transition: "all 0.2s",
-              }}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
-
-        {/* User Menu */}
-        <div className="nav-user-menu">
-          {session ? (
-            <>
-              <Link
-                href="/profile"
+      {/* TOPBAR */}
+      <header className="lz-topbar">
+        <div className="lz-wrap">
+          <button
+            className="lz-brand"
+            onClick={() => setActiveTab("inicio")}
+            style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
+          >
+            {!logoErr ? (
+              <img src={clan.logo} alt={clan.name} onError={() => setLogoErr(true)} />
+            ) : (
+              <span
                 style={{
-                  background: "transparent",
-                  border: `1px solid ${gold}`,
-                  color: gold,
-                  fontFamily: "'Cinzel', serif",
-                  fontSize: 10,
-                  fontWeight: 600,
-                  letterSpacing: 1.25,
-                  textTransform: "uppercase",
-                  padding: "10px 16px",
-                  cursor: "pointer",
-                  borderRadius: 6,
-                  textDecoration: "none",
-                  display: "inline-block",
-                  transition: "all 0.2s",
-                }}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.background = gold;
-                  e.currentTarget.style.color = bg;
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.background = "transparent";
-                  e.currentTarget.style.color = gold;
+                  width: 40,
+                  height: 40,
+                  borderRadius: "50%",
+                  display: "grid",
+                  placeItems: "center",
+                  background: `linear-gradient(135deg, ${gold}, ${darkGold})`,
+                  color: bg,
+                  fontFamily: "'Oxanium', sans-serif",
+                  fontWeight: 800,
+                  fontSize: 18,
                 }}
               >
-                Mi Perfil
-              </Link>
-              {session.user?.permissions?.is_admin && (
-                <a
-                  href="/admin"
+                {clan.name[0]}
+              </span>
+            )}
+            <span className="wm">CLAN <b>{clan.name}</b></span>
+          </button>
+
+          <nav className="lz-tabs">
+            {TABS.map((t) => (
+              <button
+                key={t.id}
+                className={activeTab === t.id ? "active" : ""}
+                onClick={() => setActiveTab(t.id)}
+              >
+                {t.label}
+              </button>
+            ))}
+          </nav>
+
+          <div className="lz-usermenu">
+            {session ? (
+              <>
+                <Link href="/profile" className="lz-btn lz-btn-ghost lz-btn-sm">
+                  Mi Perfil
+                </Link>
+                {session.user?.permissions?.is_admin && (
+                  <a href="/admin" className="lz-btn lz-btn-ghost lz-btn-sm">
+                    Admin
+                  </a>
+                )}
+              </>
+            ) : (
+              <>
+                <Link href="/login" className="lz-btn lz-btn-ghost lz-btn-sm">
+                  Entrar
+                </Link>
+                <button
+                  className="lz-btn lz-btn-gold lz-btn-sm"
+                  onClick={() => setJoinModalOpen(true)}
+                >
+                  Únete
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      </header>
+
+      {/* HERO (solo en Inicio) */}
+      {activeTab === "inicio" && (
+        <section className="lz-hero">
+          <div className="lz-hero-bg" />
+          <div className="lz-hero-grid" />
+          <div className="lz-wrap">
+            <div className="lz-lead">
+              <span className="lz-eyebrow">StarCraft · Fastest · Perú</span>
+              <h1>
+                <span className="l1">Clan</span>
+                <span className="l2">{clan.name}</span>
+              </h1>
+              <p className="lz-desc">{clan.tagline}</p>
+              <div className="lz-cta">
+                {!session && (
+                  <button
+                    className="lz-btn lz-btn-gold"
+                    onClick={() => setJoinModalOpen(true)}
+                  >
+                    Únete al clan
+                  </button>
+                )}
+                <button
+                  className="lz-btn lz-btn-ghost"
+                  onClick={() => setActiveTab("roster")}
+                >
+                  Ver roster
+                </button>
+              </div>
+            </div>
+            <div className="lz-aside">
+              {nextEvent ? (
+                <div className="lz-livecard">
+                  <span className="lz-livetag">
+                    <span className="dot" />
+                    Próximo evento
+                  </span>
+                  <h3>{nextEvent.title}</h3>
+                  <div className="mini">
+                    {nextEvent._d.getDate()} {MESES_ABBR[nextEvent._d.getMonth()]}
+                    {nextEvent.event_time ? ` · ${nextEvent.event_time}` : ""}
+                    {nextEvent.event_type
+                      ? ` · ${EVENT_TYPES[nextEvent.event_type]?.label || nextEvent.event_type}`
+                      : ""}
+                  </div>
+                  <button
+                    className="lz-more"
+                    style={{ marginTop: 14, color: gold }}
+                    onClick={() => setActiveTab("events")}
+                  >
+                    Ver calendario →
+                  </button>
+                </div>
+              ) : (
+                <div
                   style={{
-                    background: "rgba(201,168,76,0.1)",
-                    border: `1px solid ${gold}`,
-                    color: gold,
-                    fontFamily: "'Cinzel', serif",
-                    fontSize: 10,
-                    fontWeight: 600,
-                    letterSpacing: 1.25,
-                    textTransform: "uppercase",
-                    padding: "10px 16px",
-                    cursor: "pointer",
-                    borderRadius: 6,
-                    textDecoration: "none",
-                    display: "inline-block",
-                    transition: "all 0.2s",
-                  }}
-                  onMouseOver={(e) => {
-                    e.currentTarget.style.background = gold;
-                    e.currentTarget.style.color = bg;
-                  }}
-                  onMouseOut={(e) => {
-                    e.currentTarget.style.background = "rgba(201,168,76,0.1)";
-                    e.currentTarget.style.color = gold;
+                    background: "linear-gradient(180deg, var(--panel-2), var(--panel))",
+                    border: "1px solid var(--line)",
+                    borderRadius: 14,
+                    padding: 20,
                   }}
                 >
-                  Admin
-                </a>
+                  <span className="lz-eyebrow" style={{ fontSize: 11 }}>
+                    Próximamente
+                  </span>
+                  <h3
+                    style={{
+                      fontFamily: "'Oxanium', sans-serif",
+                      fontSize: 22,
+                      textTransform: "uppercase",
+                      marginTop: 10,
+                      color: textLight,
+                    }}
+                  >
+                    Nuevos eventos
+                  </h3>
+                  <p style={{ color: textMuted, fontSize: 13, marginTop: 6 }}>
+                    Pronto showmatches y partidas. Activa las notificaciones para enterarte.
+                  </p>
+                </div>
               )}
-            </>
-          ) : (
-            <Link
-              href="/login"
-              style={{
-                background: "transparent",
-                border: `1px solid ${gold}`,
-                color: gold,
-                fontFamily: "'Cinzel', serif",
-                fontSize: 11,
-                fontWeight: 600,
-                letterSpacing: 1.5,
-                textTransform: "uppercase",
-                padding: "12px 20px",
-                cursor: "pointer",
-                borderRadius: 6,
-                textDecoration: "none",
-                display: "inline-block",
-                transition: "all 0.2s",
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.background = gold;
-                e.currentTarget.style.color = bg;
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.background = "transparent";
-                e.currentTarget.style.color = gold;
-              }}
-            >
-              Iniciar Sesión
-            </Link>
-          )}
-        </div>
-
-      </nav>
+              <div className="lz-statrow">
+                <div className="s">
+                  <div className="n">{members.length}</div>
+                  <div className="l">Miembros</div>
+                </div>
+                <div className="s">
+                  <div className="n">{events.length}</div>
+                  <div className="l">Eventos</div>
+                </div>
+                <div className="s">
+                  <div className="n">{posts.length}</div>
+                  <div className="l">Posts</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* CONTENT */}
-      <main style={{ maxWidth: 800, margin: "0 auto", padding: "32px 20px 48px" }}>
-        {activeTab === "blog" && <BlogSection posts={posts} />}
-        {activeTab === "videos" && <VideosSection videos={videos} />}
-        {activeTab === "roster" && <RosterSection members={members} />}
-        {activeTab === "events" && <EventsSection events={events} />}
-        {activeTab === "tournaments" && <TournamentsSection tournaments={tournaments} />}
-        {activeTab === "rules" && <RulesSection rules={rules || []} />}
-        {activeTab === "build-orders" && <BuildOrdersSection builds={buildOrders} />}
-      </main>
+      {activeTab === "inicio" ? (
+        <LandingSections
+          posts={posts}
+          members={members}
+          videos={videos}
+          session={session}
+          onTab={setActiveTab}
+          onJoin={() => setJoinModalOpen(true)}
+        />
+      ) : activeTab === "events" ? (
+        <main className="lz-wrap" style={{ padding: "40px 20px 64px" }}>
+          <CalendarSection events={events} />
+        </main>
+      ) : activeTab === "roster" ? (
+        <main className="lz-wrap" style={{ padding: "40px 20px 64px" }}>
+          <RosterSection members={members} />
+        </main>
+      ) : (
+        <main style={{ maxWidth: 880, margin: "0 auto", padding: "40px 20px 56px" }}>
+          {activeTab === "blog" && <BlogSection posts={posts} />}
+          {activeTab === "videos" && <VideosSection videos={videos} />}
+          {activeTab === "tournaments" && <TournamentsSection tournaments={tournaments} />}
+          {activeTab === "rules" && <RulesSection rules={rules || []} />}
+          {activeTab === "build-orders" && <BuildOrdersSection builds={buildOrders} />}
+        </main>
+      )}
 
       {/* FOOTER */}
       <footer
@@ -3078,7 +3243,7 @@ export default function PageClient({ initialData = null, initialHash = null }) {
           textAlign: "center",
           padding: "32px 16px 24px",
           borderTop: `1px solid ${darkGold}`,
-          fontFamily: "'Cinzel', serif",
+          fontFamily: "'Oxanium', sans-serif",
         }}
       >
         {/* Social Links */}
@@ -3100,7 +3265,7 @@ export default function PageClient({ initialData = null, initialHash = null }) {
               alignItems: "center",
               gap: 8,
               padding: "10px 16px",
-              background: "rgba(201,168,76,0.08)",
+              background: "rgba(255,194,78,0.08)",
               border: `1px solid ${darkGold}`,
               borderRadius: 6,
               color: textMuted,
@@ -3131,7 +3296,7 @@ export default function PageClient({ initialData = null, initialHash = null }) {
         <p
           style={{
             fontSize: 12,
-            color: "#3d3525",
+            color: "#242a38",
             letterSpacing: 2,
             margin: 0,
           }}
@@ -3143,12 +3308,12 @@ export default function PageClient({ initialData = null, initialHash = null }) {
               <Link
                 href="/profile"
                 style={{
-                  color: "#3d3525",
+                  color: "#242a38",
                   textDecoration: "none",
                   transition: "color 0.2s",
                 }}
                 onMouseOver={(e) => e.currentTarget.style.color = gold}
-                onMouseOut={(e) => e.currentTarget.style.color = "#3d3525"}
+                onMouseOut={(e) => e.currentTarget.style.color = "#242a38"}
               >
                 Mi Perfil
               </Link>
@@ -3158,12 +3323,12 @@ export default function PageClient({ initialData = null, initialHash = null }) {
                   <a
                     href="/admin"
                     style={{
-                      color: "#3d3525",
+                      color: "#242a38",
                       textDecoration: "none",
                       transition: "color 0.2s",
                     }}
                     onMouseOver={(e) => e.currentTarget.style.color = gold}
-                    onMouseOut={(e) => e.currentTarget.style.color = "#3d3525"}
+                    onMouseOut={(e) => e.currentTarget.style.color = "#242a38"}
                   >
                     Admin
                   </a>
@@ -3194,18 +3359,18 @@ export default function PageClient({ initialData = null, initialHash = null }) {
               letterSpacing: 0.75,
               cursor: "pointer",
               transition: "all 0.3s",
-              fontFamily: "'Cinzel', serif",
+              fontFamily: "'Oxanium', sans-serif",
               textTransform: "uppercase",
-              boxShadow: "0 4px 20px rgba(201,168,76,0.4)",
+              boxShadow: "0 4px 20px rgba(255,194,78,0.4)",
               zIndex: 999,
             }}
             onMouseOver={(e) => {
               e.currentTarget.style.transform = "translateY(-4px) scale(1.05)";
-              e.currentTarget.style.boxShadow = "0 8px 30px rgba(201,168,76,0.6)";
+              e.currentTarget.style.boxShadow = "0 8px 30px rgba(255,194,78,0.6)";
             }}
             onMouseOut={(e) => {
               e.currentTarget.style.transform = "translateY(0) scale(1)";
-              e.currentTarget.style.boxShadow = "0 4px 20px rgba(201,168,76,0.4)";
+              e.currentTarget.style.boxShadow = "0 4px 20px rgba(255,194,78,0.4)";
             }}
           >
             ⭐ Únete al Clan
@@ -3268,7 +3433,7 @@ export default function PageClient({ initialData = null, initialHash = null }) {
             {/* Modal Title */}
             <h2
               style={{
-                fontFamily: "'Cinzel', serif",
+                fontFamily: "'Oxanium', sans-serif",
                 fontSize: 28,
                 fontWeight: 700,
                 color: gold,
@@ -3482,15 +3647,15 @@ export default function PageClient({ initialData = null, initialHash = null }) {
                       style={{
                         width: "100%",
                         padding: "10px 36px 10px 14px",
-                        background: "linear-gradient(180deg, #1e1b18 0%, #16130f 100%)",
-                        border: "1.5px solid #3d3525",
+                        background: "linear-gradient(180deg, #090a0f 0%, #05060a 100%)",
+                        border: "1.5px solid #242a38",
                         borderRadius: "6px",
-                        color: "#e8dcc0",
+                        color: "#eef1f8",
                         fontSize: "13px",
                         fontFamily: "inherit",
                         cursor: "pointer",
                         appearance: "none",
-                        backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23c9a84c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
+                        backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23ffc24e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
                         backgroundRepeat: "no-repeat",
                         backgroundPosition: "right 12px center",
                         transition: "all 0.2s ease",
@@ -3582,14 +3747,14 @@ export default function PageClient({ initialData = null, initialHash = null }) {
                     letterSpacing: 1.5,
                     cursor: joinFormSubmitting ? "not-allowed" : "pointer",
                     transition: "all 0.3s",
-                    fontFamily: "'Cinzel', serif",
+                    fontFamily: "'Oxanium', sans-serif",
                     textTransform: "uppercase",
                     opacity: joinFormSubmitting ? 0.6 : 1,
                   }}
                   onMouseOver={(e) => {
                     if (!joinFormSubmitting) {
                       e.currentTarget.style.transform = "translateY(-2px)";
-                      e.currentTarget.style.boxShadow = "0 4px 15px rgba(201,168,76,0.4)";
+                      e.currentTarget.style.boxShadow = "0 4px 15px rgba(255,194,78,0.4)";
                     }
                   }}
                   onMouseOut={(e) => {

@@ -40,7 +40,7 @@ function LoginContent() {
         justifyContent: "center",
         background: "#0a0a0a"
       }}>
-        <div style={{ color: "#c9a84c" }}>Cargando...</div>
+        <div style={{ color: "#ffc24e" }}>Cargando...</div>
       </div>
     );
   }
@@ -69,10 +69,10 @@ function LoginContent() {
       >
         <h1
           style={{
-            fontFamily: "'Cinzel', serif",
+            fontFamily: "'Oxanium', sans-serif",
             fontSize: 32,
             fontWeight: 700,
-            color: "#c9a84c",
+            color: "#ffc24e",
             marginBottom: 12,
             letterSpacing: 4,
           }}
@@ -114,7 +114,7 @@ function LoginContent() {
             color: "#ffffff",
             border: "none",
             borderRadius: 6,
-            fontFamily: "'Cinzel', serif",
+            fontFamily: "'Oxanium', sans-serif",
             fontSize: 14,
             fontWeight: 600,
             letterSpacing: 2,
@@ -159,7 +159,7 @@ export default function LoginPage() {
             background: "#0a0a0a",
           }}
         >
-          <div style={{ color: "#c9a84c" }}>Cargando...</div>
+          <div style={{ color: "#ffc24e" }}>Cargando...</div>
         </div>
       }
     >
