@@ -433,7 +433,7 @@ function AuditLogSection() {
       ) : (
         <>
           <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+            <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}><table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, minWidth: 520 }}>
               <thead>
                 <tr style={{ borderBottom: `2px solid ${darkGold}` }}>
                   <th style={thStyle}>Fecha</th>
@@ -584,7 +584,7 @@ function AuditLogSection() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </table></div>
           </div>
 
           {/* Paginación */}
@@ -2921,7 +2921,7 @@ export default function AdminDashboard() {
 
                           {/* Niveles por Raza */}
                           <h4 style={{ color: gold, fontSize: 13, marginTop: 4, marginBottom: 12, textTransform: "uppercase", letterSpacing: 1 }}>Niveles por Raza</h4>
-                          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 20 }}>
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: 12, marginBottom: 20 }}>
                             <div>
                               <label style={{ display: "block", color: textMuted, fontSize: 11, marginBottom: 4 }}>Protoss</label>
                               <select
@@ -4095,7 +4095,7 @@ export default function AdminDashboard() {
                 </Button>
               </div>
               <div style={{ overflowX: "auto" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}><table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, minWidth: 520 }}>
                   <thead>
                     <tr style={{ borderBottom: `2px solid ${darkGold}` }}>
                       <th style={{ padding: "12px 8px", textAlign: "left", color: gold, fontWeight: 600 }}>Usuario</th>
@@ -4208,7 +4208,7 @@ export default function AdminDashboard() {
                     </tr>
                   ))}
                   </tbody>
-                </table>
+                </table></div>
               </div>
 
               {/* Paginación */}
@@ -4281,7 +4281,7 @@ export default function AdminDashboard() {
 
             {/* Lista de suscriptores */}
             <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+              <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}><table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, minWidth: 520 }}>
                 <thead>
                   <tr style={{ borderBottom: `2px solid ${darkGold}` }}>
                     <th style={{ padding: "12px 8px", textAlign: "left", color: gold, fontWeight: 600 }}>Email</th>
@@ -4339,7 +4339,7 @@ export default function AdminDashboard() {
                     ))
                   )}
                 </tbody>
-              </table>
+              </table></div>
             </div>
 
             <div style={{ marginTop: 16, padding: "12px", background: "rgba(255,194,78,0.05)", borderRadius: 6 }}>
