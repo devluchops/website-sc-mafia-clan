@@ -4,7 +4,7 @@ import { sendPushToAll } from "@/lib/push";
 
 // Perú = America/Lima = UTC-5 (sin horario de verano)
 const LIMA_OFFSET_HOURS = 5;
-const WINDOW_MS = 90 * 60 * 1000; // avisa si el inicio ocurrió en los últimos 90 min
+const WINDOW_MS = 30 * 60 * 1000; // margen para no perder el disparo entre corridas
 
 const TYPE_LABELS = {
   showmatch: "Showmatch",
@@ -17,7 +17,7 @@ const TYPE_LABELS = {
 
 function parseStart(timeStr) {
   if (!timeStr) return { h: 9, m: 0 };
-  const first = String(timeStr).split(/[-–—]/)[0].trim(); // "8:00 AM"
+  const first = String(timeStr).split(/[-–—]/)[0].trim();
   const m = first.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/i);
   if (!m) return { h: 9, m: 0 };
   let h = parseInt(m[1], 10);
@@ -32,12 +32,16 @@ function startInstantUTC(eventDate, timeStr) {
   const ymd = String(eventDate).slice(0, 10).split("-").map(Number);
   if (ymd.length !== 3 || ymd.some(isNaN)) return null;
   const { h, m } = parseStart(timeStr);
-  // Lima local -> UTC: sumar el offset
   return Date.UTC(ymd[0], ymd[1] - 1, ymd[2], h + LIMA_OFFSET_HOURS, m);
 }
 
+/**
+ * Recordatorios de eventos. Pensado para ejecutarse cada ~15 min desde un
+ * programador externo (GitHub Actions), porque el plan Hobby de Vercel solo
+ * permite cron diario. Dispara cuando llega el momento del recordatorio
+ * (inicio - "avisar antes") y marca el evento para no repetir.
+ */
 export async function GET(request) {
-  // Protección: Vercel Cron añade Authorization: Bearer <CRON_SECRET> automáticamente
   const auth = request.headers.get("authorization");
   if (process.env.CRON_SECRET && auth !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
@@ -49,7 +53,6 @@ export async function GET(request) {
     await sql`ALTER TABLE events ADD COLUMN IF NOT EXISTS remind_before_min INTEGER DEFAULT 0`;
 
     const now = Date.now();
-    // candidatos: con fecha, no recordados aún
     const events = await sql`
       SELECT * FROM events
       WHERE event_date IS NOT NULL AND reminded_at IS NULL
@@ -61,7 +64,6 @@ export async function GET(request) {
       if (start == null) continue;
       const lead = (ev.remind_before_min || 0) * 60 * 1000;
       const remindAt = start - lead;
-      // disparar cuando llegó el momento del recordatorio (dentro de la ventana) y no se avisó
       if (now >= remindAt && now - remindAt <= WINDOW_MS) {
         const label = TYPE_LABELS[ev.event_type] || "Evento";
         const leadTxt =
