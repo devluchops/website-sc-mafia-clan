@@ -29,10 +29,11 @@ function parseStart(timeStr) {
 }
 
 function startInstantUTC(eventDate, timeStr) {
-  const ymd = String(eventDate).slice(0, 10).split("-").map(Number);
-  if (ymd.length !== 3 || ymd.some(isNaN)) return null;
+  // neon devuelve DATE como objeto Date; usamos sus componentes UTC
+  const d = new Date(eventDate);
+  if (isNaN(d.getTime())) return null;
   const { h, m } = parseStart(timeStr);
-  return Date.UTC(ymd[0], ymd[1] - 1, ymd[2], h + LIMA_OFFSET_HOURS, m);
+  return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), h + LIMA_OFFSET_HOURS, m);
 }
 
 /**

@@ -34,14 +34,18 @@ export async function GET(_req, { params }) {
       return new Response("Evento sin fecha", { status: 404 });
     }
 
-    const ymd = String(ev.event_date).slice(0, 10).split("-").map(Number);
+    // neon devuelve DATE como objeto Date; usamos sus componentes UTC
+    const dObj = new Date(ev.event_date);
+    if (isNaN(dObj.getTime())) return new Response("Fecha inválida", { status: 404 });
+    const Y = dObj.getUTCFullYear(), Mo = dObj.getUTCMonth(), Da = dObj.getUTCDate();
+
     const parts = String(ev.event_time || "").split(/[-–—]/);
     const start = parseTime(parts[0], 20);
     const end = parts[1] ? parseTime(parts[1], 23) : { h: start.h + 2, m: start.m };
 
     // Lima local -> UTC
-    let startMs = Date.UTC(ymd[0], ymd[1] - 1, ymd[2], start.h + LIMA_OFFSET_HOURS, start.m);
-    let endMs = Date.UTC(ymd[0], ymd[1] - 1, ymd[2], end.h + LIMA_OFFSET_HOURS, end.m);
+    let startMs = Date.UTC(Y, Mo, Da, start.h + LIMA_OFFSET_HOURS, start.m);
+    let endMs = Date.UTC(Y, Mo, Da, end.h + LIMA_OFFSET_HOURS, end.m);
     if (endMs <= startMs) endMs += 24 * 3600 * 1000; // termina al día siguiente (ej. medianoche)
 
     const ics = [
