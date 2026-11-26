@@ -1,6 +1,7 @@
 import "./globals.css";
 import SessionProvider from "@/components/SessionProvider";
 import PwaRegister from "@/components/PwaRegister";
+import InstallBanner from "@/components/InstallBanner";
 
 // El sitio es dinámico (auth + base de datos); evitamos el prerender estático
 // que rompía el build (useContext null en /, /admin, /login, /404, etc.).
@@ -55,6 +56,7 @@ export default function RootLayout({ children }) {
       <body>
         <SessionProvider>{children}</SessionProvider>
         <PwaRegister />
+        <InstallBanner />
       </body>
     </html>
   );
