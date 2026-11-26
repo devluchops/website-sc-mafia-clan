@@ -438,3 +438,15 @@ html {
   .admin-more.open { display: block; }
   .admin-main-pad { padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px)) !important; }
 }
+
+/* --- calendario: celdas más compactas en móvil (no alargadas) --- */
+@media (max-width: 520px) {
+  .cal-grid { gap: 4px; }
+  .cal-cell { min-height: 42px; padding: 4px 3px; border-radius: 6px; }
+  .cal-daynum { font-size: 12px; }
+  .cal-evs { gap: 2px; margin-top: 2px; }
+  .cal-ev { font-size: 9px; padding: 1px 4px; }
+  .cal-more { font-size: 9px; }
+  .cal-panel { padding: 14px; }
+  .cal-dow { font-size: 10px; }
+}

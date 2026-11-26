@@ -2290,7 +2290,7 @@ export default function AdminDashboard() {
           { id: "members", label: "Miembros", icon: "members", can: p.is_admin || p.can_manage_members },
           { id: "blog", label: "Blog", icon: "blog", can: p.is_admin || p.can_publish_blog },
           { id: "events", label: "Eventos", icon: "events", can: p.is_admin || p.can_publish_events },
-          { id: "notifications", label: "Notis", icon: "bell", can: p.is_admin || p.can_publish_events },
+          { id: "notifications", label: "Notificaciones", icon: "bell", can: p.is_admin || p.can_publish_events },
           { id: "rules", label: "Reglas", icon: "rules", can: p.is_admin || p.can_edit_rules },
           { id: "permissions", label: "Permisos", icon: "key", can: p.is_admin || p.can_manage_permissions },
           { id: "subscribers", label: "Suscriptores", icon: "mail", can: p.is_admin || p.can_publish_blog },
