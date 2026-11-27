@@ -24,7 +24,10 @@ export async function GET(_request, { params }) {
   const mark = Math.round(width * 0.28);
 
   const logo = await readFile(join(process.cwd(), "public", "logo.png"));
-  const logoSrc = `data:image/png;base64,${logo.toString("base64")}`;
+  // logo.png es en realidad un JPEG (bytes FF D8 FF); el mime tiene que coincidir o
+  // @vercel/og no lo dibuja. Se detecta por los primeros bytes.
+  const logoMime = logo[0] === 0x89 ? "image/png" : "image/jpeg";
+  const logoSrc = `data:${logoMime};base64,${logo.toString("base64")}`;
 
   return new ImageResponse(
     (
@@ -48,13 +51,14 @@ export async function GET(_request, { params }) {
         <div
           style={{
             display: "flex",
+            gap: Math.round(width * 0.028),
             marginTop: Math.round(width * 0.07),
             fontSize: Math.round(width * 0.085),
             fontWeight: 800,
             letterSpacing: Math.round(width * 0.006),
           }}
         >
-          <span style={{ color: "#ffffff" }}>CLAN&nbsp;</span>
+          <span style={{ color: "#ffffff" }}>CLAN</span>
           <span style={{ color: PWA_GOLD }}>MAFIA</span>
         </div>
         <div
