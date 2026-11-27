@@ -643,7 +643,7 @@ export default function AdminDashboard() {
   const [tournaments, setTournaments] = useState([]);
   const [subscribers, setSubscribers] = useState([]);
   const [subscriberStats, setSubscriberStats] = useState(null);
-  const [notifForm, setNotifForm] = useState({ title: "", body: "", url: "" });
+  const [notifForm, setNotifForm] = useState({ title: "", body: "", url: "", detail: "" });
   const [notifSending, setNotifSending] = useState(false);
   const [notifResult, setNotifResult] = useState("");
   const [pushCount, setPushCount] = useState(null);
@@ -1260,7 +1260,7 @@ export default function AdminDashboard() {
       const data = await res.json();
       if (res.ok) {
         setNotifResult(`✅ Enviada a ${data.sent} dispositivo(s)${data.removed ? ` · ${data.removed} inactivos limpiados` : ""}`);
-        setNotifForm({ title: "", body: "", url: "" });
+        setNotifForm({ title: "", body: "", url: "", detail: "" });
         loadPushCount();
       } else {
         setNotifResult("❌ " + (data.error || "Error al enviar"));
@@ -4861,11 +4861,18 @@ export default function AdminDashboard() {
               placeholder="Ej: Bienvenido al clan / Baja / Anuncio"
             />
             <Input
-              label="Mensaje"
+              label="Mensaje (corto, el que llega al celular)"
               textarea
               value={notifForm.body}
               onChange={(val) => setNotifForm({ ...notifForm, body: val })}
-              placeholder="Texto que verá la gente en la notificación"
+              placeholder="Texto breve que verá la gente en la notificación"
+            />
+            <Input
+              label="Detalle ampliado (opcional, se ve en la bandeja de la app)"
+              textarea
+              value={notifForm.detail}
+              onChange={(val) => setNotifForm({ ...notifForm, detail: val })}
+              placeholder="Texto más largo con el detalle completo. Si lo dejas vacío, en la bandeja se muestra el mensaje corto."
             />
             <Input
               label="Enlace al tocar (opcional)"
