@@ -122,7 +122,7 @@ export default function Organigrama({ org }) {
 
         <Connector />
         <div style={{ display: "flex", justifyContent: "center" }}>
-          <Role role="Community Manager" name={g.cm[0] || "—"} color={C.terran} />
+          <Role role="Apoyo Directiva" name={g.cm[0] || "—"} color={C.goldHi} />
         </div>
 
         <Connector />

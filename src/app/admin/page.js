@@ -4646,7 +4646,7 @@ export default function AdminDashboard() {
                   >
                     <option value="lider">Líder</option>
                     <option value="socio">Socio</option>
-                    <option value="cm">Community Manager</option>
+                    <option value="cm">Apoyo Directiva</option>
                     <option value="capitan">Capitán</option>
                     <option value="miembro">Miembro</option>
                   </select>
