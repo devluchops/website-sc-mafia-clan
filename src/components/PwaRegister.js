@@ -13,7 +13,28 @@ export default function PwaRegister() {
     };
     if (document.readyState === "complete") register();
     else window.addEventListener("load", register);
-    return () => window.removeEventListener("load", register);
+
+    // Borrar el numerito rojo del ícono cuando la app está abierta/al frente.
+    const clearBadge = () => {
+      if ("clearAppBadge" in navigator) {
+        try {
+          navigator.clearAppBadge().catch(() => {});
+        } catch (_e) {}
+      }
+      navigator.serviceWorker.ready
+        .then((reg) => reg.active && reg.active.postMessage({ type: "clear-badge" }))
+        .catch(() => {});
+    };
+    const onVisible = () => {
+      if (document.visibilityState === "visible") clearBadge();
+    };
+    clearBadge();
+    document.addEventListener("visibilitychange", onVisible);
+
+    return () => {
+      window.removeEventListener("load", register);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
   }, []);
 
   return null;
