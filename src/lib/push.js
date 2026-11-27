@@ -93,6 +93,8 @@ export async function ensurePushLogTable(sql) {
   `;
   // Detalle por dispositivo: [{ device, status: 'ok'|'expired'|'error', code }]
   await sql`ALTER TABLE push_log ADD COLUMN IF NOT EXISTS results JSONB`;
+  // Texto ampliado para la bandeja de la app (el push se queda corto; esto es el detalle)
+  await sql`ALTER TABLE push_log ADD COLUMN IF NOT EXISTS detail TEXT`;
 }
 
 export async function getPushLog(limit = 30) {
@@ -156,10 +158,10 @@ export async function sendPushToAll(payload, meta = {}) {
   try {
     await ensurePushLogTable(sql);
     await sql`
-      INSERT INTO push_log (title, body, url, kind, sent_by, sent, removed, total, results)
+      INSERT INTO push_log (title, body, url, kind, sent_by, sent, removed, total, results, detail)
       VALUES (${payload.title || ""}, ${payload.body || ""}, ${payload.url || null},
               ${meta.kind || "manual"}, ${meta.sentBy || null}, ${sent}, ${removed}, ${targets.length},
-              ${JSON.stringify(results)})
+              ${JSON.stringify(results)}, ${payload.detail || null})
     `;
   } catch (e) {
     console.error("No se pudo registrar el log de push:", e.message);
