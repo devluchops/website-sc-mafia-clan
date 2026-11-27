@@ -64,6 +64,17 @@ export async function countSubscriptions() {
   return row?.n || 0;
 }
 
+// Etiqueta corta del dispositivo a partir del endpoint / user-agent.
+export function deviceLabel(endpoint = "", ua = "") {
+  if (endpoint.includes("apple.com")) return "iPhone";
+  if (endpoint.includes("fcm.googleapis") || /android/i.test(ua)) return "Android";
+  if (endpoint.includes("mozilla")) return "Firefox";
+  if (endpoint.includes("windows.com")) return "Edge";
+  if (/mac os x/i.test(ua)) return "Mac";
+  if (/windows/i.test(ua)) return "Windows";
+  return "Otro";
+}
+
 // Historial de notificaciones enviadas
 export async function ensurePushLogTable(sql) {
   await sql`
@@ -80,6 +91,8 @@ export async function ensurePushLogTable(sql) {
       created_at TIMESTAMP DEFAULT NOW()
     )
   `;
+  // Detalle por dispositivo: [{ device, status: 'ok'|'expired'|'error', code }]
+  await sql`ALTER TABLE push_log ADD COLUMN IF NOT EXISTS results JSONB`;
 }
 
 export async function getPushLog(limit = 30) {
@@ -114,19 +127,26 @@ export async function sendPushToAll(payload, meta = {}) {
 
   let sent = 0;
   let removed = 0;
+  const results = [];
 
   await Promise.all(
     targets.map(async (s) => {
+      const device = deviceLabel(s.endpoint, s.user_agent);
       try {
         await webpush.sendNotification(
           { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
           body
         );
         sent++;
+        results.push({ device, status: "ok", code: 201 });
       } catch (err) {
-        if (err?.statusCode === 404 || err?.statusCode === 410) {
+        const code = err?.statusCode || null;
+        if (code === 404 || code === 410) {
           await sql`DELETE FROM push_subscriptions WHERE endpoint = ${s.endpoint}`;
           removed++;
+          results.push({ device, status: "expired", code });
+        } else {
+          results.push({ device, status: "error", code });
         }
       }
     })
@@ -136,13 +156,14 @@ export async function sendPushToAll(payload, meta = {}) {
   try {
     await ensurePushLogTable(sql);
     await sql`
-      INSERT INTO push_log (title, body, url, kind, sent_by, sent, removed, total)
+      INSERT INTO push_log (title, body, url, kind, sent_by, sent, removed, total, results)
       VALUES (${payload.title || ""}, ${payload.body || ""}, ${payload.url || null},
-              ${meta.kind || "manual"}, ${meta.sentBy || null}, ${sent}, ${removed}, ${subs.length})
+              ${meta.kind || "manual"}, ${meta.sentBy || null}, ${sent}, ${removed}, ${targets.length},
+              ${JSON.stringify(results)})
     `;
   } catch (e) {
     console.error("No se pudo registrar el log de push:", e.message);
   }
 
-  return { ok: true, sent, removed, total: subs.length };
+  return { ok: true, sent, removed, total: targets.length, results };
 }
