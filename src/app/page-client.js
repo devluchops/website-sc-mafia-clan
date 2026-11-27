@@ -2617,6 +2617,29 @@ function RulesSection({ rules }) {
           Como miembro del clan <strong style={{ color: gold }}>MAFIA</strong>, te comprometes a seguir
           estas reglas para mantener un ambiente competitivo, respetuoso y profesional.
         </p>
+        <a
+          href="/clan-mafia-principios.pdf"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 8,
+            marginTop: 16,
+            fontFamily: "'Oxanium', sans-serif",
+            fontWeight: 700,
+            fontSize: 13,
+            letterSpacing: "0.06em",
+            textTransform: "uppercase",
+            color: "#15110a",
+            background: "linear-gradient(135deg, #ffd87a, #ffc24e)",
+            padding: "11px 20px",
+            borderRadius: 7,
+            textDecoration: "none",
+          }}
+        >
+          ⬇ Descargar documento oficial (PDF)
+        </a>
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
