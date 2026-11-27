@@ -3,6 +3,7 @@ import SessionProvider from "@/components/SessionProvider";
 import PwaRegister from "@/components/PwaRegister";
 import InstallBanner from "@/components/InstallBanner";
 import NotifyBell from "@/components/NotifyBell";
+import { IOS_SPLASH_SCREENS, splashMedia, splashSize } from "@/lib/pwa";
 
 // El sitio es dinámico (auth + base de datos); evitamos el prerender estático
 // que rompía el build (useContext null en /, /admin, /login, /404, etc.).
@@ -33,7 +34,16 @@ export const metadata = {
     capable: true,
     statusBarStyle: "black-translucent",
     title: "Clan MAFIA",
+    // La pantalla de arranque del iPhone (así no queda negro al abrir la app instalada):
+    // una imagen por modelo, ver IOS_SPLASH_SCREENS.
+    startupImage: IOS_SPLASH_SCREENS.map((s) => ({
+      url: `/pwa/splash/${splashSize(s)}`,
+      media: splashMedia(s),
+    })),
   },
+  // iOS solo usa la pantalla de arranque con el meta viejo. Next emite el nombre nuevo
+  // (mobile-web-app-capable), así que el viejo se agrega a mano.
+  other: { "apple-mobile-web-app-capable": "yes" },
   icons: {
     icon: [
       { url: "/favicon.svg", type: "image/svg+xml" },
