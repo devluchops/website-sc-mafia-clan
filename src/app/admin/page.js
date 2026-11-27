@@ -4683,6 +4683,20 @@ export default function AdminDashboard() {
           const ingresos = filtered.filter((r) => r.kind === "ingreso").reduce((s, r) => s + Number(r.amount), 0);
           const egresos = filtered.filter((r) => r.kind === "egreso").reduce((s, r) => s + Number(r.amount), 0);
           const neto = ingresos - egresos;
+          const byCat = {};
+          filtered.forEach((r) => { const k = (r.category || "Sin tipo") + "|" + r.kind; byCat[k] = (byCat[k] || 0) + Number(r.amount); });
+          const catRows = Object.entries(byCat).map(([k, v]) => { const [cat, kind] = k.split("|"); return { cat, kind, total: v }; }).sort((a, b) => b.total - a.total);
+          const exportExcel = async () => {
+            try {
+              const XLSX = await import("xlsx");
+              const rows = filtered.map((r) => ({ Fecha: dateStr(r.tx_date), Tipo: r.kind, Categoria: r.category || "", Concepto: r.concept || "", Monto: r.kind === "ingreso" ? Number(r.amount) : -Number(r.amount) }));
+              const wb = XLSX.utils.book_new();
+              XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows.length ? rows : [{ Fecha: "", Tipo: "", Categoria: "", Concepto: "", Monto: 0 }]), "Movimientos");
+              XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([{ Concepto: "Ingresos", Monto: ingresos }, { Concepto: "Egresos", Monto: egresos }, { Concepto: "Balance neto", Monto: neto }]), "Resumen");
+              const periodo = finYear + (finMonth === "all" ? "" : "-" + String(Number(finMonth) + 1).padStart(2, "0"));
+              XLSX.writeFile(wb, "finanzas-" + periodo + ".xlsx");
+            } catch (e) { console.error("Export error:", e); }
+          };
           const tile = { background: bg, border: `1px solid ${darkGold}`, borderRadius: 10, padding: 16, textAlign: "center" };
           const num = { fontFamily: "'Oxanium', sans-serif", fontWeight: 800, fontSize: 24, fontVariantNumeric: "tabular-nums" };
           const lbl = { fontFamily: "'Oxanium', sans-serif", fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: textMuted, marginTop: 4 };
@@ -4697,6 +4711,7 @@ export default function AdminDashboard() {
                   <option value="all">Todo el año</option>
                   {MESES.map((m, i) => <option key={i} value={i}>{m}</option>)}
                 </select>
+                <Button variant="secondary" onClick={exportExcel} style={{ marginLeft: "auto" }}>⬇ Exportar Excel</Button>
               </div>
 
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 12, marginBottom: 22 }}>
@@ -4704,6 +4719,20 @@ export default function AdminDashboard() {
                 <div style={tile}><div style={{ ...num, color: "#ff8a5c" }}>{money(egresos)}</div><div style={lbl}>Egresos</div></div>
                 <div style={tile}><div style={{ ...num, color: neto >= 0 ? gold : "#ff6b6b" }}>{money(neto)}</div><div style={lbl}>Balance neto</div></div>
               </div>
+
+              {catRows.length > 0 && (
+                <div style={{ marginBottom: 22 }}>
+                  <p style={{ fontFamily: "'Oxanium', sans-serif", fontSize: 12, letterSpacing: 1, textTransform: "uppercase", color: textMuted, marginBottom: 10 }}>Desglose por tipo</p>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10 }}>
+                    {catRows.map((c) => (
+                      <div key={c.cat + c.kind} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, background: bg, border: `1px solid ${darkGold}`, borderRadius: 8, padding: "10px 12px" }}>
+                        <span style={{ color: textLight, fontSize: 13 }}>{c.cat} <span style={{ color: textMuted, fontSize: 11 }}>· {c.kind}</span></span>
+                        <strong style={{ fontFamily: "'Oxanium', sans-serif", fontVariantNumeric: "tabular-nums", color: c.kind === "ingreso" ? "#4ee08a" : "#ff8a5c" }}>{money(c.total)}</strong>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Agregar movimiento */}
               <div style={{ background: bg, border: `1px solid ${darkGold}`, borderRadius: 10, padding: 16, marginBottom: 20 }}>
