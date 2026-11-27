@@ -100,8 +100,12 @@ function Input({ label, value, onChange, placeholder, textarea, type = "text" })
           border: `1px solid ${darkGold}`,
           borderRadius: 6,
           color: textLight,
-          fontSize: 14,
+          fontSize: 16,
           fontFamily: "inherit",
+          textAlign: "left",
+          minHeight: 44,
+          WebkitAppearance: "none",
+          appearance: "none",
           ...(textarea && { minHeight: 100, resize: "vertical" }),
         }}
       />
@@ -183,10 +187,11 @@ function Modal({ isOpen, onClose, title, children, zIndex = 1000 }) {
         bottom: 0,
         background: "rgba(0,0,0,0.8)",
         display: "flex",
-        alignItems: "center",
+        alignItems: "flex-start",
         justifyContent: "center",
         zIndex: zIndex,
-        padding: 20,
+        padding: "20px 16px 40px",
+        overflowY: "auto",
       }}
       onClick={onClose}
     >
@@ -198,8 +203,7 @@ function Modal({ isOpen, onClose, title, children, zIndex = 1000 }) {
           padding: 24,
           maxWidth: 600,
           width: "100%",
-          maxHeight: "90vh",
-          overflow: "auto",
+          margin: "auto",
         }}
         onClick={(e) => e.stopPropagation()}
       >
