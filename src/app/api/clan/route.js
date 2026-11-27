@@ -33,8 +33,13 @@ export async function GET() {
     const videos = await sql`SELECT * FROM videos ORDER BY created_at DESC`;
     const events = await sql`SELECT * FROM events ORDER BY created_at DESC`;
     const rules = await sql`SELECT * FROM clan_rules ORDER BY order_index ASC`;
+    let org = [];
+    try {
+      org = await sql`SELECT id, section, name, order_index FROM clan_org ORDER BY order_index ASC`;
+    } catch (_e) { org = []; }
 
     return NextResponse.json({
+      org,
       clan: clanInfo || { name: "MAFIA", tagline: "El mejor clan del StarCraft en mapa Fastest", logo: "/logo.png" },
       members: members.map(m => ({
         id: m.id,
