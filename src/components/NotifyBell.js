@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import PushControls from "./PushControls";
 
 const DISMISS_KEY = "mafia_notify_prompt_dismissed_at";
@@ -16,9 +17,13 @@ function Bell({ size = 26, color = "#15110a" }) {
 }
 
 export default function NotifyBell() {
+  const pathname = usePathname();
   const [eligible, setEligible] = useState(false);
   const [open, setOpen] = useState(false);
   const [subscribed, setSubscribed] = useState(false);
+  // Hasta no comprobar la suscripción, no se pinta la campana (evita que parpadee
+  // y desaparezca cuando ya estás suscrito).
+  const [checked, setChecked] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -31,8 +36,11 @@ export default function NotifyBell() {
 
     navigator.serviceWorker.ready
       .then((r) => r.pushManager.getSubscription())
-      .then((s) => setSubscribed(!!s))
-      .catch(() => {});
+      .then((s) => {
+        setSubscribed(!!s);
+        setChecked(true);
+      })
+      .catch(() => setChecked(true));
 
     // Aviso emergente: se abre solo una vez tras unos segundos (soft-ask),
     // salvo que ya esté suscrito o lo hayan cerrado hace poco.
@@ -54,6 +62,12 @@ export default function NotifyBell() {
   }, []);
 
   if (!eligible) return null;
+  // No en páginas internas (solo tuyas): admin y login.
+  if (pathname && (pathname.startsWith("/admin") || pathname.startsWith("/login"))) return null;
+  // Si ya estás suscrito, la campana cumplió su función: se esconde. Vuelve si te
+  // desuscribes (desde la tarjeta de notificaciones de la página). Para apagar/gestionar
+  // avisos está esa tarjeta, no un botón flotante permanente.
+  if (checked && subscribed) return null;
 
   const close = () => {
     setOpen(false);
