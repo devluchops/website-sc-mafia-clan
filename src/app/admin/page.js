@@ -4697,6 +4697,39 @@ export default function AdminDashboard() {
               XLSX.writeFile(wb, "finanzas-" + periodo + ".xlsx");
             } catch (e) { console.error("Export error:", e); }
           };
+          const exportPdf = async () => {
+            try {
+              const jspdf = await import("jspdf");
+              const JsPDF = jspdf.jsPDF || jspdf.default;
+              const doc = new JsPDF({ unit: "pt", format: "a4" });
+              const left = 40;
+              const pageH = doc.internal.pageSize.getHeight();
+              let y = 48;
+              const line = (txt, o = {}) => {
+                if (y > pageH - 40) { doc.addPage(); y = 48; }
+                doc.setFontSize(o.size || 11);
+                doc.text(String(txt), o.x || left, y);
+                y += o.gap || 15;
+              };
+              doc.setFont("helvetica", "bold"); line("CLAN MAFIA - Finanzas", { size: 18, gap: 10 });
+              doc.setFont("helvetica", "normal");
+              line("Periodo: " + finYear + (finMonth === "all" ? " (todo el año)" : " - " + MESES[Number(finMonth)]), { gap: 20 });
+              doc.setFont("helvetica", "bold"); line("Resumen", { size: 13, gap: 15 }); doc.setFont("helvetica", "normal");
+              line("Ingresos:  " + money(ingresos));
+              line("Egresos:   " + money(egresos));
+              doc.setFont("helvetica", "bold"); line("Balance neto:  " + money(neto), { gap: 20 }); doc.setFont("helvetica", "normal");
+              if (catRows.length) {
+                doc.setFont("helvetica", "bold"); line("Desglose por tipo", { size: 13, gap: 15 }); doc.setFont("helvetica", "normal");
+                catRows.forEach((c) => line("- " + c.cat + " (" + c.kind + "):  " + money(c.total)));
+                y += 8;
+              }
+              doc.setFont("helvetica", "bold"); line("Movimientos", { size: 13, gap: 15 }); doc.setFont("helvetica", "normal");
+              if (!filtered.length) line("Sin movimientos en el periodo.");
+              filtered.forEach((r) => line(dateStr(r.tx_date) + "   " + (r.kind === "ingreso" ? "+" : "-") + money(r.amount) + "   " + (r.concept || r.category || "")));
+              const periodo = finYear + (finMonth === "all" ? "" : "-" + String(Number(finMonth) + 1).padStart(2, "0"));
+              doc.save("finanzas-" + periodo + ".pdf");
+            } catch (e) { console.error("PDF error:", e); }
+          };
           const tile = { background: bg, border: `1px solid ${darkGold}`, borderRadius: 10, padding: 16, textAlign: "center" };
           const num = { fontFamily: "'Oxanium', sans-serif", fontWeight: 800, fontSize: 24, fontVariantNumeric: "tabular-nums" };
           const lbl = { fontFamily: "'Oxanium', sans-serif", fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: textMuted, marginTop: 4 };
@@ -4712,6 +4745,7 @@ export default function AdminDashboard() {
                   {MESES.map((m, i) => <option key={i} value={i}>{m}</option>)}
                 </select>
                 <Button variant="secondary" onClick={exportExcel} style={{ marginLeft: "auto" }}>⬇ Exportar Excel</Button>
+                <Button variant="secondary" onClick={exportPdf}>⬇ Exportar PDF</Button>
               </div>
 
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 12, marginBottom: 22 }}>
