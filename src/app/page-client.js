@@ -1325,7 +1325,7 @@ function VideosSection({ videos }) {
   );
 }
 
-function RosterSection({ members }) {
+function RosterSection({ members, org }) {
   const [sortBy, setSortBy] = useState("level");
   const [selectedMember, setSelectedMember] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -1414,7 +1414,7 @@ function RosterSection({ members }) {
 
   return (
     <div>
-      <Organigrama />
+      <Organigrama org={org} />
 
       <SectionTitle>
         Miembros del clan ({searchQuery ? `${filtered.length} / ${members.length}` : members.length})
@@ -3051,7 +3051,7 @@ export default function PageClient({ initialData = null, initialHash = null }) {
     );
   }
 
-  const { clan, members, posts, videos, events, rules } = data;
+  const { clan, members, posts, videos, events, rules, org } = data;
 
   // Próximo evento (desde hoy en adelante) para la tarjeta del hero
   const _today = new Date();
@@ -3260,7 +3260,7 @@ export default function PageClient({ initialData = null, initialHash = null }) {
         </main>
       ) : activeTab === "roster" ? (
         <main className="lz-wrap" style={{ padding: "40px 20px 64px" }}>
-          <RosterSection members={members} />
+          <RosterSection members={members} org={org} />
         </main>
       ) : (
         <main style={{ maxWidth: 880, margin: "0 auto", padding: "40px 20px 56px" }}>

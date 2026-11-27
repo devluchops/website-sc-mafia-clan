@@ -649,6 +649,9 @@ export default function AdminDashboard() {
   const [pushCount, setPushCount] = useState(null);
   const [pushLog, setPushLog] = useState([]);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [orgEntries, setOrgEntries] = useState([]);
+  const [orgSaving, setOrgSaving] = useState(false);
+  const [orgMsg, setOrgMsg] = useState("");
 
   // Modal states
   const [memberModal, setMemberModal] = useState({ isOpen: false, member: null });
@@ -731,6 +734,7 @@ export default function AdminDashboard() {
       window.location.hash = activeSection;
     }
     if (activeSection === "notifications") loadPushCount();
+    if (activeSection === "organigrama") loadOrg();
   }, [activeSection]);
 
   useEffect(() => {
@@ -1161,6 +1165,32 @@ export default function AdminDashboard() {
         setPushLog(d.log || []);
       }
     } catch (_e) {}
+  };
+
+  const loadOrg = async () => {
+    try {
+      const res = await fetch("/api/admin/org");
+      const d = await res.json();
+      if (res.ok) setOrgEntries((d.org || []).map((e) => ({ section: e.section, name: e.name })));
+    } catch (_e) {}
+  };
+
+  const saveOrg = async () => {
+    setOrgSaving(true);
+    setOrgMsg("");
+    try {
+      const res = await fetch("/api/admin/org", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ entries: orgEntries }),
+      });
+      const d = await res.json();
+      if (res.ok) setOrgMsg(`✅ Organigrama guardado (${d.count} entradas)`);
+      else setOrgMsg("❌ " + (d.error || "Error al guardar"));
+    } catch (e) {
+      setOrgMsg("❌ " + e.message);
+    }
+    setOrgSaving(false);
   };
 
   const handleSendNotification = async () => {
@@ -2238,6 +2268,28 @@ export default function AdminDashboard() {
               Notificaciones
             </button>
           )}
+          {(session?.user?.permissions?.is_admin || session?.user?.permissions?.can_manage_members) && (
+            <button
+              onClick={() => setActiveSection("organigrama")}
+              style={{
+                background: activeSection === "organigrama" ? "rgba(255,194,78,0.08)" : "transparent",
+                border: "none",
+                color: activeSection === "organigrama" ? gold : textMuted,
+                fontFamily: "'Oxanium', sans-serif",
+                fontSize: 12,
+                fontWeight: 600,
+                letterSpacing: 1.5,
+                textTransform: "uppercase",
+                padding: "16px 20px",
+                cursor: "pointer",
+                borderBottom: activeSection === "organigrama" ? `2px solid ${gold}` : "2px solid transparent",
+                transition: "all 0.2s",
+                whiteSpace: "nowrap",
+              }}
+            >
+              Organigrama
+            </button>
+          )}
         </div>
 
         {/* Selector de sección (solo móvil / PWA) */}
@@ -2295,6 +2347,7 @@ export default function AdminDashboard() {
           { id: "blog", label: "Blog", icon: "blog", can: p.is_admin || p.can_publish_blog },
           { id: "events", label: "Eventos", icon: "events", can: p.is_admin || p.can_publish_events },
           { id: "notifications", label: "Notificaciones", icon: "bell", can: p.is_admin || p.can_publish_events },
+          { id: "organigrama", label: "Organigrama", icon: "members", can: p.is_admin || p.can_manage_members },
           { id: "rules", label: "Reglas", icon: "rules", can: p.is_admin || p.can_edit_rules },
           { id: "permissions", label: "Permisos", icon: "key", can: p.is_admin || p.can_manage_permissions },
           { id: "subscribers", label: "Suscriptores", icon: "mail", can: p.is_admin || p.can_publish_blog },
@@ -4503,6 +4556,49 @@ export default function AdminDashboard() {
 
         {/* Audit Log */}
         {activeSection === "audit" && session?.user?.permissions?.is_admin && <AuditLogSection />}
+
+        {activeSection === "organigrama" && (session?.user?.permissions?.is_admin || session?.user?.permissions?.can_manage_members) && (
+          <AdminCard title="Organigrama">
+            <p style={{ color: textMuted, fontSize: 13, marginBottom: 16 }}>
+              Edita la estructura del clan. Se muestra en la pestaña <strong style={{ color: gold }}>Miembros</strong> del sitio y se puede descargar en PDF.
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {orgEntries.map((e, i) => (
+                <div key={i} style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                  <select
+                    value={e.section}
+                    onChange={(ev) => setOrgEntries(orgEntries.map((x, j) => (j === i ? { ...x, section: ev.target.value } : x)))}
+                    style={{ ...getSelectStyle(), width: "auto", minWidth: 130, flex: "0 0 auto" }}
+                  >
+                    <option value="lider">Líder</option>
+                    <option value="socio">Socio</option>
+                    <option value="cm">Community Manager</option>
+                    <option value="capitan">Capitán</option>
+                    <option value="miembro">Miembro</option>
+                  </select>
+                  <input
+                    value={e.name}
+                    onChange={(ev) => setOrgEntries(orgEntries.map((x, j) => (j === i ? { ...x, name: ev.target.value } : x)))}
+                    placeholder="Nombre"
+                    style={{ flex: 1, minWidth: 140, padding: "10px 14px", background: bg, border: `1px solid ${darkGold}`, borderRadius: 6, color: textLight, fontSize: 16 }}
+                  />
+                  <Button variant="danger" style={{ padding: "8px 12px", fontSize: 11 }} onClick={() => setOrgEntries(orgEntries.filter((_, j) => j !== i))}>
+                    ✕
+                  </Button>
+                </div>
+              ))}
+            </div>
+            <div style={{ display: "flex", gap: 12, marginTop: 16, alignItems: "center", flexWrap: "wrap" }}>
+              <Button variant="secondary" onClick={() => setOrgEntries([...orgEntries, { section: "miembro", name: "" }])}>
+                + Agregar
+              </Button>
+              <Button onClick={saveOrg} loading={orgSaving}>
+                Guardar organigrama
+              </Button>
+              {orgMsg && <span style={{ color: textMuted, fontSize: 13 }}>{orgMsg}</span>}
+            </div>
+          </AdminCard>
+        )}
 
         {activeSection === "notifications" && (session?.user?.permissions?.is_admin || session?.user?.permissions?.can_publish_events) && (
           <>
