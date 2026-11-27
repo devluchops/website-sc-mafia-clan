@@ -1179,7 +1179,7 @@ export default function AdminDashboard() {
     try {
       const res = await fetch("/api/admin/org");
       const d = await res.json();
-      if (res.ok) setOrgEntries((d.org || []).map((e) => ({ section: e.section, name: e.name })));
+      if (res.ok) setOrgEntries((d.org || []).filter((e) => e.section !== "miembro").map((e) => ({ section: e.section, name: e.name })));
     } catch (_e) {}
   };
 
@@ -4634,7 +4634,7 @@ export default function AdminDashboard() {
         {activeSection === "organigrama" && (session?.user?.permissions?.is_admin || session?.user?.permissions?.can_manage_members) && (
           <AdminCard title="Organigrama">
             <p style={{ color: textMuted, fontSize: 13, marginBottom: 16 }}>
-              Edita la estructura del clan. Se muestra en la pestaña <strong style={{ color: gold }}>Miembros</strong> del sitio y se puede descargar en PDF.
+              Edita la cúpula del clan (líder, socios, apoyo y capitanes). La <strong style={{ color: gold }}>nómina general</strong> se arma sola con los miembros registrados, así que no se edita aquí. Se muestra en la pestaña <strong style={{ color: gold }}>Miembros</strong> del sitio y se puede descargar en PDF.
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {orgEntries.map((e, i) => (
@@ -4648,7 +4648,6 @@ export default function AdminDashboard() {
                     <option value="socio">Socio</option>
                     <option value="cm">Apoyo Directiva</option>
                     <option value="capitan">Capitán</option>
-                    <option value="miembro">Miembro</option>
                   </select>
                   <input
                     value={e.name}
@@ -4663,7 +4662,7 @@ export default function AdminDashboard() {
               ))}
             </div>
             <div style={{ display: "flex", gap: 12, marginTop: 16, alignItems: "center", flexWrap: "wrap" }}>
-              <Button variant="secondary" onClick={() => setOrgEntries([...orgEntries, { section: "miembro", name: "" }])}>
+              <Button variant="secondary" onClick={() => setOrgEntries([...orgEntries, { section: "socio", name: "" }])}>
                 + Agregar
               </Button>
               <Button onClick={saveOrg} loading={orgSaving}>

@@ -49,8 +49,31 @@ const LevelLabel = ({ children }) => (
   <div style={{ fontFamily: "'Oxanium', sans-serif", fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: C.gold, textAlign: "center", margin: "4px 0 10px" }}>{children}</div>
 );
 
-export default function Organigrama({ org }) {
+// Quita el tag del clan para mostrar/comparar: "MAFIA]`Neo" -> "Neo"
+function cleanName(n) {
+  if (!n) return "";
+  const s = String(n);
+  return (s.includes("`") ? s.split("`").pop() : s).trim();
+}
+
+export default function Organigrama({ org, members }) {
   const g = groupOrg(org);
+
+  // La nómina general sale de los miembros REALES (tabla members),
+  // excluyendo a quienes ya aparecen en la cúpula (líder, socios, apoyo, capitanes).
+  const leadership = new Set(
+    [...g.lider, ...g.socio, ...g.cm, ...g.capitan].map((n) => cleanName(n).toLowerCase())
+  );
+  const roster =
+    members && members.length
+      ? Array.from(
+          new Set(
+            members
+              .map((m) => cleanName(m.name))
+              .filter((n) => n && !leadership.has(n.toLowerCase()))
+          )
+        ).sort((a, b) => a.localeCompare(b, "es", { sensitivity: "base" }))
+      : g.miembro;
   const chartRef = useRef(null);
   const [pdfBusy, setPdfBusy] = useState(false);
 
@@ -134,7 +157,7 @@ export default function Organigrama({ org }) {
         <Connector />
         <LevelLabel>Nómina general de miembros</LevelLabel>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))", gap: 10 }}>
-          {g.miembro.map((n, i) => (
+          {roster.map((n, i) => (
             <div key={n + i} style={{ background: C.panel, border: "1px solid " + C.line, borderRadius: 8, padding: "10px 12px", textAlign: "center" }}>
               <div style={{ fontFamily: "'Oxanium', sans-serif", fontSize: 9.5, letterSpacing: "0.1em", color: C.muted }}>MIEMBRO {String(i + 1).padStart(2, "0")}</div>
               <div style={{ fontFamily: "'Oxanium', sans-serif", fontWeight: 700, fontSize: 14, color: C.fg, marginTop: 2 }}>{n}</div>

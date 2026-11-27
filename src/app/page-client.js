@@ -1414,7 +1414,7 @@ function RosterSection({ members, org }) {
 
   return (
     <div>
-      <Organigrama org={org} />
+      <Organigrama org={org} members={members} />
 
       <SectionTitle>
         Miembros del clan ({searchQuery ? `${filtered.length} / ${members.length}` : members.length})
