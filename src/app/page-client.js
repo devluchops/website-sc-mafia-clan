@@ -1229,7 +1229,7 @@ function VideosSection({ videos }) {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+          gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))",
           gap: 14,
         }}
       >
@@ -1469,7 +1469,7 @@ function RosterSection({ members }) {
       {/* Grid de miembros */}
       <div style={{
         display: "grid",
-        gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+        gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))",
         gap: 16,
       }}>
         {sorted.map((m, i) => {
