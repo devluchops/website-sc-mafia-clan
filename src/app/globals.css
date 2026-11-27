@@ -255,7 +255,7 @@ html {
 .lz-more:hover { color: var(--gold); }
 
 .lz-grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px,1fr)); gap: 18px; }
-.lz-grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px,1fr)); gap: 16px; }
+.lz-grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 16px; }
 
 .lz-card { background: linear-gradient(180deg, var(--panel-2), var(--panel)); border: 1px solid var(--line);
   border-radius: 12px; overflow: hidden; cursor: pointer; transition: transform .15s, border-color .15s, box-shadow .15s; }
@@ -449,4 +449,14 @@ html {
   .cal-more { font-size: 9px; }
   .cal-panel { padding: 14px; }
   .cal-dow { font-size: 10px; }
+}
+
+/* --- roster teaser: 2+ por fila en móvil, nombres sin romper --- */
+.lz-player .pname { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+@media (max-width: 600px) {
+  .lz-grid-4 { gap: 12px; }
+  .lz-player { padding: 16px 10px; }
+  .lz-player .av { width: 56px; height: 56px; font-size: 22px; }
+  .lz-player .pname { font-size: 15px; }
+  .lz-player .mmr b { font-size: 18px; }
 }
