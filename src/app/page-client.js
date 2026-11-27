@@ -1100,11 +1100,11 @@ function BlogSection({ posts }) {
             bottom: 0,
             background: "rgba(0,0,0,0.85)",
             display: "flex",
-            alignItems: "center",
+            alignItems: "flex-start",
             justifyContent: "center",
             zIndex: 1000,
-            padding: 20,
-            overflow: "auto",
+            padding: "20px 20px 40px",
+            overflowY: "auto",
           }}
           onClick={closePost}
         >
@@ -1116,8 +1116,7 @@ function BlogSection({ posts }) {
               padding: 24,
               maxWidth: 700,
               width: "100%",
-              maxHeight: "90vh",
-              overflow: "auto",
+              margin: "auto 0",
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -1833,10 +1832,11 @@ function RosterSection({ members }) {
               bottom: 0,
               background: "rgba(0,0,0,0.85)",
               display: "flex",
-              alignItems: "center",
+              alignItems: "flex-start",
               justifyContent: "center",
               zIndex: 1000,
-              padding: 20,
+              padding: "20px 20px 40px",
+              overflowY: "auto",
             }}
             onClick={() => closeMember()}
           >
@@ -1848,8 +1848,7 @@ function RosterSection({ members }) {
                 padding: 24,
                 maxWidth: 500,
                 width: "100%",
-                maxHeight: "90vh",
-                overflow: "auto",
+                margin: "auto 0",
               }}
               onClick={(e) => e.stopPropagation()}
             >
@@ -2421,10 +2420,11 @@ function EventsSection({ events }) {
             bottom: 0,
             background: "rgba(0,0,0,0.85)",
             display: "flex",
-            alignItems: "center",
+            alignItems: "flex-start",
             justifyContent: "center",
             zIndex: 1000,
-            padding: 16,
+            padding: "16px 16px 40px",
+            overflowY: "auto",
           }}
           onClick={closeEvent}
         >
@@ -2436,8 +2436,7 @@ function EventsSection({ events }) {
               padding: 24,
               maxWidth: 500,
               width: "100%",
-              maxHeight: "90vh",
-              overflow: "auto",
+              margin: "auto 0",
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -3415,10 +3414,11 @@ export default function PageClient({ initialData = null, initialHash = null }) {
             bottom: 0,
             background: "rgba(0, 0, 0, 0.85)",
             display: "flex",
-            alignItems: "center",
+            alignItems: "flex-start",
             justifyContent: "center",
             zIndex: 9999,
-            padding: 16,
+            padding: "16px 16px 40px",
+            overflowY: "auto",
           }}
           onClick={() => setJoinModalOpen(false)}
         >
@@ -3430,8 +3430,7 @@ export default function PageClient({ initialData = null, initialHash = null }) {
               borderRadius: 12,
               maxWidth: 600,
               width: "100%",
-              maxHeight: "90vh",
-              overflow: "auto",
+              margin: "auto 0",
               padding: 24,
               position: "relative",
             }}
