@@ -2898,11 +2898,17 @@ function LandingSections({ posts = [], members = [], videos = [], session, onTab
       <section className="lz-band">
         <div className="lz-wrap">
           <div className="lz-notif">
+            <div className="lz-notif-ico" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="26" height="26" fill="none">
+                <path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" stroke="#15110a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="#15110a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
             <div className="ntxt">
-              <h3>Llévate MAFIA al bolsillo</h3>
+              <h3>Activa los avisos del clan</h3>
               <p>
-                Instala la app y activa las notificaciones para enterarte al instante de
-                showmatches, torneos, reuniones y anuncios del clan.
+                Showmatches, partidas, torneos, reuniones y anuncios — te llegan al instante
+                al celular, como una app.
               </p>
             </div>
             <PushControls />

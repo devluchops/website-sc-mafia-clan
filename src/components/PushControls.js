@@ -165,66 +165,68 @@ export default function PushControls({ compact = false }) {
     } catch (_e) {}
   };
 
-  const showInstall = !installed && (installEvent || isIOS);
+  const chips = (
+    <div className="pushctl-chips">
+      {PUSH_TOPICS.map((t) => {
+        const on = topics.includes(t.key);
+        return (
+          <button
+            key={t.key}
+            type="button"
+            className={on ? "pushctl-chip on" : "pushctl-chip"}
+            aria-pressed={on}
+            onClick={() => toggleTopic(t.key)}
+          >
+            {on ? "✓ " : ""}{t.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  // iPhone sin instalar (o navegador sin push): no se puede suscribir aún
+  if (!supported) {
+    return (
+      <div className={compact ? "pushctl pushctl-compact" : "pushctl"}>
+        <div className="pushctl-hint">
+          {isIOS ? (
+            <>
+              En iPhone primero <b>instala la app</b> (botón <b>Compartir</b> →{" "}
+              <b>“Añadir a pantalla de inicio”</b>) y ábrela desde el ícono para activar los avisos.
+            </>
+          ) : (
+            <>Tu navegador no soporta notificaciones push.</>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={compact ? "pushctl pushctl-compact" : "pushctl"}>
-      <div className="pushctl-row">
-        {supported && (
-          subscribed ? (
-            <button className="lz-btn lz-btn-ghost" onClick={disable} disabled={busy}>
-              {busy ? "..." : "Notificaciones activas ✓"}
-            </button>
-          ) : (
-            <button className="lz-btn lz-btn-gold" onClick={enable} disabled={busy}>
-              {busy ? "Activando..." : "Activar notificaciones"}
-            </button>
-          )
-        )}
-
-        {showInstall && installEvent && (
-          <button className="lz-btn lz-btn-ghost" onClick={install}>
-            Instalar app
-          </button>
-        )}
+      <div className="pushctl-topics">
+        <span className="pushctl-topics-label">
+          {subscribed ? "Estás recibiendo" : "¿Qué avisos quieres recibir?"}
+        </span>
+        {chips}
       </div>
 
-      {!supported && (
-        <p className="pushctl-msg">
-          Tu navegador no soporta notificaciones push. En iPhone, primero instala la app
-          (Compartir → “Añadir a pantalla de inicio”) y ábrela desde ahí.
-        </p>
-      )}
-
-      {showInstall && isIOS && !installEvent && (
-        <p className="pushctl-msg">
-          En iPhone: toca <b>Compartir</b> en Safari y luego <b>“Añadir a pantalla de inicio”</b>.
-          Abre la app desde el ícono para recibir avisos.
-        </p>
+      {subscribed ? (
+        <div className="pushctl-row pushctl-row-on">
+          <span className="pushctl-status">✓ Notificaciones activas</span>
+          <button className="pushctl-off" onClick={disable} disabled={busy}>
+            {busy ? "..." : "Desactivar"}
+          </button>
+        </div>
+      ) : (
+        <div className="pushctl-row">
+          <button className="lz-btn lz-btn-gold pushctl-cta" onClick={enable} disabled={busy}>
+            {busy ? "Activando…" : "🔔 Activar notificaciones"}
+          </button>
+        </div>
       )}
 
       {msg && <p className="pushctl-msg">{msg}</p>}
-
-      {subscribed && (
-        <div className="pushctl-topics">
-          <span className="pushctl-topics-label">Quiero recibir:</span>
-          <div className="pushctl-chips">
-            {PUSH_TOPICS.map((t) => {
-              const on = topics.includes(t.key);
-              return (
-                <button
-                  key={t.key}
-                  type="button"
-                  className={on ? "pushctl-chip on" : "pushctl-chip"}
-                  onClick={() => toggleTopic(t.key)}
-                >
-                  {on ? "✓ " : ""}{t.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
