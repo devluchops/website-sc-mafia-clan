@@ -643,7 +643,7 @@ export default function AdminDashboard() {
   const [tournaments, setTournaments] = useState([]);
   const [subscribers, setSubscribers] = useState([]);
   const [subscriberStats, setSubscriberStats] = useState(null);
-  const [notifForm, setNotifForm] = useState({ title: "", body: "", url: "" });
+  const [notifForm, setNotifForm] = useState({ title: "", body: "", url: "", detail: "" });
   const [notifSending, setNotifSending] = useState(false);
   const [notifResult, setNotifResult] = useState("");
   const [pushCount, setPushCount] = useState(null);
@@ -1260,7 +1260,7 @@ export default function AdminDashboard() {
       const data = await res.json();
       if (res.ok) {
         setNotifResult(`✅ Enviada a ${data.sent} dispositivo(s)${data.removed ? ` · ${data.removed} inactivos limpiados` : ""}`);
-        setNotifForm({ title: "", body: "", url: "" });
+        setNotifForm({ title: "", body: "", url: "", detail: "" });
         loadPushCount();
       } else {
         setNotifResult("❌ " + (data.error || "Error al enviar"));
@@ -4861,11 +4861,18 @@ export default function AdminDashboard() {
               placeholder="Ej: Bienvenido al clan / Baja / Anuncio"
             />
             <Input
-              label="Mensaje"
+              label="Mensaje (corto, el que llega al celular)"
               textarea
               value={notifForm.body}
               onChange={(val) => setNotifForm({ ...notifForm, body: val })}
-              placeholder="Texto que verá la gente en la notificación"
+              placeholder="Texto breve que verá la gente en la notificación"
+            />
+            <Input
+              label="Detalle ampliado (opcional, se ve en la bandeja de la app)"
+              textarea
+              value={notifForm.detail}
+              onChange={(val) => setNotifForm({ ...notifForm, detail: val })}
+              placeholder="Texto más largo con el detalle completo. Si lo dejas vacío, en la bandeja se muestra el mensaje corto."
             />
             <Input
               label="Enlace al tocar (opcional)"
@@ -4906,6 +4913,31 @@ export default function AdminDashboard() {
                       <span>Tipo: {n.kind}</span>
                       <span>Enviadas: <strong style={{ color: gold }}>{n.sent}</strong>/{n.total}</span>
                     </div>
+                    {Array.isArray(n.results) && n.results.length > 0 && (
+                      <div style={{ marginTop: 8, display: "flex", gap: 6, flexWrap: "wrap" }}>
+                        {(() => {
+                          const groups = {};
+                          for (const r of n.results) {
+                            const k = `${r.device}|${r.status}`;
+                            groups[k] = (groups[k] || 0) + 1;
+                          }
+                          const styleFor = {
+                            ok: { label: "✓", bg: "rgba(76,201,130,0.12)", border: "rgba(76,201,130,0.4)", color: "#7ee0a6" },
+                            expired: { label: "inactivo", bg: "rgba(255,255,255,0.05)", border: darkGold, color: textMuted },
+                            error: { label: "✗ falló", bg: "rgba(201,76,76,0.12)", border: "rgba(201,76,76,0.45)", color: "#e79a9a" },
+                          };
+                          return Object.entries(groups).map(([k, count]) => {
+                            const [device, status] = k.split("|");
+                            const m = styleFor[status] || styleFor.error;
+                            return (
+                              <span key={k} style={{ fontSize: 11, padding: "3px 9px", borderRadius: 999, background: m.bg, border: `1px solid ${m.border}`, color: m.color, fontFamily: "'Oxanium', sans-serif" }}>
+                                {device} · {m.label}{count > 1 ? ` ×${count}` : ""}
+                              </span>
+                            );
+                          });
+                        })()}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

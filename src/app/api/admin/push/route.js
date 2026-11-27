@@ -27,13 +27,13 @@ export async function POST(request) {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   }
   try {
-    const { title, body, url } = await request.json();
+    const { title, body, url, detail } = await request.json();
     if (!title || !body) {
       return NextResponse.json({ error: "title y body requeridos" }, { status: 400 });
     }
     const sentBy = session.user?.discordUsername || session.user?.name || session.user?.email || "admin";
     const result = await sendPushToAll(
-      { title, body, url: url || "/", tag: "anuncio", topic: "anuncio" },
+      { title, body, url: url || "/", detail: detail || null, tag: "anuncio", topic: "anuncio" },
       { kind: "manual", sentBy }
     );
     return NextResponse.json(result);
