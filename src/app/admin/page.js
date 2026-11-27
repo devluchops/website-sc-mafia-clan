@@ -652,6 +652,13 @@ export default function AdminDashboard() {
   const [orgEntries, setOrgEntries] = useState([]);
   const [orgSaving, setOrgSaving] = useState(false);
   const [orgMsg, setOrgMsg] = useState("");
+  const [finRows, setFinRows] = useState([]);
+  const [finYears, setFinYears] = useState([]);
+  const [finYear, setFinYear] = useState(new Date().getFullYear());
+  const [finMonth, setFinMonth] = useState("all");
+  const [finForm, setFinForm] = useState({ kind: "egreso", category: "", concept: "", amount: "", tx_date: new Date().toISOString().slice(0, 10) });
+  const [finMsg, setFinMsg] = useState("");
+  const [finBusy, setFinBusy] = useState(false);
 
   // Modal states
   const [memberModal, setMemberModal] = useState({ isOpen: false, member: null });
@@ -735,6 +742,7 @@ export default function AdminDashboard() {
     }
     if (activeSection === "notifications") loadPushCount();
     if (activeSection === "organigrama") loadOrg();
+    if (activeSection === "finance") loadFinance(finYear);
   }, [activeSection]);
 
   useEffect(() => {
@@ -1191,6 +1199,49 @@ export default function AdminDashboard() {
       setOrgMsg("❌ " + e.message);
     }
     setOrgSaving(false);
+  };
+
+  const loadFinance = async (year) => {
+    try {
+      const y = year || finYear;
+      const res = await fetch(`/api/admin/finance?year=${y}`);
+      const d = await res.json();
+      if (res.ok) {
+        setFinRows(d.rows || []);
+        setFinYears(d.years || []);
+      }
+    } catch (_e) {}
+  };
+
+  const saveFinance = async () => {
+    setFinBusy(true);
+    setFinMsg("");
+    try {
+      const res = await fetch("/api/admin/finance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(finForm),
+      });
+      const d = await res.json();
+      if (res.ok) {
+        setFinMsg("✅ Movimiento guardado");
+        setFinForm({ kind: "egreso", category: "", concept: "", amount: "", tx_date: new Date().toISOString().slice(0, 10) });
+        loadFinance(finYear);
+      } else {
+        setFinMsg("❌ " + (d.error || "Error al guardar"));
+      }
+    } catch (e) {
+      setFinMsg("❌ " + e.message);
+    }
+    setFinBusy(false);
+  };
+
+  const deleteFinance = async (id) => {
+    if (!confirm("¿Eliminar este movimiento?")) return;
+    try {
+      await fetch("/api/admin/finance", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
+      loadFinance(finYear);
+    } catch (_e) {}
   };
 
   const handleSendNotification = async () => {
@@ -2290,6 +2341,28 @@ export default function AdminDashboard() {
               Organigrama
             </button>
           )}
+          {session?.user?.permissions?.is_admin && (
+            <button
+              onClick={() => setActiveSection("finance")}
+              style={{
+                background: activeSection === "finance" ? "rgba(255,194,78,0.08)" : "transparent",
+                border: "none",
+                color: activeSection === "finance" ? gold : textMuted,
+                fontFamily: "'Oxanium', sans-serif",
+                fontSize: 12,
+                fontWeight: 600,
+                letterSpacing: 1.5,
+                textTransform: "uppercase",
+                padding: "16px 20px",
+                cursor: "pointer",
+                borderBottom: activeSection === "finance" ? `2px solid ${gold}` : "2px solid transparent",
+                transition: "all 0.2s",
+                whiteSpace: "nowrap",
+              }}
+            >
+              Finanzas
+            </button>
+          )}
         </div>
 
         {/* Selector de sección (solo móvil / PWA) */}
@@ -2348,6 +2421,7 @@ export default function AdminDashboard() {
           { id: "events", label: "Eventos", icon: "events", can: p.is_admin || p.can_publish_events },
           { id: "notifications", label: "Notificaciones", icon: "bell", can: p.is_admin || p.can_publish_events },
           { id: "organigrama", label: "Organigrama", icon: "members", can: p.is_admin || p.can_manage_members },
+          { id: "finance", label: "Finanzas", icon: "more", can: p.is_admin },
           { id: "rules", label: "Reglas", icon: "rules", can: p.is_admin || p.can_edit_rules },
           { id: "permissions", label: "Permisos", icon: "key", can: p.is_admin || p.can_manage_permissions },
           { id: "subscribers", label: "Suscriptores", icon: "mail", can: p.is_admin || p.can_publish_blog },
@@ -4599,6 +4673,80 @@ export default function AdminDashboard() {
             </div>
           </AdminCard>
         )}
+
+        {activeSection === "finance" && session?.user?.permissions?.is_admin && (() => {
+          const MESES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+          const monthOf = (d) => { try { return new Date(d).getUTCMonth(); } catch (_e) { return -1; } };
+          const dateStr = (d) => { try { return new Date(d).toISOString().slice(0, 10); } catch (_e) { return String(d).slice(0, 10); } };
+          const money = (n) => "S/ " + Number(n).toLocaleString("es-PE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+          const filtered = finMonth === "all" ? finRows : finRows.filter((r) => monthOf(r.tx_date) === Number(finMonth));
+          const ingresos = filtered.filter((r) => r.kind === "ingreso").reduce((s, r) => s + Number(r.amount), 0);
+          const egresos = filtered.filter((r) => r.kind === "egreso").reduce((s, r) => s + Number(r.amount), 0);
+          const neto = ingresos - egresos;
+          const tile = { background: bg, border: `1px solid ${darkGold}`, borderRadius: 10, padding: 16, textAlign: "center" };
+          const num = { fontFamily: "'Oxanium', sans-serif", fontWeight: 800, fontSize: 24, fontVariantNumeric: "tabular-nums" };
+          const lbl = { fontFamily: "'Oxanium', sans-serif", fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: textMuted, marginTop: 4 };
+          const yearOpts = [...new Set([finYear, ...finYears, new Date().getFullYear()])].sort((a, b) => b - a);
+          return (
+            <AdminCard title="Finanzas · Balance">
+              <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center", marginBottom: 18 }}>
+                <select value={finYear} onChange={(e) => { const y = Number(e.target.value); setFinYear(y); loadFinance(y); }} style={{ ...getSelectStyle(), width: "auto", minWidth: 110 }}>
+                  {yearOpts.map((y) => <option key={y} value={y}>{y}</option>)}
+                </select>
+                <select value={finMonth} onChange={(e) => setFinMonth(e.target.value)} style={{ ...getSelectStyle(), width: "auto", minWidth: 150 }}>
+                  <option value="all">Todo el año</option>
+                  {MESES.map((m, i) => <option key={i} value={i}>{m}</option>)}
+                </select>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 12, marginBottom: 22 }}>
+                <div style={tile}><div style={{ ...num, color: "#4ee08a" }}>{money(ingresos)}</div><div style={lbl}>Ingresos</div></div>
+                <div style={tile}><div style={{ ...num, color: "#ff8a5c" }}>{money(egresos)}</div><div style={lbl}>Egresos</div></div>
+                <div style={tile}><div style={{ ...num, color: neto >= 0 ? gold : "#ff6b6b" }}>{money(neto)}</div><div style={lbl}>Balance neto</div></div>
+              </div>
+
+              {/* Agregar movimiento */}
+              <div style={{ background: bg, border: `1px solid ${darkGold}`, borderRadius: 10, padding: 16, marginBottom: 20 }}>
+                <p style={{ fontFamily: "'Oxanium', sans-serif", fontSize: 12, letterSpacing: 1, textTransform: "uppercase", color: gold, marginBottom: 12 }}>Nuevo movimiento</p>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12 }}>
+                  <select value={finForm.kind} onChange={(e) => setFinForm({ ...finForm, kind: e.target.value })} style={getSelectStyle()}>
+                    <option value="egreso">Egreso (gasto)</option>
+                    <option value="ingreso">Ingreso</option>
+                  </select>
+                  <input value={finForm.category} onChange={(e) => setFinForm({ ...finForm, category: e.target.value })} placeholder="Tipo (Sueldo, Donación, Premio...)" style={{ padding: "10px 14px", background: cardBg, border: `1px solid ${darkGold}`, borderRadius: 6, color: textLight, fontSize: 16 }} />
+                  <input value={finForm.concept} onChange={(e) => setFinForm({ ...finForm, concept: e.target.value })} placeholder="Concepto (ej: Sueldo Thana, Donación jeque)" style={{ padding: "10px 14px", background: cardBg, border: `1px solid ${darkGold}`, borderRadius: 6, color: textLight, fontSize: 16 }} />
+                  <input type="number" value={finForm.amount} onChange={(e) => setFinForm({ ...finForm, amount: e.target.value })} placeholder="Monto (S/)" style={{ padding: "10px 14px", background: cardBg, border: `1px solid ${darkGold}`, borderRadius: 6, color: textLight, fontSize: 16 }} />
+                  <input type="date" value={finForm.tx_date} onChange={(e) => setFinForm({ ...finForm, tx_date: e.target.value })} style={{ padding: "10px 14px", background: cardBg, border: `1px solid ${darkGold}`, borderRadius: 6, color: textLight, fontSize: 16, textAlign: "left" }} />
+                </div>
+                <div style={{ display: "flex", gap: 12, marginTop: 14, alignItems: "center", flexWrap: "wrap" }}>
+                  <Button onClick={saveFinance} loading={finBusy}>Agregar</Button>
+                  {finMsg && <span style={{ color: textMuted, fontSize: 13 }}>{finMsg}</span>}
+                </div>
+              </div>
+
+              {/* Lista */}
+              {filtered.length === 0 ? (
+                <p style={{ color: textMuted, fontSize: 13 }}>Sin movimientos en este periodo.</p>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {filtered.map((r) => (
+                    <div key={r.id} style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", background: bg, border: `1px solid ${darkGold}`, borderRadius: 8, padding: "10px 14px" }}>
+                      <span style={{ fontFamily: "'Oxanium', sans-serif", fontSize: 12, color: textMuted, minWidth: 90 }}>{dateStr(r.tx_date)}</span>
+                      <span style={{ fontFamily: "'Oxanium', sans-serif", fontWeight: 700, fontSize: 10.5, letterSpacing: "0.1em", textTransform: "uppercase", padding: "3px 8px", borderRadius: 5, color: "#0c0c0c", background: r.kind === "ingreso" ? "#4ee08a" : "#ff8a5c" }}>{r.kind}</span>
+                      <span style={{ flex: 1, minWidth: 140, color: textLight, fontSize: 14 }}>
+                        {r.concept || r.category || "—"}{r.category && r.concept ? <span style={{ color: textMuted, fontSize: 12 }}> · {r.category}</span> : null}
+                      </span>
+                      <strong style={{ fontFamily: "'Oxanium', sans-serif", fontVariantNumeric: "tabular-nums", color: r.kind === "ingreso" ? "#4ee08a" : "#ff8a5c" }}>
+                        {r.kind === "ingreso" ? "+" : "−"}{money(r.amount)}
+                      </strong>
+                      <Button variant="danger" style={{ padding: "6px 10px", fontSize: 11 }} onClick={() => deleteFinance(r.id)}>✕</Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </AdminCard>
+          );
+        })()}
 
         {activeSection === "notifications" && (session?.user?.permissions?.is_admin || session?.user?.permissions?.can_publish_events) && (
           <>
