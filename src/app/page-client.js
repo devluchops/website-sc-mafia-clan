@@ -7,6 +7,7 @@ import { SocialIcons } from "@/components/SocialIcons";
 import SubscribeForm from "@/components/SubscribeForm";
 import PushControls from "@/components/PushControls";
 import CalendarSection, { EVENT_TYPES } from "@/components/CalendarSection";
+import Organigrama from "@/components/Organigrama";
 import { getVideoEmbedUrl } from "@/lib/video-utils";
 
 // ============================================================
@@ -1413,6 +1414,8 @@ function RosterSection({ members }) {
 
   return (
     <div>
+      <Organigrama />
+
       <SectionTitle>
         Miembros del clan ({searchQuery ? `${filtered.length} / ${members.length}` : members.length})
       </SectionTitle>
