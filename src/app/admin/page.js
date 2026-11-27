@@ -2011,37 +2011,68 @@ export default function AdminDashboard() {
         style={{
           background: cardBg,
           borderBottom: `1px solid ${darkGold}`,
-          padding: "20px 24px",
+          padding: "calc(16px + env(safe-area-inset-top, 0px)) 20px 16px",
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          flexWrap: "wrap",
           gap: 12,
         }}
       >
-        <div>
+        <div style={{ minWidth: 0 }}>
           <h1
             style={{
               fontFamily: "'Oxanium', sans-serif",
-              fontSize: 24,
+              fontSize: 22,
               fontWeight: 700,
               color: gold,
-              letterSpacing: 4,
+              letterSpacing: 3,
             }}
           >
             PANEL ADMIN
           </h1>
-          <p style={{ fontSize: 12, color: textMuted, marginTop: 4 }}>
+          <p style={{ fontSize: 12, color: textMuted, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {session?.user?.email || session?.user?.name}
           </p>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-          <Button variant="secondary" onClick={() => window.location.href = "/"}>
-            Ver Sitio
-          </Button>
-          <Button variant="secondary" onClick={handleLogout}>
-            Cerrar Sesión
-          </Button>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+          <button
+            onClick={() => (window.location.href = "/")}
+            title="Ver sitio"
+            aria-label="Ver sitio"
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              padding: "8px 13px", borderRadius: 999,
+              background: "rgba(255,255,255,0.04)", border: `1px solid ${darkGold}`,
+              color: textLight, fontFamily: "'Oxanium', sans-serif", fontSize: 11.5,
+              fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", cursor: "pointer",
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+              <polyline points="15 3 21 3 21 9" />
+              <line x1="10" y1="14" x2="21" y2="3" />
+            </svg>
+            <span className="admin-hdr-label">Ver sitio</span>
+          </button>
+          <button
+            onClick={handleLogout}
+            title="Cerrar sesión"
+            aria-label="Cerrar sesión"
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              padding: "8px 13px", borderRadius: 999,
+              background: "rgba(201,76,76,0.08)", border: "1px solid rgba(201,76,76,0.45)",
+              color: "#e79a9a", fontFamily: "'Oxanium', sans-serif", fontSize: 11.5,
+              fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", cursor: "pointer",
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+            <span className="admin-hdr-label">Salir</span>
+          </button>
         </div>
       </header>
 
@@ -2420,8 +2451,8 @@ export default function AdminDashboard() {
           { id: "blog", label: "Blog", icon: "blog", can: p.is_admin || p.can_publish_blog },
           { id: "events", label: "Eventos", icon: "events", can: p.is_admin || p.can_publish_events },
           { id: "notifications", label: "Notificaciones", icon: "bell", can: p.is_admin || p.can_publish_events },
-          { id: "organigrama", label: "Organigrama", icon: "members", can: p.is_admin || p.can_manage_members },
-          { id: "finance", label: "Finanzas", icon: "more", can: p.is_admin },
+          { id: "organigrama", label: "Organigrama", icon: "org", can: p.is_admin || p.can_manage_members },
+          { id: "finance", label: "Finanzas", icon: "finance", can: p.is_admin },
           { id: "rules", label: "Reglas", icon: "rules", can: p.is_admin || p.can_edit_rules },
           { id: "permissions", label: "Permisos", icon: "key", can: p.is_admin || p.can_manage_permissions },
           { id: "subscribers", label: "Suscriptores", icon: "mail", can: p.is_admin || p.can_publish_blog },
@@ -2436,6 +2467,12 @@ export default function AdminDashboard() {
           if (k === "blog") return (<svg {...sp}><path d="M6 3h9l4 4v14H6z" /><path d="M15 3v5h5M9 13h6M9 17h4" /></svg>);
           if (k === "events") return (<svg {...sp}><rect x="3" y="4.5" width="18" height="16.5" rx="2" /><path d="M3 9.5h18M8 2.5v4M16 2.5v4" /></svg>);
           if (k === "bell") return (<svg {...sp}><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6" /><path d="M10 20a2 2 0 0 0 4 0" /></svg>);
+          if (k === "org") return (<svg {...sp}><rect x="9" y="2.5" width="6" height="5" rx="1" /><rect x="2.5" y="16.5" width="6" height="5" rx="1" /><rect x="15.5" y="16.5" width="6" height="5" rx="1" /><path d="M12 7.5v4M5.5 16.5v-2.5h13v2.5M12 11.5v2.5" /></svg>);
+          if (k === "finance") return (<svg {...sp}><circle cx="12" cy="12" r="9" /><path d="M12 7v10M14.5 9.3c-.6-.8-1.6-1.1-2.6-1.1-1.4 0-2.4.7-2.4 1.8 0 2.6 5 1.2 5 3.9 0 1.1-1 1.9-2.6 1.9-1.1 0-2.1-.4-2.7-1.2" /></svg>);
+          if (k === "rules") return (<svg {...sp}><path d="M12 6c-1.5-1-3.5-1.5-5.5-1.5-1.3 0-2.4.2-3 .5v13c.6-.3 1.7-.5 3-.5 2 0 4 .5 5.5 1.5 1.5-1 3.5-1.5 5.5-1.5 1.3 0 2.4.2 3 .5v-13c-.6-.3-1.7-.5-3-.5-2 0-4 .5-5.5 1.5z" /><path d="M12 6v13" /></svg>);
+          if (k === "key") return (<svg {...sp}><circle cx="8" cy="15" r="4" /><path d="M10.9 12.1 20 3M16.5 6.5l2 2M13.5 9.5l2 2" /></svg>);
+          if (k === "mail") return (<svg {...sp}><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3.5 7 8.5 6 8.5-6" /></svg>);
+          if (k === "log") return (<svg {...sp}><circle cx="4" cy="6" r="1.1" /><circle cx="4" cy="12" r="1.1" /><circle cx="4" cy="18" r="1.1" /><path d="M8 6h12M8 12h12M8 18h8" /></svg>);
           return (<svg {...sp}><circle cx="5" cy="12" r="1.3" /><circle cx="12" cy="12" r="1.3" /><circle cx="19" cy="12" r="1.3" /></svg>);
         };
         const go = (id) => { setActiveSection(id); setMoreOpen(false); if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" }); };
@@ -2459,7 +2496,7 @@ export default function AdminDashboard() {
                   <div className="amp-title">Más secciones</div>
                   {rest.map((s) => (
                     <button key={s.id} className={activeSection === s.id ? "active" : ""} onClick={() => go(s.id)}>
-                      {s.label}
+                      {icon(s.icon)}<span>{s.label}</span>
                     </button>
                   ))}
                 </div>

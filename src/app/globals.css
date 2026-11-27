@@ -378,6 +378,15 @@ html {
   background: radial-gradient(circle at 35% 30%, var(--gold-hi), var(--gold));
   box-shadow: 0 10px 30px -6px rgba(255,194,78,0.6); transition: transform .15s, box-shadow .15s; }
 .notify-fab:hover { transform: translateY(-2px); box-shadow: 0 16px 38px -8px rgba(255,194,78,0.8); }
+/* Ya suscrito: la campana pasa a modo "gestionar", discreta (sin dorado ni glow). */
+.notify-fab--subtle { background: rgba(255,255,255,0.08); border: 1px solid var(--line);
+  box-shadow: 0 8px 22px -10px rgba(0,0,0,0.75); }
+.notify-fab--subtle:hover { transform: translateY(-2px); box-shadow: 0 12px 26px -10px rgba(0,0,0,0.85); }
+
+/* Header del admin: en pantallas muy angostas, las acciones quedan solo con ícono. */
+@media (max-width: 380px) {
+  .admin-hdr-label { display: none; }
+}
 .notify-fab-dot { position: absolute; top: 11px; right: 11px; width: 11px; height: 11px; border-radius: 50%;
   background: var(--live); border: 2px solid #15110a; box-shadow: 0 0 0 0 rgba(78,224,138,0.6);
   animation: notifpulse 2s infinite; }
@@ -477,11 +486,13 @@ html {
 }
 .admin-more-panel .amp-title { font-family: 'Oxanium', sans-serif; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-muted); padding: 10px 6px 6px; }
 .admin-more-panel button {
-  display: block; width: 100%; text-align: left; background: none; border: none;
+  display: flex; align-items: center; gap: 13px; width: 100%; text-align: left; background: none; border: none;
   border-top: 1px solid var(--line-2); padding: 15px 6px;
   color: var(--text-light); font-family: 'Oxanium', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer;
 }
+.admin-more-panel button svg { flex-shrink: 0; color: var(--text-muted); }
 .admin-more-panel button.active { color: var(--gold); }
+.admin-more-panel button.active svg { color: var(--gold); }
 @media (max-width: 768px) {
   .admin-nav-tabs { display: none !important; }
   .admin-bottomnav {
