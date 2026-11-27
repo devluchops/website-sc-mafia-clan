@@ -61,7 +61,23 @@ export default function Organigrama({ org }) {
       const [h2c, jspdf] = await Promise.all([import("html2canvas"), import("jspdf")]);
       const html2canvas = h2c.default || h2c;
       const jsPDF = jspdf.jsPDF || jspdf.default;
-      const canvas = await html2canvas(chartRef.current, { backgroundColor: "#090a0f", scale: 2, useCORS: true });
+
+      // Clon fuera de pantalla con ancho fijo (como escritorio) para que el PDF
+      // salga completo también desde el celular, sin saltos en la UI.
+      const clone = chartRef.current.cloneNode(true);
+      clone.style.width = "900px";
+      clone.style.maxWidth = "none";
+      clone.style.position = "fixed";
+      clone.style.left = "-10000px";
+      clone.style.top = "0";
+      document.body.appendChild(clone);
+
+      let canvas;
+      try {
+        canvas = await html2canvas(clone, { backgroundColor: "#090a0f", scale: 2, useCORS: true, windowWidth: 980 });
+      } finally {
+        document.body.removeChild(clone);
+      }
       const img = canvas.toDataURL("image/png");
       const pdf = new jsPDF({ orientation: canvas.width >= canvas.height ? "landscape" : "portrait", unit: "px", format: [canvas.width, canvas.height] });
       pdf.addImage(img, "PNG", 0, 0, canvas.width, canvas.height);
